@@ -1,0 +1,47 @@
+# ===================================================
+# NileSky Platform — Render Blueprint
+# ===================================================
+# One-click: provisions the Postgres database AND the NestJS API,
+# and wires DATABASE_URL between them automatically.
+#
+# The two Flutter Web front-ends are NOT here on purpose — Render's
+# build image has no Flutter SDK, so it cannot build them. See DEPLOY_NOW.md.
+
+databases:
+  - name: nilesky-db
+    databaseName: nilesky
+    user: nilesky
+    plan: free
+    region: frankfurt
+
+services:
+  - type: web
+    name: nilesky-api            # -> https://nilesky-api.onrender.com
+    runtime: node
+    region: frankfurt            # must match the database region
+    plan: free
+    rootDir: backend
+    branch: main
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /           # AppController GET / — no DB, no auth
+    autoDeploy: true
+    envVars:
+      - key: NODE_VERSION
+        value: "20.18.0"
+      - key: NODE_ENV
+        value: production
+      - key: DATABASE_URL
+        fromDatabase:
+          name: nilesky-db
+          property: connectionString
+      - key: SEED_PASSWORD
+        generateValue: true      # Render generates it; read it in the dashboard to log in
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d

@@ -1,0 +1,48 @@
+# Node & Backend
+**/node_modules/
+**/dist/
+
+# Environment files — NEVER commit these (they contain DB URLs and JWT secrets)
+**/.env
+**/.env.*
+!**/.env.example
+!**/.env.*.example
+
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Flutter & Dart
+**/.dart_tool/
+**/.packages
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.pub-cache/
+**/.pub/
+
+# Ignore Flutter build output generally...
+**/build/
+# ...but DO commit the web builds so Render Static Sites can publish them
+!admin_panel/build/
+!admin_panel/build/web/
+!admin_panel/build/web/**
+!customer_app/build/
+!customer_app/build/web/
+!customer_app/build/web/**
+
+# Large binaries — keep out of git
+*.apk
+*.aab
+*.ipa
+*.zip
+
+# IDE & OS
+.DS_Store
+Thumbs.db
+**/*.swp
+**/*.swo
+.idea/
+*.iml
+.vscode/*
+!.vscode/settings.json
+!.vscode/launch.json

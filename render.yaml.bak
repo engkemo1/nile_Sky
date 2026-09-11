@@ -1,0 +1,57 @@
+# ===================================================
+# NileSky Platform — Render Blueprint (One-Click Deploy)
+# ===================================================
+# Free Tier Deployment for NestJS Backend, Admin Panel, and Customer App
+
+version: "1"
+
+services:
+  # ─── 1. NileSky NestJS Backend API ───
+  - type: web
+    name: nilesky-backend
+    env: node
+    region: frankfurt # or oregon
+    plan: free
+    rootDir: backend
+    buildCommand: npm install && npm run build
+    startCommand: npm run start:prod
+    healthCheckPath: /weather/luxor
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 10000
+      - key: DATABASE_URL
+        sync: false # Set in Render Dashboard: your Neon.tech connection string
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: 24h
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: 30d
+
+  # ─── 2. NileSky Admin Panel (Flutter Web) ───
+  - type: web
+    name: nilesky-admin-panel
+    env: static
+    rootDir: admin_panel/build/web
+    buildCommand: echo "Built via Flutter"
+    staticPublishPath: ./
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
+
+  # ─── 3. NileSky Customer App (Flutter Web) ───
+  - type: web
+    name: nilesky-customer-app
+    env: static
+    rootDir: customer_app/build/web
+    buildCommand: echo "Built via Flutter"
+    staticPublishPath: ./
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html

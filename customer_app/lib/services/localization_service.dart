@@ -1,0 +1,1319 @@
+import 'package:flutter/material.dart';
+
+class LanguageService {
+  static final ValueNotifier<Locale> localeNotifier = ValueNotifier<Locale>(
+    const Locale('en'),
+  );
+
+  static const List<Map<String, String>> supportedLanguages = [
+    {'code': 'en', 'name': 'English', 'native': 'English', 'flag': '🇬🇧'},
+    {'code': 'ar', 'name': 'Arabic', 'native': 'العربية', 'flag': '🇪🇬'},
+    {'code': 'de', 'name': 'German', 'native': 'Deutsch', 'flag': '🇩🇪'},
+    {'code': 'fr', 'name': 'French', 'native': 'Français', 'flag': '🇫🇷'},
+    {'code': 'es', 'name': 'Spanish', 'native': 'Español', 'flag': '🇪🇸'},
+  ];
+
+  static List<Locale> get supportedLocales =>
+      supportedLanguages.map((l) => Locale(l['code']!)).toList();
+
+  static String get currentLanguageCode => localeNotifier.value.languageCode;
+
+  static bool get isArabic => currentLanguageCode == 'ar';
+
+  static String get currentFlag {
+    final lang = supportedLanguages.firstWhere(
+      (l) => l['code'] == currentLanguageCode,
+      orElse: () => supportedLanguages.first,
+    );
+    return lang['flag']!;
+  }
+
+  static String get currentLanguageName {
+    final lang = supportedLanguages.firstWhere(
+      (l) => l['code'] == currentLanguageCode,
+      orElse: () => supportedLanguages.first,
+    );
+    return lang['native']!;
+  }
+
+  static void setLanguage(String code) {
+    if (supportedLanguages.any((l) => l['code'] == code)) {
+      localeNotifier.value = Locale(code);
+    }
+  }
+
+  static final Map<String, Map<String, String>> _translations = {
+    // -------------------------------------------------------------
+    // ENGLISH
+    // -------------------------------------------------------------
+    'en': {
+      // General & Common
+      'appName': 'NileSky',
+      'tagline': 'Luxor Hot Air Balloon Flights',
+      'taglineSubtitle': 'See Egypt From Above',
+      'luxorEgypt': 'Luxor, Egypt',
+      'westBankZone': 'West Bank Sunrise Zone',
+      'continueBtn': 'Continue',
+      'backBtn': 'Back',
+      'saveBtn': 'Save',
+      'cancelBtn': 'Cancel',
+      'closeBtn': 'Close',
+      'gotIt': 'Got it',
+      'search': 'Search',
+      'seeAll': 'See All',
+      'explore': 'Explore',
+      'home': 'Home',
+      'myTrips': 'My Trips',
+      'profile': 'Profile',
+      'confirm': 'Confirm',
+      'done': 'Done',
+      'verified': 'Verified Operator',
+      'stars': 'Stars',
+      'reviews': 'reviews',
+      'flights': 'flights',
+      'currency': 'Currency',
+      'language': 'Language',
+      'appLanguage': 'App Language',
+      'safeToFly': 'Favorable to Fly',
+      'favorable': 'Favorable',
+      'uncertain': 'Under Assessment',
+      'unfavorable': 'Flights Suspended',
+      'wind': 'Wind',
+      'visibility': 'Visibility',
+      'sunrise': 'Sunrise',
+      'perPerson': '/ person',
+      'seatsLeft': 'seats left',
+      'pickup': 'Pickup',
+      'breakfast': 'Breakfast',
+      'duration': 'Duration',
+      'minutes': 'min',
+
+      // Home Screen
+      'greeting': '☀️ Good Morning, John',
+      'skyAdventureHeadline': 'Your Sky Adventure\nStarts Here',
+      'findFlightTitle': 'Find Your Flight',
+      'date': 'Date',
+      'tomorrow': 'Tomorrow',
+      'today': 'Today',
+      'guests': 'Guests',
+      'persons': 'Persons',
+      'searchFlightsInLuxor': 'Search Flights in Luxor',
+      'comparePackages': 'Compare Flight Packages',
+      'comparePackagesSub':
+          'Standard vs Premium vs Private flights side-by-side',
+      'availableFlights': '🔥 NileSky Flight Packages',
+      'whyNileSky': '✨ Why Fly With NileSky?',
+      'whyNileSkySub': 'Direct, certified, and unforgettable Luxor sunrise experiences',
+      'nileSkyFeature1Title': '100% Safety Track Record',
+      'nileSkyFeature1Sub': 'Egyptian Civil Aviation Authority Certified (#EGY-LXR-088).',
+      'nileSkyFeature2Title': 'Master Captain Pilots',
+      'nileSkyFeature2Sub': 'Over 3,000+ flight hours over the Valley of the Kings.',
+      'nileSkyFeature3Title': 'Door-to-Basket VIP Pickup',
+      'nileSkyFeature3Sub': 'Modern A/C vans & scenic Nile motorboat crossing with hot tea.',
+      'nileSkyFeature4Title': 'Ultra-Modern Fleet',
+      'nileSkyFeature4Sub': 'World-class Cameron & Kubicek UK/EU certified hot air balloons.',
+      'trackPickup': 'Track Pickup',
+      'whyLuxorTitle': 'Why Luxor Ballooning?',
+      'whyLuxorDesc':
+          'Luxor West Bank is the world’s hot air balloon capital with 360 days of sunrise flights over the Valley of the Kings, Hatshepsut Temple, and the Nile River.',
+      'safeWindBadge': '🟢 Safe Wind & Visibility',
+
+      // Explore & Search
+      'availableFlightsTitle': 'Available Flights in Luxor',
+      'allCategory': 'All',
+      'standardCategory': 'Standard',
+      'premiumCategory': 'Premium',
+      'privateCategory': 'VIP Private',
+      'sortBy': 'Sort by',
+      'sortByPrice': 'Lowest Price',
+      'sortByRating': 'Top Rated',
+      'sortByDuration': 'Duration',
+      'noFlightsFound': 'No flights matching your filter',
+      'addToCompare': 'Compare',
+      'compareFlights': 'Compare Flights',
+
+      // Flight Details
+      'flightDetailsTitle': 'Flight Details',
+      'bookNow': 'Book Now',
+      'bookThisFlight': 'Book This Flight',
+      'includesHotelPickup': 'Free Hotel & Nile Cruise Pickup',
+      'includesBreakfast': 'Traditional Breakfast Included',
+      'pilotName': 'Pilot',
+      'balloonModel': 'Balloon',
+      'whatIncluded': 'What is Included',
+      'flightPath': 'Flight Route & Highlights',
+      'valleyKingsDesc':
+          'Fly over Valley of the Kings, Queen Hatshepsut Temple, Colossi of Memnon & the River Nile.',
+      'safetyCertTitle': 'ECAA Aviation Safety Certified',
+      'safetyCertDesc':
+          'Every pilot is fully licensed with over 1,500 flight hours and daily civil aviation clearance.',
+      'cancelPolicyNotice':
+          'Free cancellation up to 24h prior. 100% weather refund guarantee.',
+      'shareFlight': 'Share Flight',
+      'linkCopied': 'Flight link copied to clipboard!',
+
+      // Booking Flow (2-Step)
+      'step1Of2': 'Step 1 of 2: Trip & Passenger',
+      'step2Of2': 'Step 2 of 2: Payment & Confirm',
+      'selectFlightDate': 'Flight Date',
+      'numberOfGuests': 'Number of Passengers',
+      'leadPassengerName': 'Lead Passenger Name',
+      'whatsappPhone': 'WhatsApp / Mobile Number',
+      'hotelPickupLocation': 'Pickup Hotel or Nile Cruise Dock',
+      'selectHotelHint': 'Choose your Luxor accommodation',
+      'specialRequests': 'Special Requests / Notes (Optional)',
+      'specialRequestsHint':
+          'e.g., Birthday celebration, anniversary banner...',
+      'nextPayment': 'Continue to Payment →',
+      'orderSummary': 'Booking Summary',
+      'packageSelected': 'Selected Package',
+      'priceBreakdown': 'Price Breakdown',
+      'subtotal': 'Subtotal',
+      'discount': 'Discount',
+      'totalToPay': 'Total Amount',
+      'promoCoupon': 'Promo / Referral Code',
+      'apply': 'Apply',
+      'validCoupon': '✅ 10% Discount Applied!',
+      'invalidCoupon': '❌ Invalid Coupon Code',
+      'paymentMethod': 'Select Payment Method',
+      'creditCard': 'Credit / Debit Card (Visa, Mastercard)',
+      'appleGooglePay': 'Apple Pay / Google Pay',
+      'vodafoneCash': 'Vodafone Cash / InstaPay',
+      'cashOnPickup': 'Cash on Pickup (EGP / USD / EUR)',
+      'confirmAndBook': 'Confirm & Book Flight',
+      'processingBooking': 'Securing your seats...',
+      'pickupNoticeText':
+          '🚐 Hotel pickup begins 2 hours before sunrise (03:45 - 04:15 AM). Your driver will contact you via WhatsApp.',
+
+      // Booking Confirmation & Boarding Pass
+      'bookingConfirmed': 'Booking Confirmed! 🎉',
+      'confirmedSubtitle': 'Get ready for an unforgettable sunrise over Luxor.',
+      'digitalBoardingPass': 'Digital Boarding Pass',
+      'showQrAtBoarding': 'Show this QR code to the driver & flight crew',
+      'bookingRef': 'Booking Reference',
+      'flightDate': 'Flight Date',
+      'flightTime': 'Flight Time',
+      'pickupTime': 'Pickup Time',
+      'pickupPoint': 'Pickup Point',
+      'guestsCount': 'Guests',
+      'totalPaid': 'Total Paid',
+      'trackDriverBtn': 'Track Driver & Flight Day Guide',
+      'backToHome': 'Back to Home',
+
+      // Active Flight & Day-of Hub
+      'todayFlightExp': 'Today’s Flight Hub',
+      'sunriseFlightToday': 'Sunrise Flight Today',
+      'confirmedToFly': 'Confirmed to Fly',
+      'takeoff': '06:15 AM Takeoff',
+      'driverAssigned': 'Your Pickup Driver',
+      'driverVanModel': 'Toyota HiAce (Air Conditioned)',
+      'driverPlate': 'Luxor ل م ط ١٢٣٤',
+      'callDriver': 'Call Driver',
+      'whatsappDriver': 'WhatsApp',
+      'flightTimeline': 'Morning Experience Timeline',
+      'timelineStep1': '03:45 AM - Hotel Lobby Pickup',
+      'timelineStep1Sub': 'Driver meets you in the reception with NileSky sign',
+      'timelineStep2': '04:45 AM - Nile Crossing & Coffee',
+      'timelineStep2Sub': 'Motorboat cross to West Bank with hot Egyptian tea',
+      'timelineStep3': '05:30 AM - Balloon Inflation & Safety Briefing',
+      'timelineStep3Sub':
+          'Watch massive balloons ignite under the desert stars',
+      'timelineStep4': '06:00 AM - Sunrise Liftoff!',
+      'timelineStep4Sub': '45-60 min drifting over the pharaonic temples',
+      'weatherAdvisoryTitle': 'Live Aviation Weather',
+      'weatherAdvisoryBody':
+          'Winds calm at 8 km/h. Flight safety clearance granted by Egyptian Civil Aviation Authority.',
+
+      // My Bookings
+      'myBookingsTitle': 'My Balloon Bookings',
+      'upcomingTab': 'Upcoming',
+      'pastTab': 'Past Flights',
+      'viewFlightDayHub': 'View Flight Day Hub',
+      'boardingQrPass': 'Boarding QR Pass',
+      'completedBadge': 'Completed',
+      'ratingGiven': 'Your Rating',
+      'noBookingsYet': 'No bookings yet. Start your Luxor adventure today!',
+
+      // Profile & Settings
+      'myProfile': 'My Profile',
+      'displayCurrency': 'Display Currency',
+      'pushAlerts': 'Flight & Driver Alerts',
+      'pushAlertsSub': 'Receive pickup reminder & live weather notifications',
+      'cancellationPolicy': 'Cancellation & Refund Policy',
+      'aboutNileSky': 'NileSky Luxor',
+      'aboutNileSkySub': 'The official Luxor Hot Air Balloon Booking Platform',
+      'policyTitle': 'NileSky Safety & Refund Policy',
+      'policyRule1': '• 100% full refund if cancelled > 24 hours prior.',
+      'policyRule2': '• 50% refund if cancelled 12-24 hours prior.',
+      'policyRule3':
+          '• 100% automatic full refund if flight is grounded due to weather.',
+
+      // Auth & Onboarding
+      'signIn': 'Sign In',
+      'createAccount': 'Create Account',
+      'fullName': 'Full Name',
+      'emailAddress': 'Email Address',
+      'password': 'Password',
+      'exploreAsGuest': 'Explore Flights as Guest →',
+      'skip': 'Skip',
+      'next': 'Next',
+      'getStarted': 'Get Started',
+      'onboarding1Title': 'Discover Luxor\nFrom the Sky',
+      'onboarding1Sub':
+          'Book unforgettable sunrise hot air balloon flights over the Valley of the Kings and Nile River.',
+      'onboarding2Title': 'Compare & Choose\nTrusted Operators',
+      'onboarding2Sub':
+          'Easily compare verified operators like King Tut, Sindbad, and SkyScape side-by-side.',
+      'onboarding3Title': 'Book Instantly with\nHotel Pickup & QR',
+      'onboarding3Sub':
+          'Guaranteed hotel pickup, live weather checks, driver tracking, and instant digital QR tickets.',
+      'chooseLanguage': 'Choose Your Language',
+      'chooseLanguageSub':
+          'Select your preferred language for a smooth experience',
+    },
+
+    // -------------------------------------------------------------
+    // ARABIC (العربية) - With Egyptian tourism context
+    // -------------------------------------------------------------
+    'ar': {
+      // General & Common
+      'appName': 'نايل سكاي',
+      'tagline': 'رحلات المنطاد الطائر بالأقصر',
+      'taglineSubtitle': 'عش سحر الأقصر من السماء',
+      'luxorEgypt': 'الأقصر، مصر',
+      'westBankZone': 'منطقة إقلاع البر الغربي لشروق الشمس',
+      'continueBtn': 'متابعة',
+      'backBtn': 'رجوع',
+      'saveBtn': 'حفظ',
+      'cancelBtn': 'إلغاء',
+      'closeBtn': 'إغلاق',
+      'gotIt': 'فهمت ذلك',
+      'search': 'بحث',
+      'seeAll': 'عرض الكل',
+      'explore': 'استكشاف',
+      'home': 'الرئيسية',
+      'myTrips': 'رحلاتي',
+      'profile': 'حسابي',
+      'confirm': 'تأكيد',
+      'done': 'تم',
+      'verified': 'شركة معتمدة رسمياً',
+      'stars': 'نجوم',
+      'reviews': 'تقييم',
+      'flights': 'رحلة',
+      'currency': 'العملة',
+      'language': 'اللغة',
+      'appLanguage': 'لغة التطبيق',
+      'safeToFly': 'الطقس مناسب للطيران',
+      'favorable': 'مناسب تماماً',
+      'uncertain': 'قيد التقييم',
+      'unfavorable': 'تعليق الرحلات',
+      'wind': 'الرياح',
+      'visibility': 'الرؤية',
+      'sunrise': 'الشروق',
+      'perPerson': '/ للفرد',
+      'seatsLeft': 'مقاعد متبقية',
+      'pickup': 'توصيل',
+      'breakfast': 'إفطار',
+      'duration': 'المدة',
+      'minutes': 'دقيقة',
+
+      // Home Screen
+      'greeting': '☀️ صباح الخير، يا مرحباً',
+      'skyAdventureHeadline': 'مغامرتك في سماء الأقصر\nتبدأ هنا',
+      'findFlightTitle': 'ابحث عن رحلتك',
+      'date': 'التاريخ',
+      'tomorrow': 'غداً',
+      'today': 'اليوم',
+      'guests': 'المسافرين',
+      'persons': 'أفراد',
+      'searchFlightsInLuxor': 'ابحث عن رحلات المنطاد',
+      'comparePackages': 'مقارنة باقات الرحلات',
+      'comparePackagesSub':
+          'مقارنة بين الباقة الأساسية والمميزة والخاصة جنباً لجنب',
+      'availableFlights': '🔥 باقات رحلات نايل سكاي',
+      'whyNileSky': '✨ لماذا تحجز مباشرة مع نايل سكاي؟',
+      'whyNileSkySub': 'تنظيم مباشر وإشراف كامل بأعلى معايير السلامة والجودة',
+      'nileSkyFeature1Title': 'سجل أمان تام 100%',
+      'nileSkyFeature1Sub': 'معتمد رسمياً من سلطة الطيران المدني المصري (#EGY-LXR-088).',
+      'nileSkyFeature2Title': 'كباتن وطيارين معتمدين دولياً',
+      'nileSkyFeature2Sub': 'أكثر من 3000 ساعة طيران خبرة في سماء وادي الملوك بالأقصر.',
+      'nileSkyFeature3Title': 'توصيل VIP كامل من الفندق',
+      'nileSkyFeature3Sub': 'حافلات مكيفة حديثة وقارب خاص لعبور النيل مع الشاي والقهوة.',
+      'nileSkyFeature4Title': 'أسطول بالونات فائق الحداثة',
+      'nileSkyFeature4Sub': 'أحدث بالونات Cameron و Kubicek البريطانية والأوروبية المعتمدة.',
+      'trackPickup': 'تتبع السائق',
+      'whyLuxorTitle': 'لماذا منطاد الأقصر؟',
+      'whyLuxorDesc':
+          'البر الغربي بالأقصر هو عاصمة المنطاد الطائر في العالم، حيث تستمتع بشروق الشمس فوق وادي الملوك ومعبد حتشبسوت ونهر النيل الخالد.',
+      'safeWindBadge': '🟢 سرعة الرياح والرؤية آمنة ومثالية',
+
+      // Explore & Search
+      'availableFlightsTitle': 'رحلات البالون المتاحة بالأقصر',
+      'allCategory': 'الكل',
+      'standardCategory': 'الأساسية',
+      'premiumCategory': 'المميزة',
+      'privateCategory': 'خاصة VIP',
+      'sortBy': 'ترتيب حسب',
+      'sortByPrice': 'الأقل سعراً',
+      'sortByRating': 'الأعلى تقييماً',
+      'sortByDuration': 'المدة الأطول',
+      'noFlightsFound': 'لا توجد رحلات تطابق هذا الفلتر',
+      'addToCompare': 'مقارنة',
+      'compareFlights': 'مقارنة الرحلات',
+
+      // Flight Details
+      'flightDetailsTitle': 'تفاصيل الرحلة',
+      'bookNow': 'احجز الآن',
+      'bookThisFlight': 'احجز هذه الرحلة',
+      'includesHotelPickup': 'شامل التوصيل من الفندق أو الفلوكة/المركب',
+      'includesBreakfast': 'شامل إفطار مصري تقليدي',
+      'pilotName': 'الطيار',
+      'balloonModel': 'المنطاد',
+      'whatIncluded': 'المزايا المشمولة',
+      'flightPath': 'مسار الرحلة والمعالم الأثرية',
+      'valleyKingsDesc':
+          'التحليق فوق وادي الملوك، معبد حتشبسوت، تمثالي ممنون ونهر النيل الخالد.',
+      'safetyCertTitle': 'مرخص ومعتمد من سلطة الطيران المدني المصري',
+      'safetyCertDesc':
+          'جميع الطيارين معتمدون ولديهم أكثر من 1500 ساعة طيران بتصريح طيران يومي رسمي.',
+      'cancelPolicyNotice':
+          'إلغاء مجاني حتى 24 ساعة قبل الرحلة. استرداد 100% في حالة إلغاء الطيران بسبب الطقس.',
+      'shareFlight': 'مشاركة الرحلة',
+      'linkCopied': 'تم نسخ رابط الرحلة!',
+
+      // Booking Flow (2-Step)
+      'step1Of2': 'الخطوة 1 من 2: تفاصيل الرحلة والمسافر',
+      'step2Of2': 'الخطوة 2 من 2: الدفع والتأكيد',
+      'selectFlightDate': 'تاريخ الرحلة',
+      'numberOfGuests': 'عدد المسافرين',
+      'leadPassengerName': 'اسم المسافر الأساسي',
+      'whatsappPhone': 'رقم الواتساب / الهاتف',
+      'hotelPickupLocation': 'مكان الإقامة (فندق أو كروز نايل)',
+      'selectHotelHint': 'اختر فندقك أو عنوان إقامتك في الأقصر',
+      'specialRequests': 'طلبات خاصة (اختياري)',
+      'specialRequestsHint': 'مثل: مناسبة عيد ميلاد، لافتة ذكرى زواج...',
+      'nextPayment': 'المتابعة للدفع والتأكيد ←',
+      'orderSummary': 'ملخص الحجز',
+      'packageSelected': 'الباقة المختارة',
+      'priceBreakdown': 'تفاصيل السعر',
+      'subtotal': 'المجموع الفرعي',
+      'discount': 'الخصم',
+      'totalToPay': 'المبلغ الإجمالي',
+      'promoCoupon': 'كوبون الخصم أو كود الدعوة',
+      'apply': 'تطبيق',
+      'validCoupon': '✅ تم تطبيق خصم 10% بنجاح!',
+      'invalidCoupon': '❌ كود الخصم غير صحيح',
+      'paymentMethod': 'اختر وسيلة الدفع',
+      'creditCard': 'بطاقة بنكية (فيزا، ماستركارد)',
+      'appleGooglePay': 'أبل باي / جوجل باي',
+      'vodafoneCash': 'فودافون كاش / إنستاباي (InstaPay)',
+      'cashOnPickup': 'دفع نقدي عند الاستقبال (جنيه، دولار، يورو)',
+      'confirmAndBook': 'تأكيد وحجز الرحلة',
+      'processingBooking': 'جارٍ تأكيد مقاعدك...',
+      'pickupNoticeText':
+          '🚐 يبدأ التحرك من الفنادق قبل شروق الشمس بساعتين (03:45 - 04:15 صباحاً). سيتواصل معك السائق عبر الواتساب.',
+
+      // Booking Confirmation & Boarding Pass
+      'bookingConfirmed': 'تم تأكيد الحجز بنجاح! 🎉',
+      'confirmedSubtitle': 'استعد لتجربة ساحرة فوق معابد وسماء الأقصر.',
+      'digitalBoardingPass': 'بطاقة الصعود الرقمية (Boarding Pass)',
+      'showQrAtBoarding': 'أظهر هذا الباركود للسائق وفريق طيران المنطاد',
+      'bookingRef': 'رقم الحجز المرجعي',
+      'flightDate': 'تاريخ الرحلة',
+      'flightTime': 'موعد الإقلاع',
+      'pickupTime': 'موعد التوصيل من الفندق',
+      'pickupPoint': 'نقطة التجمع',
+      'guestsCount': 'عدد الأفراد',
+      'totalPaid': 'المبلغ المدفوع',
+      'trackDriverBtn': 'تتبع السائق ودليل يوم الرحلة',
+      'backToHome': 'العودة للرئيسية',
+
+      // Active Flight & Day-of Hub
+      'todayFlightExp': 'مركز تجربة يوم الرحلة',
+      'sunriseFlightToday': 'رحلة شروق الشمس اليوم',
+      'confirmedToFly': 'مؤكد للطيران',
+      'takeoff': '06:15 صباحاً - وقت الإقلاع',
+      'driverAssigned': 'سائق التوصيل المخصص لك',
+      'driverVanModel': 'تويوتا هاي أس (مكيفة وحديثة)',
+      'driverPlate': 'الأقصر: ل م ط ١٢٣٤',
+      'callDriver': 'اتصال بالسائق',
+      'whatsappDriver': 'واتساب',
+      'flightTimeline': 'الجدول الزمني لصباح الرحلة',
+      'timelineStep1': '03:45 ص - الاستقبال من بهو الفندق',
+      'timelineStep1Sub': 'السائق ينتظرك في الاستقبال حاملاً لافتة نايل سكاي',
+      'timelineStep2': '04:45 ص - عبور النيل وتناول الشاي',
+      'timelineStep2Sub': 'لانش نهري للبر الغربي مع شاي مصري بالنعناع',
+      'timelineStep3': '05:30 ص - نفخ المنطاد وإرشادات السلامة',
+      'timelineStep3Sub': 'مشاهدة إشعال البالونات تحت نجوم الصحراء',
+      'timelineStep4': '06:00 ص - انطلاق الرحلة مع شروق الشمس!',
+      'timelineStep4Sub': '45-60 دقيقة من التحليق فوق المعابد الفرعونية',
+      'weatherAdvisoryTitle': 'تقرير الطيران المدني وحالة الطقس',
+      'weatherAdvisoryBody':
+          'الرياح هادئة 8 كم/س، الرؤية ممتازة وتم التصريح بالرحلات رسمياً من الطيران المدني.',
+
+      // My Bookings
+      'myBookingsTitle': 'حجوزات رحلات البالون',
+      'upcomingTab': 'القادمة',
+      'pastTab': 'الرحلات السابقة',
+      'viewFlightDayHub': 'عرض تفاصيل وتتبع يوم الرحلة',
+      'boardingQrPass': 'باركود الصعود QR',
+      'completedBadge': 'مكتملة',
+      'ratingGiven': 'تقييمك للرحلة',
+      'noBookingsYet': 'لا توجد حجوزات حتى الآن. ابدأ مغامرتك في الأقصر الآن!',
+
+      // Profile & Settings
+      'myProfile': 'حسابي وبياناتي',
+      'displayCurrency': 'عملة العرض والأسعار',
+      'pushAlerts': 'تنبيهات السائق ومواعيد الإقلاع',
+      'pushAlertsSub': 'تلقي إشعارات وقت وصول السائق وتصاريح الطقس',
+      'cancellationPolicy': 'سياسة الإلغاء واسترداد الأموال',
+      'aboutNileSky': 'نايل سكاي الأقصر',
+      'aboutNileSkySub': 'المنصة الرسمية لحجز رحلات المنطاد الطائر في الأقصر',
+      'policyTitle': 'سياسة الأمان والاسترداد',
+      'policyRule1':
+          '• استرداد كامل 100% عند الإلغاء قبل موعد الرحلة بأكثر من 24 ساعة.',
+      'policyRule2': '• استرداد 50% عند الإلغاء بين 12 إلى 24 ساعة قبل الرحلة.',
+      'policyRule3':
+          '• استرداد فوري 100% في حال تعليق الرحلات بسبب سرعة الرياح أو تعليمات الطيران المدني.',
+
+      // Auth & Onboarding
+      'signIn': 'تسجيل الدخول',
+      'createAccount': 'إنشاء حساب جديد',
+      'fullName': 'الاسم بالكامل',
+      'emailAddress': 'البريد الإلكتروني',
+      'password': 'كلمة المرور',
+      'exploreAsGuest': 'تصفح الرحلات كزائر ←',
+      'skip': 'تخطي',
+      'next': 'التالي',
+      'getStarted': 'ابدأ الآن',
+      'onboarding1Title': 'اكتشف الأقصر\nمن السماء',
+      'onboarding1Sub':
+          'احجز رحلة منطاد ساحرة فوق وادي الملوك ومعابد الفراعنة مع شروق الشمس.',
+      'onboarding2Title': 'قارن واختر بين\nأفضل الشركات المعتمدة',
+      'onboarding2Sub':
+          'مقارنة سهلة بين كبرى الشركات المرخصة في الأقصر من حيث السعر والتقييمات.',
+      'onboarding3Title': 'حجز فوري مع\nالتوصيل وتذكرة QR',
+      'onboarding3Sub':
+          'توصيل مضمون من فندقك، متابعة حالة الطقس وتتبع السائق مع تذكرة رقمية فورية.',
+      'chooseLanguage': 'اختر لغتك المفضلة',
+      'chooseLanguageSub': 'حدد اللغة لتجربة مريحة وسلسة',
+    },
+
+    // -------------------------------------------------------------
+    // GERMAN (Deutsch)
+    // -------------------------------------------------------------
+    'de': {
+      'appName': 'NileSky',
+      'tagline': 'Heißluftballonflüge in Luxor',
+      'taglineSubtitle': 'Erleben Sie Ägypten von oben',
+      'luxorEgypt': 'Luxor, Ägypten',
+      'westBankZone': 'Westufer Sonnenaufgangszone',
+      'continueBtn': 'Weiter',
+      'backBtn': 'Zurück',
+      'saveBtn': 'Speichern',
+      'cancelBtn': 'Abbrechen',
+      'closeBtn': 'Schließen',
+      'gotIt': 'Verstanden',
+      'search': 'Suchen',
+      'seeAll': 'Alle anzeigen',
+      'explore': 'Entdecken',
+      'home': 'Startseite',
+      'myTrips': 'Meine Reisen',
+      'profile': 'Profil',
+      'confirm': 'Bestätigen',
+      'done': 'Fertig',
+      'verified': 'Zertifizierter Anbieter',
+      'stars': 'Sterne',
+      'reviews': 'Bewertungen',
+      'flights': 'Flüge',
+      'currency': 'Währung',
+      'language': 'Sprache',
+      'appLanguage': 'App-Sprache',
+      'safeToFly': 'Optimale Flugbedingungen',
+      'favorable': 'Günstig',
+      'uncertain': 'Wird geprüft',
+      'unfavorable': 'Flüge ausgesetzt',
+      'wind': 'Wind',
+      'visibility': 'Sicht',
+      'sunrise': 'Sonnenaufgang',
+      'perPerson': '/ Person',
+      'seatsLeft': 'Plätze frei',
+      'pickup': 'Transfer',
+      'breakfast': 'Frühstück',
+      'duration': 'Dauer',
+      'minutes': 'Min',
+
+      'greeting': '☀️ Guten Morgen, John',
+      'skyAdventureHeadline': 'Ihr Himmelsabenteuer\nbeginnt hier',
+      'findFlightTitle': 'Flug finden',
+      'date': 'Datum',
+      'tomorrow': 'Morgen',
+      'today': 'Heute',
+      'guests': 'Gäste',
+      'persons': 'Personen',
+      'searchFlightsInLuxor': 'Flüge in Luxor suchen',
+      'comparePackages': 'Flugpakete vergleichen',
+      'comparePackagesSub':
+          'Standard, Premium & Privatflüge im Direktvergleich',
+      'availableFlights': '🔥 NileSky Flugpakete',
+      'whyNileSky': '✨ Warum NileSky wählen?',
+      'whyNileSkySub': 'Direkte Organisation und höchste Sicherheitsstandards',
+      'nileSkyFeature1Title': '100% Sicherheitsbilanz',
+      'nileSkyFeature1Sub': 'Zertifiziert von der ägyptischen Zivilluftfahrtbehörde (#EGY-LXR-088).',
+      'nileSkyFeature2Title': 'Zertifizierte Chefpiloten',
+      'nileSkyFeature2Sub': 'Über 3.000 Flugstunden über dem Tal der Könige.',
+      'nileSkyFeature3Title': 'Kompletter VIP-Transfer',
+      'nileSkyFeature3Sub': 'Klimatisierte Kleinbusse & Nilüberquerung per Motorboot.',
+      'nileSkyFeature4Title': 'Moderne Ballonflotte',
+      'nileSkyFeature4Sub': 'Zertifizierte Qualitätsballons von Cameron & Kubicek.',
+      'trackPickup': 'Fahrer verfolgen',
+      'whyLuxorTitle': 'Warum Ballonfahren in Luxor?',
+      'whyLuxorDesc':
+          'Luxor ist die Welthauptstadt des Heißluftballonfahrens mit spektakulären Ausblicken auf das Tal der Könige und den Nil.',
+      'safeWindBadge': '🟢 Sichere Wind- und Sichtverhältnisse',
+
+      'availableFlightsTitle': 'Verfügbare Flüge in Luxor',
+      'allCategory': 'Alle',
+      'standardCategory': 'Standard',
+      'premiumCategory': 'Premium',
+      'privateCategory': 'Privat VIP',
+      'sortBy': 'Sortieren nach',
+      'sortByPrice': 'Niedrigster Preis',
+      'sortByRating': 'Beste Bewertung',
+      'sortByDuration': 'Längste Dauer',
+      'noFlightsFound': 'Keine passenden Flüge gefunden',
+      'addToCompare': 'Vergleichen',
+      'compareFlights': 'Flüge vergleichen',
+
+      'flightDetailsTitle': 'Flugdetails',
+      'bookNow': 'Jetzt buchen',
+      'bookThisFlight': 'Diesen Flug buchen',
+      'includesHotelPickup': 'Inklusive Hotel- & Kreuzfahrt-Transfer',
+      'includesBreakfast': 'Inklusive traditionellem Frühstück',
+      'pilotName': 'Pilot',
+      'balloonModel': 'Ballon',
+      'whatIncluded': 'Leistungen',
+      'flightPath': 'Flugroute & Highlights',
+      'valleyKingsDesc':
+          'Überfliegen Sie das Tal der Könige, den Hatschepsut-Tempel und den Nil.',
+      'safetyCertTitle': 'ECAA Luftfahrt-Sicherheitszertifiziert',
+      'safetyCertDesc':
+          'Erfahrene Piloten mit über 1.500 Flugstunden und täglicher behördlicher Freigabe.',
+      'cancelPolicyNotice':
+          'Kostenlose Stornierung bis 24h vorher. 100% Wetter-Garantie.',
+      'shareFlight': 'Flug teilen',
+      'linkCopied': 'Link in die Zwischenablage kopiert!',
+
+      'step1Of2': 'Schritt 1 von 2: Reisedetails & Passagiere',
+      'step2Of2': 'Schritt 2 von 2: Bezahlung & Bestätigung',
+      'selectFlightDate': 'Flugdatum',
+      'numberOfGuests': 'Anzahl der Passagiere',
+      'leadPassengerName': 'Name des Hauptpassagiers',
+      'whatsappPhone': 'WhatsApp / Telefonnummer',
+      'hotelPickupLocation': 'Hotel oder Nilkreuzfahrtschiff',
+      'selectHotelHint': 'Wählen Sie Ihre Unterkunft in Luxor',
+      'specialRequests': 'Besondere Wünsche (Optional)',
+      'specialRequestsHint': 'z.B. Geburtstag, Flitterwochen...',
+      'nextPayment': 'Weiter zur Bezahlung →',
+      'orderSummary': 'Buchungsübersicht',
+      'packageSelected': 'Ausgewähltes Paket',
+      'priceBreakdown': 'Preisübersicht',
+      'subtotal': 'Zwischensumme',
+      'discount': 'Rabatt',
+      'totalToPay': 'Gesamtbetrag',
+      'promoCoupon': 'Gutscheincode',
+      'apply': 'Einlösen',
+      'validCoupon': '✅ 10% Rabatt angewendet!',
+      'invalidCoupon': '❌ Ungültiger Gutscheincode',
+      'paymentMethod': 'Zahlungsart wählen',
+      'creditCard': 'Kreditkarte (Visa, Mastercard)',
+      'appleGooglePay': 'Apple Pay / Google Pay',
+      'vodafoneCash': 'Vodafone Cash / InstaPay',
+      'cashOnPickup': 'Barzahlung bei Abholung (EGP, USD, EUR)',
+      'confirmAndBook': 'Flug verbindlich buchen',
+      'processingBooking': 'Plätze werden reserviert...',
+      'pickupNoticeText':
+          '🚐 Die Abholung beginnt ca. 2 Stunden vor Sonnenaufgang (03:45 - 04:15 Uhr).',
+
+      'bookingConfirmed': 'Buchung bestätigt! 🎉',
+      'confirmedSubtitle':
+          'Freuen Sie sich auf einen magischen Sonnenaufgang über Luxor.',
+      'digitalBoardingPass': 'Digitaler Boarding-Pass',
+      'showQrAtBoarding': 'Diesen QR-Code beim Einstieg vorzeigen',
+      'bookingRef': 'Buchungsnummer',
+      'flightDate': 'Flugdatum',
+      'flightTime': 'Flugzeit',
+      'pickupTime': 'Abholzeit',
+      'pickupPoint': 'Abholort',
+      'guestsCount': 'Passagiere',
+      'totalPaid': 'Bezahlt',
+      'trackDriverBtn': 'Fahrer verfolgen & Flug-Guide',
+      'backToHome': 'Zurück zur Startseite',
+
+      'todayFlightExp': 'Heutiges Flugerlebnis',
+      'sunriseFlightToday': 'Sonnenaufgangsflug Heute',
+      'confirmedToFly': 'Flug bestätigt',
+      'takeoff': '06:15 Uhr Start',
+      'driverAssigned': 'Ihr Transfer-Fahrer',
+      'driverVanModel': 'Toyota HiAce (Klimatisiert)',
+      'driverPlate': 'Luxor ل م ط ١٢٣٤',
+      'callDriver': 'Fahrer anrufen',
+      'whatsappDriver': 'WhatsApp',
+      'flightTimeline': 'Ablauf am Flugmorgen',
+      'timelineStep1': '03:45 Uhr - Hotelabholung',
+      'timelineStep1Sub': 'Fahrer empfängt Sie in der Lobby',
+      'timelineStep2': '04:45 Uhr - Nilüberquerung & Tee',
+      'timelineStep2Sub': 'Bootstransfer zum Westufer mit ägyptischem Tee',
+      'timelineStep3': '05:30 Uhr - Ballonaufbau & Sicherheitseinweisung',
+      'timelineStep3Sub':
+          'Eindrucksvolles Befüllen der Ballons im Morgengrauen',
+      'timelineStep4': '06:00 Uhr - Start in den Sonnenaufgang!',
+      'timelineStep4Sub': '45-60 Minuten Flug über die antiken Tempel',
+      'weatherAdvisoryTitle': 'Flugwetter-Bericht',
+      'weatherAdvisoryBody':
+          'Ruhiger Wind mit 8 km/h. Offizielle Freigabe durch die ägyptische Zivilluftfahrtbehörde.',
+
+      'myBookingsTitle': 'Meine Ballonbuchungen',
+      'upcomingTab': 'Bevorstehend',
+      'pastTab': 'Vergangene Flüge',
+      'viewFlightDayHub': 'Flug-Hub ansehen',
+      'boardingQrPass': 'QR-Boardingpass',
+      'completedBadge': 'Abgeschlossen',
+      'ratingGiven': 'Ihre Bewertung',
+      'noBookingsYet': 'Noch keine Buchungen vorhanden.',
+
+      'myProfile': 'Mein Profil',
+      'displayCurrency': 'Währung anzeigen',
+      'pushAlerts': 'Flug- & Transfer-Benachrichtigungen',
+      'pushAlertsSub': 'Erhalten Sie Updates zu Abholung und Wetter',
+      'cancellationPolicy': 'Stornierungs- & Erstattungsrichtlinien',
+      'aboutNileSky': 'NileSky Luxor',
+      'aboutNileSkySub':
+          'Offizielle Buchungsplattform für Ballonflüge in Luxor',
+      'policyTitle': 'Sicherheits- & Erstattungsrichtlinie',
+      'policyRule1': '• 100% Erstattung bei Stornierung bis 24 Stunden vorher.',
+      'policyRule2': '• 50% Erstattung bei Stornierung 12-24 Stunden vorher.',
+      'policyRule3':
+          '• 100% automatische Rückerstattung bei wetterbedingtem Flugausfall.',
+
+      'signIn': 'Anmelden',
+      'createAccount': 'Konto erstellen',
+      'fullName': 'Vollständiger Name',
+      'emailAddress': 'E-Mail-Adresse',
+      'password': 'Passwort',
+      'exploreAsGuest': 'Als Gast stöbern →',
+      'skip': 'Überspringen',
+      'next': 'Weiter',
+      'getStarted': 'Loslegen',
+      'onboarding1Title': 'Entdecken Sie Luxor\naus der Luft',
+      'onboarding1Sub':
+          'Buchen Sie unvergessliche Ballonflüge bei Sonnenaufgang über dem Tal der Könige.',
+      'onboarding2Title': 'Vergleichen Sie\ngeprüfte Anbieter',
+      'onboarding2Sub':
+          'Finden Sie den besten Fluganbieter mit transparenten Preisen und Bewertungen.',
+      'onboarding3Title': 'Sofort buchen mit\nHoteltransfer & QR-Ticket',
+      'onboarding3Sub':
+          'Inklusive Hotelabholung, Wetterprüfung und digitalem Boarding-Pass.',
+      'chooseLanguage': 'Sprache auswählen',
+      'chooseLanguageSub':
+          'Wählen Sie Ihre bevorzugte Sprache für die beste Erfahrung',
+    },
+
+    // -------------------------------------------------------------
+    // FRENCH (Français)
+    // -------------------------------------------------------------
+    'fr': {
+      'appName': 'NileSky',
+      'tagline': 'Vols en Montgolfière à Louxor',
+      'taglineSubtitle': 'Découvrez l’Égypte depuis le ciel',
+      'luxorEgypt': 'Louxor, Égypte',
+      'westBankZone': 'Rive Ouest - Lever de soleil',
+      'continueBtn': 'Continuer',
+      'backBtn': 'Retour',
+      'saveBtn': 'Enregistrer',
+      'cancelBtn': 'Annuler',
+      'closeBtn': 'Fermer',
+      'gotIt': 'Compris',
+      'search': 'Rechercher',
+      'seeAll': 'Voir tout',
+      'explore': 'Explorer',
+      'home': 'Accueil',
+      'myTrips': 'Mes Voyages',
+      'profile': 'Profil',
+      'confirm': 'Confirmer',
+      'done': 'Terminé',
+      'verified': 'Opérateur Agréé',
+      'stars': 'Étoiles',
+      'reviews': 'avis',
+      'flights': 'vols',
+      'currency': 'Devise',
+      'language': 'Langue',
+      'appLanguage': 'Langue de l’application',
+      'safeToFly': 'Conditions de vol idéales',
+      'favorable': 'Favorable',
+      'uncertain': 'En cours d’évaluation',
+      'unfavorable': 'Vols suspendus',
+      'wind': 'Vent',
+      'visibility': 'Visibilité',
+      'sunrise': 'Lever du soleil',
+      'perPerson': '/ personne',
+      'seatsLeft': 'places restantes',
+      'pickup': 'Navette',
+      'breakfast': 'Petit déjeuner',
+      'duration': 'Durée',
+      'minutes': 'min',
+
+      'greeting': '☀️ Bonjour, John',
+      'skyAdventureHeadline': 'Votre aventure dans le ciel\ncommence ici',
+      'findFlightTitle': 'Trouvez votre vol',
+      'date': 'Date',
+      'tomorrow': 'Demain',
+      'today': 'Aujourd’hui',
+      'guests': 'Passagers',
+      'persons': 'personnes',
+      'searchFlightsInLuxor': 'Rechercher des vols à Louxor',
+      'comparePackages': 'Comparer les offres',
+      'comparePackagesSub': 'Vols Standard, Premium et Privés côte à côte',
+      'availableFlights': '🔥 Forfaits de Vol NileSky',
+      'whyNileSky': '✨ Pourquoi choisir NileSky ?',
+      'whyNileSkySub': 'Organisation directe et normes de sécurité maximales',
+      'nileSkyFeature1Title': '100% Bilan de Sécurité',
+      'nileSkyFeature1Sub': 'Certifié par l’Aviation Civile Égyptienne (#EGY-LXR-088).',
+      'nileSkyFeature2Title': 'Capitaines Pilotes Certifiés',
+      'nileSkyFeature2Sub': 'Plus de 3 000 heures de vol au-dessus de la Vallée des Rois.',
+      'nileSkyFeature3Title': 'Transfert VIP Complet',
+      'nileSkyFeature3Sub': 'Minibus climatisés et traversée du Nil en bateau à moteur.',
+      'nileSkyFeature4Title': 'Flotte Ultra-Moderne',
+      'nileSkyFeature4Sub': 'Montgolfières certifiées Cameron & Kubicek UK/EU.',
+      'trackPickup': 'Suivre la navette',
+      'whyLuxorTitle': 'Pourquoi voler à Louxor ?',
+      'whyLuxorDesc':
+          'Louxor est la capitale mondiale de la montgolfière avec des vues magiques sur la Vallée des Rois et le Nil.',
+      'safeWindBadge': '🟢 Conditions de vent et visibilité idéales',
+
+      'availableFlightsTitle': 'Vols Disponibles à Louxor',
+      'allCategory': 'Tous',
+      'standardCategory': 'Standard',
+      'premiumCategory': 'Premium',
+      'privateCategory': 'Privé VIP',
+      'sortBy': 'Trier par',
+      'sortByPrice': 'Prix le plus bas',
+      'sortByRating': 'Mieux notés',
+      'sortByDuration': 'Durée',
+      'noFlightsFound': 'Aucun vol correspondant trouvé',
+      'addToCompare': 'Comparer',
+      'compareFlights': 'Comparer les vols',
+
+      'flightDetailsTitle': 'Détails du vol',
+      'bookNow': 'Réserver',
+      'bookThisFlight': 'Réserver ce vol',
+      'includesHotelPickup': 'Prise en charge à l’hôtel ou bateau incluse',
+      'includesBreakfast': 'Petit déjeuner traditionnel inclus',
+      'pilotName': 'Pilote',
+      'balloonModel': 'Montgolfière',
+      'whatIncluded': 'Ce qui est inclus',
+      'flightPath': 'Itinéraire et monuments',
+      'valleyKingsDesc':
+          'Survolez la Vallée des Rois, le temple d’Hatchepsout et le fleuve Nil.',
+      'safetyCertTitle': 'Certifié Sécurité Aviation Civile Égyptienne',
+      'safetyCertDesc':
+          'Pilotes chevronnés ayant plus de 1 500 heures de vol avec autorisation officielle.',
+      'cancelPolicyNotice':
+          'Annulation gratuite jusqu’à 24h avant. Remboursement météo à 100%.',
+      'shareFlight': 'Partager le vol',
+      'linkCopied': 'Lien copié dans le presse-papiers !',
+
+      'step1Of2': 'Étape 1 sur 2 : Voyage et Passagers',
+      'step2Of2': 'Étape 2 sur 2 : Paiement et Confirmation',
+      'selectFlightDate': 'Date du vol',
+      'numberOfGuests': 'Nombre de passagers',
+      'leadPassengerName': 'Nom du passager principal',
+      'whatsappPhone': 'Numéro WhatsApp / Téléphone',
+      'hotelPickupLocation': 'Hôtel ou quai de croisière',
+      'selectHotelHint': 'Sélectionnez votre hébergement à Louxor',
+      'specialRequests': 'Demandes particulières (Optionnel)',
+      'specialRequestsHint': 'ex : Anniversaire, lune de miel...',
+      'nextPayment': 'Continuer vers le paiement →',
+      'orderSummary': 'Récapitulatif de la réservation',
+      'packageSelected': 'Offre sélectionnée',
+      'priceBreakdown': 'Détail du prix',
+      'subtotal': 'Sous-total',
+      'discount': 'Réduction',
+      'totalToPay': 'Montant total',
+      'promoCoupon': 'Code promo',
+      'apply': 'Appliquer',
+      'validCoupon': '✅ Réduction de 10% appliquée !',
+      'invalidCoupon': '❌ Code promo invalide',
+      'paymentMethod': 'Mode de paiement',
+      'creditCard': 'Carte bancaire (Visa, Mastercard)',
+      'appleGooglePay': 'Apple Pay / Google Pay',
+      'vodafoneCash': 'Vodafone Cash / InstaPay',
+      'cashOnPickup': 'Espèces à la prise en charge (EGP, USD, EUR)',
+      'confirmAndBook': 'Confirmer et Réserver',
+      'processingBooking': 'Réservation de vos places en cours...',
+      'pickupNoticeText':
+          '🚐 La prise en charge débute 2 heures avant le lever du soleil (03h45 - 04h15).',
+
+      'bookingConfirmed': 'Réservation Confirmée ! 🎉',
+      'confirmedSubtitle':
+          'Préparez-vous à un lever de soleil inoubliable sur Louxor.',
+      'digitalBoardingPass': 'Carte d’embarquement numérique',
+      'showQrAtBoarding': 'Présentez ce QR code au chauffeur et à l’équipage',
+      'bookingRef': 'Référence de réservation',
+      'flightDate': 'Date du vol',
+      'flightTime': 'Heure du vol',
+      'pickupTime': 'Heure de prise en charge',
+      'pickupPoint': 'Lieu de prise en charge',
+      'guestsCount': 'Passagers',
+      'totalPaid': 'Total payé',
+      'trackDriverBtn': 'Suivre le chauffeur & Guide du jour',
+      'backToHome': 'Retour à l’accueil',
+
+      'todayFlightExp': 'Espace du vol du jour',
+      'sunriseFlightToday': 'Vol au lever du soleil aujourd’hui',
+      'confirmedToFly': 'Vol confirmé',
+      'takeoff': '06h15 Décollage',
+      'driverAssigned': 'Votre chauffeur',
+      'driverVanModel': 'Toyota HiAce (Climatisé)',
+      'driverPlate': 'Louxor ل م ط ١٢٣٤',
+      'callDriver': 'Appeler le chauffeur',
+      'whatsappDriver': 'WhatsApp',
+      'flightTimeline': 'Déroulement de la matinée',
+      'timelineStep1': '03h45 - Prise en charge à l’hôtel',
+      'timelineStep1Sub': 'Le chauffeur vous attend dans le hall',
+      'timelineStep2': '04h45 - Traversée du Nil et thé chaud',
+      'timelineStep2Sub': 'Bateau vers la rive ouest avec thé à la menthe',
+      'timelineStep3': '05h30 - Gonflage et consignes de sécurité',
+      'timelineStep3Sub': 'Spectacle grandiose du gonflage des ballons',
+      'timelineStep4': '06h00 - Envol au lever du soleil !',
+      'timelineStep4Sub': '45-60 minutes au-dessus des temples antiques',
+      'weatherAdvisoryTitle': 'Météo et Sécurité Aérienne',
+      'weatherAdvisoryBody':
+          'Vent calme à 8 km/h. Autorisation officielle accordée par l’Aviation Civile Égyptienne.',
+
+      'myBookingsTitle': 'Mes Réservations',
+      'upcomingTab': 'À venir',
+      'pastTab': 'Vols passés',
+      'viewFlightDayHub': 'Voir l’espace de vol',
+      'boardingQrPass': 'QR Code d’embarquement',
+      'completedBadge': 'Terminé',
+      'ratingGiven': 'Votre avis',
+      'noBookingsYet': 'Aucune réservation pour le moment.',
+
+      'myProfile': 'Mon Profil',
+      'displayCurrency': 'Devise d’affichage',
+      'pushAlerts': 'Alertes de vol et de navette',
+      'pushAlertsSub': 'Recevez les rappels de prise en charge et la météo',
+      'cancellationPolicy': 'Politique d’annulation et remboursement',
+      'aboutNileSky': 'NileSky Louxor',
+      'aboutNileSkySub':
+          'Plateforme officielle de réservation de montgolfières à Louxor',
+      'policyTitle': 'Politique de Sécurité & Remboursement',
+      'policyRule1': '• Remboursement à 100% si annulé plus de 24h à l’avance.',
+      'policyRule2': '• Remboursement à 50% si annulé entre 12h et 24h avant.',
+      'policyRule3':
+          '• Remboursement automatique à 100% en cas d’annulation météo.',
+
+      'signIn': 'Connexion',
+      'createAccount': 'Créer un compte',
+      'fullName': 'Nom complet',
+      'emailAddress': 'Adresse e-mail',
+      'password': 'Mot de passe',
+      'exploreAsGuest': 'Explorer en tant qu’invité →',
+      'skip': 'Passer',
+      'next': 'Suivant',
+      'getStarted': 'Commencer',
+      'onboarding1Title': 'Découvrez Louxor\ndepuis le ciel',
+      'onboarding1Sub':
+          'Réservez des vols inoubliables au lever du soleil au-dessus de la Vallée des Rois.',
+      'onboarding2Title': 'Comparez les\nopérateurs vérifiés',
+      'onboarding2Sub':
+          'Comparez facilement les opérateurs reconnus en termes de prix et de qualité.',
+      'onboarding3Title': 'Réservation instantanée\navec navette et QR code',
+      'onboarding3Sub':
+          'Navette hôtel garantie, météo en direct et billets numériques instantanés.',
+      'chooseLanguage': 'Choisissez votre langue',
+      'chooseLanguageSub':
+          'Sélectionnez votre langue pour une expérience personnalisée',
+    },
+
+    // -------------------------------------------------------------
+    // SPANISH (Español)
+    // -------------------------------------------------------------
+    'es': {
+      'appName': 'NileSky',
+      'tagline': 'Vuelos en Globo en Lúxor',
+      'taglineSubtitle': 'Vea Egipto desde el cielo',
+      'luxorEgypt': 'Lúxor, Egipto',
+      'westBankZone': 'Orilla Occidental - Amanecer',
+      'continueBtn': 'Continuar',
+      'backBtn': 'Atrás',
+      'saveBtn': 'Guardar',
+      'cancelBtn': 'Cancelar',
+      'closeBtn': 'Cerrar',
+      'gotIt': 'Entendido',
+      'search': 'Buscar',
+      'seeAll': 'Ver todo',
+      'explore': 'Explorar',
+      'home': 'Inicio',
+      'myTrips': 'Mis Viajes',
+      'profile': 'Perfil',
+      'confirm': 'Confirmar',
+      'done': 'Listo',
+      'verified': 'Operador Verificado',
+      'stars': 'Estrellas',
+      'reviews': 'opiniones',
+      'flights': 'vuelos',
+      'currency': 'Moneda',
+      'language': 'Idioma',
+      'appLanguage': 'Idioma de la aplicación',
+      'safeToFly': 'Condiciones óptimas de vuelo',
+      'favorable': 'Favorable',
+      'uncertain': 'En evaluación',
+      'unfavorable': 'Vuelos suspendidos',
+      'wind': 'Viento',
+      'visibility': 'Visibilidad',
+      'sunrise': 'Amanecer',
+      'perPerson': '/ persona',
+      'seatsLeft': 'asientos disponibles',
+      'pickup': 'Traslado',
+      'breakfast': 'Desayuno',
+      'duration': 'Duración',
+      'minutes': 'min',
+
+      'greeting': '☀️ Buenos días, John',
+      'skyAdventureHeadline': 'Su aventura en el cielo\ncomienza aquí',
+      'findFlightTitle': 'Encuentre su vuelo',
+      'date': 'Fecha',
+      'tomorrow': 'Mañana',
+      'today': 'Hoy',
+      'guests': 'Pasajeros',
+      'persons': 'personas',
+      'searchFlightsInLuxor': 'Buscar vuelos en Lúxor',
+      'comparePackages': 'Comparar paquetes de vuelo',
+      'comparePackagesSub': 'Vuelos Estándar, Premium y Privados cara a cara',
+      'availableFlights': '🔥 Paquetes de Vuelo NileSky',
+      'whyNileSky': '✨ ¿Por qué elegir NileSky?',
+      'whyNileSkySub': 'Organización directa y máximos estándares de seguridad',
+      'nileSkyFeature1Title': '100% Récord de Seguridad',
+      'nileSkyFeature1Sub': 'Certificado por la Aviación Civil de Egipto (#EGY-LXR-088).',
+      'nileSkyFeature2Title': 'Capitanes Pilotos Certificados',
+      'nileSkyFeature2Sub': 'Más de 3.000 horas de vuelo sobre el Valle de los Reyes.',
+      'nileSkyFeature3Title': 'Traslado VIP Completo',
+      'nileSkyFeature3Sub': 'Minibuses con aire acondicionado y cruce del Nilo en lancha motora.',
+      'nileSkyFeature4Title': 'Flota Ultra Moderna',
+      'nileSkyFeature4Sub': 'Globos aerostáticos certificados Cameron & Kubicek UK/EU.',
+      'trackPickup': 'Rastrear traslado',
+      'whyLuxorTitle': '¿Por qué volar en Lúxor?',
+      'whyLuxorDesc':
+          'Lúxor es la capital mundial del vuelo en globo aerostático con vistas impresionantes al Valle de los Reyes y al Nilo.',
+      'safeWindBadge': '🟢 Condiciones de viento y visibilidad ideales',
+
+      'availableFlightsTitle': 'Vuelos Disponibles en Lúxor',
+      'allCategory': 'Todos',
+      'standardCategory': 'Estándar',
+      'premiumCategory': 'Premium',
+      'privateCategory': 'Privado VIP',
+      'sortBy': 'Ordenar por',
+      'sortByPrice': 'Menor precio',
+      'sortByRating': 'Mejor valorados',
+      'sortByDuration': 'Duración',
+      'noFlightsFound': 'No se encontraron vuelos coincidentes',
+      'addToCompare': 'Comparar',
+      'compareFlights': 'Comparar vuelos',
+
+      'flightDetailsTitle': 'Detalles del vuelo',
+      'bookNow': 'Reservar ahora',
+      'bookThisFlight': 'Reservar este vuelo',
+      'includesHotelPickup': 'Traslado incluido desde hotel o crucero',
+      'includesBreakfast': 'Desayuno tradicional incluido',
+      'pilotName': 'Piloto',
+      'balloonModel': 'Globo',
+      'whatIncluded': 'Qué incluye',
+      'flightPath': 'Ruta de vuelo y monumentos',
+      'valleyKingsDesc':
+          'Vole sobre el Valle de los Reyes, el templo de Hatshepsut y el Río Nilo.',
+      'safetyCertTitle': 'Certificado por Aviación Civil de Egipto',
+      'safetyCertDesc':
+          'Pilotos con más de 1.500 horas de vuelo y autorización oficial diaria.',
+      'cancelPolicyNotice':
+          'Cancelación gratuita hasta 24h antes. 100% reembolso por clima.',
+      'shareFlight': 'Compartir vuelo',
+      'linkCopied': '¡Enlace copiado al portapapeles!',
+
+      'step1Of2': 'Paso 1 de 2: Detalles del viaje y Pasajeros',
+      'step2Of2': 'Paso 2 de 2: Pago y Confirmación',
+      'selectFlightDate': 'Fecha de vuelo',
+      'numberOfGuests': 'Número de pasajeros',
+      'leadPassengerName': 'Nombre del pasajero principal',
+      'whatsappPhone': 'WhatsApp / Teléfono móvil',
+      'hotelPickupLocation': 'Hotel o muelle de crucero',
+      'selectHotelHint': 'Seleccione su alojamiento en Lúxor',
+      'specialRequests': 'Peticiones especiales (Opcional)',
+      'specialRequestsHint': 'ej. Cumpleaños, aniversario...',
+      'nextPayment': 'Continuar al pago →',
+      'orderSummary': 'Resumen de la reserva',
+      'packageSelected': 'Paquete seleccionado',
+      'priceBreakdown': 'Desglose del precio',
+      'subtotal': 'Subtotal',
+      'discount': 'Descuento',
+      'totalToPay': 'Monto total',
+      'promoCoupon': 'Código promocional',
+      'apply': 'Aplicar',
+      'validCoupon': '✅ ¡10% de descuento aplicado!',
+      'invalidCoupon': '❌ Código no válido',
+      'paymentMethod': 'Método de pago',
+      'creditCard': 'Tarjeta de crédito / débito',
+      'appleGooglePay': 'Apple Pay / Google Pay',
+      'vodafoneCash': 'Vodafone Cash / InstaPay',
+      'cashOnPickup': 'Efectivo en la recogida (EGP, USD, EUR)',
+      'confirmAndBook': 'Confirmar y Reservar',
+      'processingBooking': 'Asegurando sus plazas...',
+      'pickupNoticeText':
+          '🚐 La recogida en el hotel comienza 2 horas antes del amanecer (03:45 - 04:15 AM).',
+
+      'bookingConfirmed': '¡Reserva Confirmada! 🎉',
+      'confirmedSubtitle':
+          'Prepárese para un amanecer inolvidable sobre Lúxor.',
+      'digitalBoardingPass': 'Tarjeta de embarque digital',
+      'showQrAtBoarding':
+          'Muestre este código QR al conductor y equipo de vuelo',
+      'bookingRef': 'Referencia de reserva',
+      'flightDate': 'Fecha de vuelo',
+      'flightTime': 'Hora de vuelo',
+      'pickupTime': 'Hora de recogida',
+      'pickupPoint': 'Punto de recogida',
+      'guestsCount': 'Pasajeros',
+      'totalPaid': 'Total pagado',
+      'trackDriverBtn': 'Rastrear conductor y Guía del día',
+      'backToHome': 'Volver al inicio',
+
+      'todayFlightExp': 'Centro del vuelo de hoy',
+      'sunriseFlightToday': 'Vuelo de amanecer hoy',
+      'confirmedToFly': 'Vuelo confirmado',
+      'takeoff': '06:15 AM Despegue',
+      'driverAssigned': 'Su conductor de traslado',
+      'driverVanModel': 'Toyota HiAce (Con aire acondicionado)',
+      'driverPlate': 'Lúxor ل م ط ١٢٣٤',
+      'callDriver': 'Llamar al conductor',
+      'whatsappDriver': 'WhatsApp',
+      'flightTimeline': 'Cronograma de la mañana',
+      'timelineStep1': '03:45 AM - Recogida en el hotel',
+      'timelineStep1Sub': 'El conductor le espera en la recepción',
+      'timelineStep2': '04:45 AM - Cruce del Nilo y té',
+      'timelineStep2Sub': 'Lancha hacia la orilla occidental con té egipcio',
+      'timelineStep3': '05:30 AM - Inflado y charla de seguridad',
+      'timelineStep3Sub': 'Espectáculo de inflado bajo las estrellas',
+      'timelineStep4': '06:00 AM - ¡Despegue al amanecer!',
+      'timelineStep4Sub': '45-60 minutos sobrevolando los templos faraónicos',
+      'weatherAdvisoryTitle': 'Informe meteorológico de aviación',
+      'weatherAdvisoryBody':
+          'Viento suave a 8 km/h. Autorización oficial de la Autoridad de Aviación Civil de Egipto.',
+
+      'myBookingsTitle': 'Mis Reservas de Vuelo',
+      'upcomingTab': 'Próximas',
+      'pastTab': 'Vuelos pasados',
+      'viewFlightDayHub': 'Ver centro de vuelo',
+      'boardingQrPass': 'Pase de embarque QR',
+      'completedBadge': 'Completado',
+      'ratingGiven': 'Su calificación',
+      'noBookingsYet': 'Aún no tiene reservas.',
+
+      'myProfile': 'Mi Perfil',
+      'displayCurrency': 'Moneda de visualización',
+      'pushAlerts': 'Alertas de vuelo y conductor',
+      'pushAlertsSub': 'Reciba recordatorios de recogida y avisos del clima',
+      'cancellationPolicy': 'Política de cancelación y reembolso',
+      'aboutNileSky': 'NileSky Lúxor',
+      'aboutNileSkySub': 'Plataforma oficial de reservas de globos en Lúxor',
+      'policyTitle': 'Política de Seguridad y Reembolso',
+      'policyRule1': '• Reembolso del 100% cancelando más de 24h antes.',
+      'policyRule2': '• Reembolso del 50% cancelando 12-24h antes.',
+      'policyRule3':
+          '• Reembolso automático del 100% si el vuelo se suspende por clima.',
+
+      'signIn': 'Iniciar sesión',
+      'createAccount': 'Crear cuenta',
+      'fullName': 'Nombre completo',
+      'emailAddress': 'Correo electrónico',
+      'password': 'Contraseña',
+      'exploreAsGuest': 'Explorar como invitado →',
+      'skip': 'Saltar',
+      'next': 'Siguiente',
+      'getStarted': 'Comenzar',
+      'onboarding1Title': 'Descubra Lúxor\ndesde el cielo',
+      'onboarding1Sub':
+          'Reserve vuelos inolvidables al amanecer sobre el Valle de los Reyes.',
+      'onboarding2Title': 'Compare operadores\nverificados',
+      'onboarding2Sub':
+          'Compare fácilmente operadores certificados por precio y valoración.',
+      'onboarding3Title': 'Reserva instantánea con\ntraslado y billete QR',
+      'onboarding3Sub':
+          'Recogida garantizada, chequeo meteorológico y billete digital inmediato.',
+      'chooseLanguage': 'Elija su idioma',
+      'chooseLanguageSub': 'Seleccione su idioma para una experiencia óptima',
+    },
+  };
+
+  static String tr(String key) {
+    final lang = currentLanguageCode;
+    if (_translations.containsKey(lang) &&
+        _translations[lang]!.containsKey(key)) {
+      return _translations[lang]![key]!;
+    }
+    // Fallback to English
+    return _translations['en']?[key] ?? key;
+  }
+}
+
+// Extension for clean context.tr('key') access
+extension LocalizationExtension on BuildContext {
+  String tr(String key) => LanguageService.tr(key);
+}
+
+// Language Picker Bottom Sheet for quick 1-tap switching anywhere in the app
+class LanguagePickerSheet extends StatelessWidget {
+  const LanguagePickerSheet({super.key});
+
+  static void show(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      backgroundColor: Colors.white,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+      ),
+      builder: (_) => const LanguagePickerSheet(),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final current = LanguageService.currentLanguageCode;
+
+    return SafeArea(
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 20),
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: const BoxDecoration(
+                        gradient: LinearGradient(
+                          colors: [Color(0xFFFFB800), Color(0xFFFF5E36)],
+                        ),
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Text('🌐', style: TextStyle(fontSize: 18)),
+                    ),
+                    const SizedBox(width: 12),
+                    Text(
+                      LanguageService.tr('chooseLanguage'),
+                      style: const TextStyle(
+                        color: Color(0xFF0F172A),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.white54),
+                  onPressed: () => Navigator.pop(context),
+                ),
+              ],
+            ),
+            const SizedBox(height: 18),
+            ...LanguageService.supportedLanguages.map((lang) {
+              final isSelected = lang['code'] == current;
+              return GestureDetector(
+                onTap: () {
+                  LanguageService.setLanguage(lang['code']!);
+                  Navigator.pop(context);
+                },
+                child: AnimatedContainer(
+                  duration: const Duration(milliseconds: 200),
+                  margin: const EdgeInsets.only(bottom: 10),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 14,
+                  ),
+                  decoration: BoxDecoration(
+                    gradient: isSelected
+                        ? const LinearGradient(
+                            colors: [Color(0xFF1E293B), Color(0xFF141E33)],
+                          )
+                        : null,
+                    color: isSelected ? null : const Color(0xFF192438),
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(
+                      color: isSelected
+                          ? const Color(0xFFFFB800)
+                          : const Color(0xFF26334D),
+                      width: isSelected ? 2 : 1,
+                    ),
+                    boxShadow: isSelected
+                        ? [
+                            BoxShadow(
+                              color: const Color(
+                                0xFFFFB800,
+                              ).withValues(alpha: 0.2),
+                              blurRadius: 10,
+                              offset: const Offset(0, 2),
+                            ),
+                          ]
+                        : null,
+                  ),
+                  child: Row(
+                    children: [
+                      Text(lang['flag']!, style: const TextStyle(fontSize: 26)),
+                      const SizedBox(width: 14),
+                      Expanded(
+                        child: Text(
+                          lang['native']!,
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.w500,
+                          ),
+                        ),
+                      ),
+                      Text(
+                        lang['name']!,
+                        style: TextStyle(
+                          color: isSelected
+                              ? const Color(0xFFFFB800)
+                              : Colors.white54,
+                          fontSize: 13,
+                          fontWeight: isSelected
+                              ? FontWeight.bold
+                              : FontWeight.normal,
+                        ),
+                      ),
+                      if (isSelected) ...[
+                        const SizedBox(width: 10),
+                        const Icon(
+                          Icons.check_circle,
+                          color: Color(0xFFFFB800),
+                          size: 20,
+                        ),
+                      ],
+                    ],
+                  ),
+                ),
+              );
+            }),
+          ],
+        ),
+      ),
+    );
+  }
+}
