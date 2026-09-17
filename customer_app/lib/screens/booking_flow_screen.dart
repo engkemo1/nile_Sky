@@ -4,6 +4,7 @@ import '../models/flight.dart';
 import '../services/api_service.dart';
 import '../services/localization_service.dart';
 import '../utils/date_helper.dart';
+import 'auth_screen.dart';
 import 'booking_confirmation_screen.dart';
 
 class BookingFlowScreen extends StatefulWidget {
@@ -20,11 +21,16 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   int _guestCount = 2;
   DateTime _selectedDate = DateTime.now().add(const Duration(days: 1));
   String _selectedHotel = 'Steigenberger Nile Palace';
-  final _nameController = TextEditingController(text: 'John Smith');
-  final _phoneController = TextEditingController(text: '+20 101 234 5678');
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
   final _specialRequestsController = TextEditingController();
-  final _couponController = TextEditingController(text: 'WELCOME10');
-  double _discountPercent = 0.10;
+  final _couponController = TextEditingController();
+  // Validated coupon, mirrored from the server so the displayed total matches
+  // what the backend actually charges.
+  String? _appliedCouponCode;
+  String? _couponType;      // 'percentage' | 'fixed'
+  double _couponValue = 0;  // percent points, or EGP for a fixed coupon
+  double _couponMaxDiscountEgp = 0; // 0 = uncapped
   String? _couponStatusText;
   bool _isProcessing = false;
   String _paymentMethod = 'card';
@@ -43,7 +49,6 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
   @override
   void initState() {
     super.initState();
-    _couponStatusText = '✅ 10% Discount Applied!';
     if (widget.flight.flightDate.isNotEmpty) {
       try {
         _selectedDate = DateTime.parse(widget.flight.flightDate);
@@ -80,39 +85,74 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
 
     try {
       final res = await ApiService.validateCoupon(code);
-      if (res != null && (res['valid'] == true || res['isValid'] == true)) {
-        final val = (res['discountValue'] ?? res['discount'] ?? 10).toDouble();
-        final type = res['type'] ?? res['discountType'] ?? 'percentage';
+      // The endpoint returns the coupon record itself on success.
+      if (res != null && res['code'] != null) {
+        final type = (res['type'] ?? 'percentage').toString();
+        final val = double.tryParse(res['value']?.toString() ?? '0') ?? 0;
+        final cap = double.tryParse(res['maxDiscountEgp']?.toString() ?? '0') ?? 0;
         setState(() {
-          _discountPercent = type == 'percentage' ? (val / 100.0) : 0.10;
-          _couponStatusText = '✅ $code: ${type == 'percentage' ? "${val.toInt()}%" : "${val.toInt()} EGP"} Discount Applied!';
+          _appliedCouponCode = code;
+          _couponType = type;
+          _couponValue = val;
+          _couponMaxDiscountEgp = cap;
+          _couponStatusText = type == 'percentage'
+              ? '✅ $code: ${val.toStringAsFixed(0)}% off'
+              : '✅ $code: ${val.toStringAsFixed(0)} EGP off';
         });
         return;
       }
     } catch (_) {}
 
     setState(() {
-      _discountPercent = 0.0;
+      _appliedCouponCode = null;
+      _couponType = null;
+      _couponValue = 0;
+      _couponMaxDiscountEgp = 0;
       _couponStatusText = context.tr('invalidCoupon');
     });
   }
 
+  /// Mirrors the backend's coupon maths so the total shown is the total charged.
+  double _discountFor(double subtotal) {
+    if (_appliedCouponCode == null) return 0;
+    double d = _couponType == 'percentage'
+        ? subtotal * (_couponValue / 100.0)
+        : _couponValue;
+    if (_couponMaxDiscountEgp > 0 && d > _couponMaxDiscountEgp) {
+      d = _couponMaxDiscountEgp;
+    }
+    return d > subtotal ? subtotal : d;
+  }
+
   Future<void> _completeBooking() async {
+    // Booking requires an account; send guests to sign in instead of throwing.
+    if (!ApiService.isLoggedIn) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please sign in to complete your booking.'),
+          backgroundColor: AppColors.error,
+        ),
+      );
+      Navigator.push(
+        context,
+        MaterialPageRoute(builder: (_) => const AuthScreen()),
+      );
+      return;
+    }
+
     setState(() => _isProcessing = true);
-    await Future.delayed(const Duration(milliseconds: 1000));
+    try {
+      final booking = await ApiService.createBooking(
+        flightId: widget.flight.id,
+        guestCount: _guestCount,
+        pickupHotelName: _selectedHotel,
+        couponCode: _appliedCouponCode,
+        specialRequests: _specialRequestsController.text.trim().isNotEmpty
+            ? _specialRequestsController.text.trim()
+            : null,
+      );
 
-    final booking = await ApiService.createBooking(
-      flightId: widget.flight.id,
-      guestCount: _guestCount,
-      pickupHotelName: _selectedHotel,
-      couponCode: _discountPercent > 0 ? _couponController.text.trim().toUpperCase() : null,
-      specialRequests: _specialRequestsController.text.trim().isNotEmpty
-          ? _specialRequestsController.text.trim()
-          : null,
-    );
-
-    if (mounted) {
-      setState(() => _isProcessing = false);
+      if (!mounted) return;
       Navigator.pushReplacement(
         context,
         MaterialPageRoute(
@@ -122,13 +162,25 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
           ),
         ),
       );
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Booking failed: ${e.toString().replaceFirst('Exception: ', '')}'),
+          backgroundColor: AppColors.error,
+          duration: const Duration(seconds: 6),
+        ),
+      );
+    } finally {
+      // Always release the button, even on failure.
+      if (mounted) setState(() => _isProcessing = false);
     }
   }
 
   @override
   Widget build(BuildContext context) {
     final subtotal = widget.flight.priceEgp * _guestCount;
-    final discount = subtotal * _discountPercent;
+    final discount = _discountFor(subtotal);
     final total = subtotal - discount;
 
     return Scaffold(
@@ -424,7 +476,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                     Text(
                       _couponStatusText!,
                       style: TextStyle(
-                        color: _discountPercent > 0 ? AppColors.success : AppColors.error,
+                        color: _appliedCouponCode != null ? AppColors.success : AppColors.error,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
                       ),
@@ -463,10 +515,10 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                     child: Column(
                       children: [
                         _buildPriceRow('${widget.flight.packageName} (x$_guestCount)', ApiService.formatPrice(subtotal)),
-                        if (_discountPercent > 0) ...[
+                        if (discount > 0) ...[
                           const SizedBox(height: 8),
                           _buildPriceRow(
-                            'Promo Discount (10%)',
+                            'Promo Discount ($_appliedCouponCode)',
                             '-${ApiService.formatPrice(discount)}',
                             valueColor: AppColors.success,
                           ),

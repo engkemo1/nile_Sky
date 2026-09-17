@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { IsString, IsNotEmpty, IsOptional, IsNumber, IsEnum, IsArray, IsDateString } from 'class-validator';
 import { BalloonStatus } from '../entities/balloon.entity';
 
@@ -55,4 +56,4 @@ export class CreateBalloonDto {
   notes?: string;
 }
 
-export class UpdateBalloonDto extends CreateBalloonDto {}
+export class UpdateBalloonDto extends PartialType(CreateBalloonDto) {}

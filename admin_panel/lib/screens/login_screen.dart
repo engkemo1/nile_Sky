@@ -11,8 +11,8 @@ class LoginScreen extends StatefulWidget {
 }
 
 class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStateMixin {
-  final _emailController = TextEditingController(text: 'admin@nilesky.com');
-  final _passwordController = TextEditingController(text: 'Admin@123456');
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
   bool _isLoading = false;
   bool _obscurePassword = true;
   String? _errorMessage;
@@ -360,11 +360,6 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                     ),
                   ),
 
-                  const SizedBox(height: 12),
-                  const Text(
-                    'Default: admin@nilesky.com / Admin@123456',
-                    style: TextStyle(color: AdminColors.textMuted, fontSize: 11),
-                  ),
                 ],
               ),
             ),

@@ -62,7 +62,7 @@ class ApiService {
           headers: _publicHeaders,
           body: jsonEncode({'email': email, 'password': password}),
         )
-        .timeout(const Duration(seconds: 10));
+        .timeout(const Duration(seconds: 60));
 
     if (res.statusCode == 200 || res.statusCode == 201) {
       final data = jsonDecode(res.body);
@@ -93,7 +93,7 @@ class ApiService {
             if (languagePref != null) 'languagePref': languagePref,
           }),
         )
-        .timeout(const Duration(seconds: 10));
+        .timeout(const Duration(seconds: 60));
 
     if (res.statusCode == 200 || res.statusCode == 201) {
       final data = jsonDecode(res.body);
@@ -120,7 +120,7 @@ class ApiService {
             headers: _publicHeaders,
             body: jsonEncode({'refreshToken': _refreshToken}),
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 60));
       if (res.statusCode == 200 || res.statusCode == 201) {
         final data = jsonDecode(res.body);
         _accessToken = data['accessToken'];
@@ -132,7 +132,7 @@ class ApiService {
   static String _parseError(String body) {
     try {
       final data = jsonDecode(body);
-      return data['message']?.toString() ?? 'Unknown error';
+      return (data['message'] is List ? (data['message'] as List).join('\n') : data['message']?.toString()) ?? 'Unknown error';
     } catch (_) {
       return body;
     }
@@ -159,7 +159,7 @@ class ApiService {
 
       final res = await http
           .get(uri, headers: _publicHeaders)
-          .timeout(const Duration(seconds: 8));
+          .timeout(const Duration(seconds: 60));
       if (res.statusCode == 200) {
         final List list = jsonDecode(res.body);
         return list.map((e) => FlightModel.fromJson(e)).toList();
@@ -175,7 +175,7 @@ class ApiService {
     try {
       final res = await http
           .get(Uri.parse('$baseUrl/operators'), headers: _publicHeaders)
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 60));
       if (res.statusCode == 200) {
         final List list = jsonDecode(res.body);
         return list.map((e) => OperatorModel.fromJson(e)).toList();
@@ -191,7 +191,7 @@ class ApiService {
     try {
       final res = await http
           .get(Uri.parse('$baseUrl/weather/luxor'), headers: _publicHeaders)
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 60));
       if (res.statusCode == 200) {
         return WeatherModel.fromJson(jsonDecode(res.body));
       }
@@ -226,7 +226,7 @@ class ApiService {
                 if (specialRequests != null) 'specialRequests': specialRequests,
               }),
             )
-            .timeout(const Duration(seconds: 10));
+            .timeout(const Duration(seconds: 60));
 
         if (res.statusCode == 200 || res.statusCode == 201) {
           final data = jsonDecode(res.body);
@@ -243,15 +243,15 @@ class ApiService {
             packageName:
                 data['flight']?['package']?['nameEn'] ?? 'Flight Package',
             guestCount: data['guestCount'] ?? guestCount,
-            totalPriceEgp: (data['totalPriceEgp'] ?? 0).toDouble(),
+            totalPriceEgp: double.tryParse(data['totalPriceEgp']?.toString() ?? '0') ?? 0,
             paymentStatus: data['paymentStatus'] ?? 'paid',
             bookingStatus: data['bookingStatus'] ?? 'confirmed',
             pickupHotelName: data['pickupHotelName'] ?? pickupHotelName,
             pickupTime: data['pickupTime'] ?? '03:45 AM',
-            driverName: data['driver']?['name'] ?? 'Ahmed Mahmoud',
-            driverPhone: data['driver']?['phone'] ?? '+20 101 234 5678',
-            driverCarModel: data['driver']?['carModel'] ?? 'Toyota HiAce',
-            driverCarPlate: data['driver']?['carPlate'] ?? '',
+            driverName: data['driver']?['name'],
+            driverPhone: data['driver']?['phone'],
+            driverCarModel: data['driver']?['carModel'],
+            driverCarPlate: data['driver']?['carPlate'],
             qrCodeData: data['qrCodeData'] ?? data['bookingRef'] ?? 'NLK-2026',
             specialRequests: data['specialRequests'],
           );
@@ -272,7 +272,7 @@ class ApiService {
       try {
         final res = await http
             .get(Uri.parse('$baseUrl/bookings'), headers: _authHeaders)
-            .timeout(const Duration(seconds: 8));
+            .timeout(const Duration(seconds: 60));
 
         if (res.statusCode == 200) {
           final List list = jsonDecode(res.body);
@@ -293,7 +293,7 @@ class ApiService {
                   operatorName: data['operator']?['nameEn'] ?? '-',
                   packageName: data['flight']?['package']?['nameEn'] ?? '-',
                   guestCount: data['guestCount'] ?? 0,
-                  totalPriceEgp: (data['totalPriceEgp'] ?? 0).toDouble(),
+                  totalPriceEgp: double.tryParse(data['totalPriceEgp']?.toString() ?? '0') ?? 0,
                   paymentStatus: data['paymentStatus'] ?? 'pending',
                   bookingStatus: data['bookingStatus'] ?? 'pending',
                   pickupHotelName: data['pickupHotelName'] ?? '-',
@@ -323,7 +323,7 @@ class ApiService {
             headers: _authHeaders,
             body: jsonEncode({'reason': reason ?? 'Cancelled by customer'}),
           )
-          .timeout(const Duration(seconds: 8));
+          .timeout(const Duration(seconds: 60));
       return res.statusCode >= 200 && res.statusCode < 300;
     } catch (_) {
       return false;
@@ -351,7 +351,7 @@ class ApiService {
               if (photos != null) 'photos': photos,
             }),
           )
-          .timeout(const Duration(seconds: 8));
+          .timeout(const Duration(seconds: 60));
       return res.statusCode >= 200 && res.statusCode < 300;
     } catch (_) {
       return false;
@@ -367,7 +367,7 @@ class ApiService {
             Uri.parse('$baseUrl/coupons/validate/$code'),
             headers: _publicHeaders,
           )
-          .timeout(const Duration(seconds: 5));
+          .timeout(const Duration(seconds: 60));
       if (res.statusCode == 200) {
         return jsonDecode(res.body);
       }

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../widgets/operator_picker.dart';
 
 class BalloonsScreen extends StatefulWidget {
   const BalloonsScreen({super.key});
@@ -10,6 +11,7 @@ class BalloonsScreen extends StatefulWidget {
 
 class _BalloonsScreenState extends State<BalloonsScreen> {
   List<dynamic> _balloons = [];
+  List<dynamic> _operators = [];
   bool _isLoading = true;
 
   @override
@@ -18,6 +20,7 @@ class _BalloonsScreenState extends State<BalloonsScreen> {
   Future<void> _load() async {
     setState(() => _isLoading = true);
     try { _balloons = await AdminApiService.getBalloons(); } catch (_) {}
+    try { _operators = await AdminApiService.getOperators(); } catch (_) {}
     setState(() => _isLoading = false);
   }
 
@@ -25,6 +28,8 @@ class _BalloonsScreenState extends State<BalloonsScreen> {
     final regCtrl = TextEditingController(text: b?['registrationCode'] ?? '');
     final nameCtrl = TextEditingController(text: b?['name'] ?? '');
     final capCtrl = TextEditingController(text: (b?['capacity'] ?? 16).toString());
+    String? selectedOperatorId = b?['operatorId']?.toString() ??
+        (_operators.isNotEmpty ? _operators.first['id']?.toString() : null);
     final isEdit = b != null;
 
     showDialog(context: context, builder: (ctx) => AlertDialog(
@@ -32,6 +37,13 @@ class _BalloonsScreenState extends State<BalloonsScreen> {
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(isEdit ? 'Edit ${b['name']}' : 'Add Balloon', style: const TextStyle(color: AdminColors.textPrimary, fontSize: 16)),
       content: SizedBox(width: 380, child: Column(mainAxisSize: MainAxisSize.min, children: [
+        StatefulBuilder(
+          builder: (_, setLocal) => OperatorPicker(
+            operators: _operators,
+            value: selectedOperatorId,
+            onChanged: (v) => setLocal(() => selectedOperatorId = v),
+          ),
+        ),
         _field('Registration Code', regCtrl),
         _field('Name', nameCtrl),
         _field('Capacity', capCtrl),
@@ -40,8 +52,12 @@ class _BalloonsScreenState extends State<BalloonsScreen> {
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: AdminColors.textMuted))),
         ElevatedButton(
           onPressed: () async {
-            Navigator.pop(ctx);
-            final data = {'registrationCode': regCtrl.text, 'name': nameCtrl.text, 'capacity': int.tryParse(capCtrl.text) ?? 16};
+            if (selectedOperatorId == null) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select an operator first')));
+            return;
+          }
+          Navigator.pop(ctx);
+            final data = {'registrationCode': regCtrl.text, 'name': nameCtrl.text, 'capacity': int.tryParse(capCtrl.text) ?? 16, 'operatorId': selectedOperatorId};
             try {
               if (isEdit) { await AdminApiService.updateBalloon(b['id'], data); }
               else { await AdminApiService.createBalloon(data); }

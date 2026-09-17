@@ -210,9 +210,9 @@ class _FlightsScreenState extends State<FlightsScreen> with SingleTickerProvider
                     onPressed: () async {
                       final tomorrow = DateTime.now().add(const Duration(days: 1)).toIso8601String().substring(0, 10);
                       try {
-                        await AdminApiService.generateFlights(tomorrow);
+                        final result = await AdminApiService.generateFlights(tomorrow);
                         _loadFlights();
-                        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Flights generated for $tomorrow'), backgroundColor: AdminColors.success));
+                        if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result['message']?.toString() ?? 'Flights generated for $tomorrow'), backgroundColor: AdminColors.success));
                       } catch (e) {
                         if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: AdminColors.error));
                       }

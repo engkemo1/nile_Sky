@@ -16,10 +16,10 @@ class _AuthScreenState extends State<AuthScreen> {
   bool _isLogin = true;
   bool _isLoading = false;
   String? _errorMessage;
-  final _emailController = TextEditingController(text: 'john@gmail.com');
-  final _passwordController = TextEditingController(text: 'Admin@123456');
-  final _nameController = TextEditingController(text: 'John Smith');
-  final _phoneController = TextEditingController(text: '+20 101 234 5678');
+  final _emailController = TextEditingController();
+  final _passwordController = TextEditingController();
+  final _nameController = TextEditingController();
+  final _phoneController = TextEditingController();
 
   @override
   void dispose() {

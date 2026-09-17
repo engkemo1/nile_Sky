@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../widgets/operator_picker.dart';
 
 class DriversScreen extends StatefulWidget {
   const DriversScreen({super.key});
@@ -10,6 +11,7 @@ class DriversScreen extends StatefulWidget {
 
 class _DriversScreenState extends State<DriversScreen> {
   List<dynamic> _drivers = [];
+  List<dynamic> _operators = [];
   bool _isLoading = true;
 
   @override
@@ -18,6 +20,7 @@ class _DriversScreenState extends State<DriversScreen> {
   Future<void> _load() async {
     setState(() => _isLoading = true);
     try { _drivers = await AdminApiService.getDrivers(); } catch (_) {}
+    try { _operators = await AdminApiService.getOperators(); } catch (_) {}
     setState(() => _isLoading = false);
   }
 
@@ -26,19 +29,32 @@ class _DriversScreenState extends State<DriversScreen> {
     final phoneCtrl = TextEditingController(text: d?['phone'] ?? '');
     final carCtrl = TextEditingController(text: d?['carModel'] ?? '');
     final plateCtrl = TextEditingController(text: d?['carPlate'] ?? '');
+    String? selectedOperatorId = d?['operatorId']?.toString() ??
+        (_operators.isNotEmpty ? _operators.first['id']?.toString() : null);
     final isEdit = d != null;
 
     showDialog(context: context, builder: (ctx) => AlertDialog(
       backgroundColor: AdminColors.cardDark, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(isEdit ? 'Edit Driver' : 'Add Driver', style: const TextStyle(color: AdminColors.textPrimary, fontSize: 16)),
       content: SizedBox(width: 380, child: Column(mainAxisSize: MainAxisSize.min, children: [
+        StatefulBuilder(
+          builder: (_, setLocal) => OperatorPicker(
+            operators: _operators,
+            value: selectedOperatorId,
+            onChanged: (v) => setLocal(() => selectedOperatorId = v),
+          ),
+        ),
         _field('Name', nameCtrl), _field('Phone', phoneCtrl), _field('Car Model', carCtrl), _field('Plate #', plateCtrl),
       ])),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: AdminColors.textMuted))),
         ElevatedButton(onPressed: () async {
+          if (selectedOperatorId == null) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select an operator first')));
+            return;
+          }
           Navigator.pop(ctx);
-          final data = {'name': nameCtrl.text, 'phone': phoneCtrl.text, 'carModel': carCtrl.text, 'carPlate': plateCtrl.text};
+          final data = {'name': nameCtrl.text, 'phone': phoneCtrl.text, 'carModel': carCtrl.text, 'carPlate': plateCtrl.text, 'operatorId': selectedOperatorId};
           try {
             if (isEdit) { await AdminApiService.updateDriver(d['id'], data); } else { await AdminApiService.createDriver(data); }
             _load();

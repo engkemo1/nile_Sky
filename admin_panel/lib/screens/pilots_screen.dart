@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../widgets/operator_picker.dart';
 
 class PilotsScreen extends StatefulWidget {
   const PilotsScreen({super.key});
@@ -10,6 +11,7 @@ class PilotsScreen extends StatefulWidget {
 
 class _PilotsScreenState extends State<PilotsScreen> {
   List<dynamic> _pilots = [];
+  List<dynamic> _operators = [];
   bool _isLoading = true;
 
   @override
@@ -18,6 +20,7 @@ class _PilotsScreenState extends State<PilotsScreen> {
   Future<void> _load() async {
     setState(() => _isLoading = true);
     try { _pilots = await AdminApiService.getPilots(); } catch (_) {}
+    try { _operators = await AdminApiService.getOperators(); } catch (_) {}
     setState(() => _isLoading = false);
   }
 
@@ -26,20 +29,33 @@ class _PilotsScreenState extends State<PilotsScreen> {
     final nameArCtrl = TextEditingController(text: p?['nameAr'] ?? '');
     final licenseCtrl = TextEditingController(text: p?['licenseNumber'] ?? '');
     final expCtrl = TextEditingController(text: (p?['experienceYears'] ?? 0).toString());
+    String? selectedOperatorId = p?['operatorId']?.toString() ??
+        (_operators.isNotEmpty ? _operators.first['id']?.toString() : null);
     final isEdit = p != null;
 
     showDialog(context: context, builder: (ctx) => AlertDialog(
       backgroundColor: AdminColors.cardDark, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
       title: Text(isEdit ? 'Edit Pilot' : 'Add Pilot', style: const TextStyle(color: AdminColors.textPrimary, fontSize: 16)),
       content: SizedBox(width: 380, child: Column(mainAxisSize: MainAxisSize.min, children: [
+        StatefulBuilder(
+          builder: (_, setLocal) => OperatorPicker(
+            operators: _operators,
+            value: selectedOperatorId,
+            onChanged: (v) => setLocal(() => selectedOperatorId = v),
+          ),
+        ),
         _field('Name (EN)', nameEnCtrl), _field('Name (AR)', nameArCtrl),
         _field('License #', licenseCtrl), _field('Experience (Years)', expCtrl),
       ])),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: AdminColors.textMuted))),
         ElevatedButton(onPressed: () async {
+          if (selectedOperatorId == null) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select an operator first')));
+            return;
+          }
           Navigator.pop(ctx);
-          final data = {'nameEn': nameEnCtrl.text, 'nameAr': nameArCtrl.text, 'licenseNumber': licenseCtrl.text, 'experienceYears': int.tryParse(expCtrl.text) ?? 0};
+          final data = {'nameEn': nameEnCtrl.text, 'nameAr': nameArCtrl.text, 'licenseNumber': licenseCtrl.text, 'experienceYears': int.tryParse(expCtrl.text) ?? 0, 'operatorId': selectedOperatorId};
           try {
             if (isEdit) { await AdminApiService.updatePilot(p['id'], data); } else { await AdminApiService.createPilot(data); }
             _load();

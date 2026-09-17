@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { IsString, IsNotEmpty, IsOptional, IsNumber, IsEnum, IsBoolean, IsArray } from 'class-validator';
 import { RecurrenceType } from '../entities/flight-template.entity';
 
@@ -31,4 +32,4 @@ export class CreateFlightTemplateDto {
   isActive?: boolean;
 }
 
-export class UpdateFlightTemplateDto extends CreateFlightTemplateDto {}
+export class UpdateFlightTemplateDto extends PartialType(CreateFlightTemplateDto) {}

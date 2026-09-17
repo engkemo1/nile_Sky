@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../utils/num_parse.dart';
 
 class AnalyticsScreen extends StatefulWidget {
   const AnalyticsScreen({super.key});
@@ -38,8 +39,8 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
     // Calculate stats from bookings
     final confirmedBookings = _bookings.where((b) => b['bookingStatus'] != 'cancelled').toList();
-    final totalRevenue = confirmedBookings.fold<double>(0, (sum, b) => sum + (b['totalPriceEgp'] ?? 0).toDouble());
-    final totalCommission = confirmedBookings.fold<double>(0, (sum, b) => sum + (b['commissionAmount'] ?? 0).toDouble());
+    final totalRevenue = confirmedBookings.fold<double>(0, (sum, b) => sum + asDouble(b['totalPriceEgp']));
+    final totalCommission = confirmedBookings.fold<double>(0, (sum, b) => sum + asDouble(b['commissionAmount']));
     final totalPassengers = confirmedBookings.fold<int>(0, (sum, b) => sum + ((b['guestCount'] ?? 0) as int));
     final cancelledCount = _bookings.where((b) => b['bookingStatus'] == 'cancelled').length;
     final avgPerBooking = confirmedBookings.isNotEmpty ? totalRevenue / confirmedBookings.length : 0;
@@ -100,7 +101,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
     final Map<String, int> countByOp = {};
     for (final b in bookings) {
       final opName = b['operator']?['nameEn'] ?? 'Unknown';
-      revenueByOp[opName] = (revenueByOp[opName] ?? 0) + (b['totalPriceEgp'] ?? 0).toDouble();
+      revenueByOp[opName] = (revenueByOp[opName] ?? 0) + asDouble(b['totalPriceEgp']);
       countByOp[opName] = (countByOp[opName] ?? 0) + 1;
     }
     if (revenueByOp.isEmpty) return const Text('No data yet.', style: TextStyle(color: AdminColors.textMuted));

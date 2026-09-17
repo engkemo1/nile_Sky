@@ -21,9 +21,7 @@ class ReviewScreen extends StatefulWidget {
 
 class _ReviewScreenState extends State<ReviewScreen> {
   int _rating = 5;
-  final _commentController = TextEditingController(
-    text: 'Unbelievable sunrise view over the Valley of the Kings! The pilot was very skilled and pickup was on time.',
-  );
+  final _commentController = TextEditingController();
   bool _isSubmitting = false;
   bool _submitted = false;
   String? _errorMessage;

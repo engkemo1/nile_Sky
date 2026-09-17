@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../utils/num_parse.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
@@ -54,8 +55,8 @@ class _BookingsScreenState extends State<BookingsScreen> {
                 _detailRow('Package', booking['flight']?['package']?['nameEn'] ?? 'N/A'),
                 const Divider(color: AdminColors.border),
                 _detailRow('Guests', '${booking['guestCount']}'),
-                _detailRow('Total', '${NumberFormat('#,###').format(booking['totalPriceEgp'] ?? 0)} EGP'),
-                _detailRow('Commission', '${NumberFormat('#,###').format(booking['commissionAmount'] ?? 0)} EGP'),
+                _detailRow('Total', '${NumberFormat('#,###').format(asDouble(booking['totalPriceEgp']))} EGP'),
+                _detailRow('Commission', '${NumberFormat('#,###').format(asDouble(booking['commissionAmount']))} EGP'),
                 _detailRow('Discount', '${booking['discountAmount'] ?? 0} EGP'),
                 const Divider(color: AdminColors.border),
                 _detailRow('Pickup', booking['pickupHotelName'] ?? 'N/A'),
@@ -194,7 +195,7 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                   DataCell(Text(b['flight']?['flightNumber']?.toString() ?? '-', style: const TextStyle(fontSize: 12))),
                                   DataCell(Text(b['pickupHotelName'] ?? '-', style: const TextStyle(fontSize: 12))),
                                   DataCell(Text('${b['guestCount'] ?? 0}')),
-                                  DataCell(Text('${NumberFormat('#,###').format(b['totalPriceEgp'] ?? 0)} EGP', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
+                                  DataCell(Text('${NumberFormat('#,###').format(asDouble(b['totalPriceEgp']))} EGP', style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 12))),
                                   DataCell(Container(
                                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                     decoration: BoxDecoration(color: payColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),

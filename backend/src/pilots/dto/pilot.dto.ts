@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { IsString, IsNotEmpty, IsOptional, IsNumber, IsEnum, IsDateString } from 'class-validator';
 import { PilotStatus } from '../entities/pilot.entity';
 
@@ -43,4 +44,4 @@ export class CreatePilotDto {
   status?: PilotStatus;
 }
 
-export class UpdatePilotDto extends CreatePilotDto {}
+export class UpdatePilotDto extends PartialType(CreatePilotDto) {}

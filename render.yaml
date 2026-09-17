@@ -1,11 +1,19 @@
 # ===================================================
-# NileSky Platform — Render Blueprint
+# NileSky Platform — Render Blueprint (free tier)
 # ===================================================
-# One-click: provisions the Postgres database AND the NestJS API,
-# and wires DATABASE_URL between them automatically.
+# One click: provisions the Postgres database AND the NestJS API,
+# and wires DATABASE_URL between them automatically. Nothing to paste.
 #
-# The two Flutter Web front-ends are NOT here on purpose — Render's
-# build image has no Flutter SDK, so it cannot build them. See DEPLOY_NOW.md.
+# NOTE: Render's FREE Postgres is deleted 30 days after creation.
+# Before then, create a free-forever database at neon.tech and replace
+# DATABASE_URL in the Render dashboard with its connection string.
+# No code change is needed — app.module.ts already handles DATABASE_URL
+# with ssl: { rejectUnauthorized: false } under NODE_ENV=production,
+# and the schema is recreated and seeded automatically on first boot.
+#
+# The two Flutter front-ends are NOT here on purpose: Render's build
+# image has no Flutter SDK, so it cannot build them. Deploy those to
+# Netlify Drop or Cloudflare Pages instead — both free.
 
 databases:
   - name: nilesky-db
@@ -16,15 +24,15 @@ databases:
 
 services:
   - type: web
-    name: nilesky-api            # -> https://nilesky-api.onrender.com
+    name: nilesky-api              # -> https://nilesky-api.onrender.com
     runtime: node
-    region: frankfurt            # must match the database region
+    region: frankfurt              # must match the database region
     plan: free
     rootDir: backend
     branch: main
     buildCommand: npm install && npm run build
     startCommand: npm run start:prod
-    healthCheckPath: /           # AppController GET / — no DB, no auth
+    healthCheckPath: /             # AppController GET / — no DB, no auth
     autoDeploy: true
     envVars:
       - key: NODE_VERSION
@@ -36,7 +44,7 @@ services:
           name: nilesky-db
           property: connectionString
       - key: SEED_PASSWORD
-        generateValue: true      # Render generates it; read it in the dashboard to log in
+        generateValue: true        # read it in the dashboard to log in first time
       - key: JWT_SECRET
         generateValue: true
       - key: JWT_EXPIRES_IN

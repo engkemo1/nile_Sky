@@ -61,11 +61,13 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
           ElevatedButton(
             onPressed: () async {
               Navigator.pop(ctx);
-              final data = {
+              // @IsOptional() only skips null/undefined, so an empty string
+              // fails @IsEmail(). Omit blank optional fields entirely.
+              final data = <String, dynamic>{
                 'nameEn': nameEnCtrl.text,
                 'nameAr': nameArCtrl.text,
-                'email': emailCtrl.text,
-                'phone': phoneCtrl.text,
+                if (emailCtrl.text.trim().isNotEmpty) 'email': emailCtrl.text.trim(),
+                if (phoneCtrl.text.trim().isNotEmpty) 'phone': phoneCtrl.text.trim(),
                 'commissionRate': double.tryParse(commissionCtrl.text) ?? 10,
               };
               try {

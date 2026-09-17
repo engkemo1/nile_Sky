@@ -1,4 +1,6 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <!-- Required: without this the release APK has no network access at all -->
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
         android:label="NileSky"
         android:name="${applicationName}"

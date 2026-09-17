@@ -18,10 +18,18 @@ import { User, UserRole } from './entities/user.entity';
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
+  /** Strip secrets that must never leave the API. */
+  private sanitize(user: any) {
+    if (!user) return user;
+    const { passwordHash, refreshTokenHash, socialId, ...safe } = user;
+    return safe;
+  }
+
+
   @UseGuards(JwtAuthGuard)
   @Get('me')
   async getMe(@CurrentUser() user: User) {
-    return this.usersService.findById(user.id);
+    return this.sanitize(await this.usersService.findById(user.id));
   }
 
   @UseGuards(JwtAuthGuard)
@@ -37,21 +45,21 @@ export class UsersController {
       currencyPref?: string;
     },
   ) {
-    return this.usersService.updateProfile(user.id, dto);
+    return this.sanitize(await this.usersService.updateProfile(user.id, dto));
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PLATFORM_ADMIN)
   @Get()
   async getAllUsers(@Query('role') role?: UserRole) {
-    return this.usersService.findAll(role);
+    return (await this.usersService.findAll(role)).map((u) => this.sanitize(u));
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PLATFORM_ADMIN)
   @Get(':id')
   async getUserById(@Param('id') id: string) {
-    return this.usersService.findById(id);
+    return this.sanitize(await this.usersService.findById(id));
   }
 
   @UseGuards(JwtAuthGuard, RolesGuard)
@@ -61,6 +69,6 @@ export class UsersController {
     @Param('id') id: string,
     @Body('isActive') isActive: boolean,
   ) {
-    return this.usersService.updateStatus(id, isActive);
+    return this.sanitize(await this.usersService.updateStatus(id, isActive));
   }
 }

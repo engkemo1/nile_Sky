@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { IsString, IsNotEmpty, IsOptional, IsEnum, IsNumber, IsBoolean, IsArray } from 'class-validator';
 import { PackageType } from '../entities/package.entity';
 
@@ -79,4 +80,4 @@ export class CreatePackageDto {
   isActive?: boolean;
 }
 
-export class UpdatePackageDto extends CreatePackageDto {}
+export class UpdatePackageDto extends PartialType(CreatePackageDto) {}

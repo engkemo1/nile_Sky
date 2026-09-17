@@ -33,6 +33,17 @@ class AdminApiService {
         'Content-Type': 'application/json',
       };
 
+
+  /// Render's free tier sleeps after 15 min idle; the next request takes
+  /// 30-60s to wake it. Without this every call hangs forever on a dead host.
+  static const Duration _requestTimeout = Duration(seconds: 60);
+
+  static Never _timedOut() => throw ApiException(
+        408,
+        'The server did not respond in 60s. If this is a free Render instance '
+        'it may be waking up — try again in a moment.',
+      );
+
   static void logout() {
     _accessToken = null;
     _refreshToken = null;
@@ -42,11 +53,13 @@ class AdminApiService {
   // ───────── AUTH ─────────
 
   static Future<Map<String, dynamic>> login(String email, String password) async {
-    final res = await http.post(
-      Uri.parse('$baseUrl/auth/login'),
-      headers: _publicHeaders,
-      body: jsonEncode({'email': email, 'password': password}),
-    );
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl/auth/login'),
+          headers: _publicHeaders,
+          body: jsonEncode({'email': email, 'password': password}),
+        )
+        .timeout(_requestTimeout, onTimeout: _timedOut);
     if (res.statusCode == 200 || res.statusCode == 201) {
       final data = jsonDecode(res.body);
       _accessToken = data['accessToken'];
@@ -59,11 +72,13 @@ class AdminApiService {
 
   static Future<void> refreshAuth() async {
     if (_refreshToken == null) throw ApiException(401, 'No refresh token');
-    final res = await http.post(
-      Uri.parse('$baseUrl/auth/refresh'),
-      headers: _publicHeaders,
-      body: jsonEncode({'refreshToken': _refreshToken}),
-    );
+    final res = await http
+        .post(
+          Uri.parse('$baseUrl/auth/refresh'),
+          headers: _publicHeaders,
+          body: jsonEncode({'refreshToken': _refreshToken}),
+        )
+        .timeout(_requestTimeout, onTimeout: _timedOut);
     if (res.statusCode == 200 || res.statusCode == 201) {
       final data = jsonDecode(res.body);
       _accessToken = data['accessToken'];
@@ -78,10 +93,10 @@ class AdminApiService {
 
   static Future<dynamic> _get(String path, {Map<String, String>? queryParams}) async {
     final uri = Uri.parse('$baseUrl$path').replace(queryParameters: queryParams);
-    var res = await http.get(uri, headers: _authHeaders);
+    var res = await http.get(uri, headers: _authHeaders).timeout(_requestTimeout, onTimeout: _timedOut);
     if (res.statusCode == 401 && _refreshToken != null) {
       await refreshAuth();
-      res = await http.get(uri, headers: _authHeaders);
+      res = await http.get(uri, headers: _authHeaders).timeout(_requestTimeout, onTimeout: _timedOut);
     }
     if (res.statusCode >= 200 && res.statusCode < 300) {
       return jsonDecode(res.body);
@@ -90,18 +105,22 @@ class AdminApiService {
   }
 
   static Future<dynamic> _post(String path, Map<String, dynamic> body) async {
-    var res = await http.post(
-      Uri.parse('$baseUrl$path'),
-      headers: _authHeaders,
-      body: jsonEncode(body),
-    );
+    var res = await http
+        .post(
+          Uri.parse('$baseUrl$path'),
+          headers: _authHeaders,
+          body: jsonEncode(body),
+        )
+        .timeout(_requestTimeout, onTimeout: _timedOut);
     if (res.statusCode == 401 && _refreshToken != null) {
       await refreshAuth();
-      res = await http.post(
-        Uri.parse('$baseUrl$path'),
-        headers: _authHeaders,
-        body: jsonEncode(body),
-      );
+      res = await http
+          .post(
+            Uri.parse('$baseUrl$path'),
+            headers: _authHeaders,
+            body: jsonEncode(body),
+          )
+          .timeout(_requestTimeout, onTimeout: _timedOut);
     }
     if (res.statusCode >= 200 && res.statusCode < 300) {
       return jsonDecode(res.body);
@@ -110,18 +129,22 @@ class AdminApiService {
   }
 
   static Future<dynamic> _patch(String path, Map<String, dynamic> body) async {
-    var res = await http.patch(
-      Uri.parse('$baseUrl$path'),
-      headers: _authHeaders,
-      body: jsonEncode(body),
-    );
+    var res = await http
+        .patch(
+          Uri.parse('$baseUrl$path'),
+          headers: _authHeaders,
+          body: jsonEncode(body),
+        )
+        .timeout(_requestTimeout, onTimeout: _timedOut);
     if (res.statusCode == 401 && _refreshToken != null) {
       await refreshAuth();
-      res = await http.patch(
-        Uri.parse('$baseUrl$path'),
-        headers: _authHeaders,
-        body: jsonEncode(body),
-      );
+      res = await http
+          .patch(
+            Uri.parse('$baseUrl$path'),
+            headers: _authHeaders,
+            body: jsonEncode(body),
+          )
+          .timeout(_requestTimeout, onTimeout: _timedOut);
     }
     if (res.statusCode >= 200 && res.statusCode < 300) {
       return jsonDecode(res.body);
@@ -130,10 +153,14 @@ class AdminApiService {
   }
 
   static Future<void> _delete(String path) async {
-    var res = await http.delete(Uri.parse('$baseUrl$path'), headers: _authHeaders);
+    var res = await http
+        .delete(Uri.parse('$baseUrl$path'), headers: _authHeaders)
+        .timeout(_requestTimeout, onTimeout: _timedOut);
     if (res.statusCode == 401 && _refreshToken != null) {
       await refreshAuth();
-      res = await http.delete(Uri.parse('$baseUrl$path'), headers: _authHeaders);
+      res = await http
+        .delete(Uri.parse('$baseUrl$path'), headers: _authHeaders)
+        .timeout(_requestTimeout, onTimeout: _timedOut);
     }
     if (res.statusCode >= 200 && res.statusCode < 300) return;
     throw ApiException(res.statusCode, _parseError(res.body));
@@ -220,8 +247,14 @@ class AdminApiService {
     await _delete('/flights/$id');
   }
 
-  static Future<List<dynamic>> generateFlights(String targetDate) async {
+  /// POST /flights/generate returns {"message": "...", "flights": [...]},
+  /// not a bare list.
+  static Future<Map<String, dynamic>> generateFlights(String targetDate) async {
     return await _post('/flights/generate', {'targetDate': targetDate});
+  }
+
+  static Future<List<dynamic>> getFlightTemplates() async {
+    return await _get('/flight-templates');
   }
 
   // ───────── BOOKINGS ─────────

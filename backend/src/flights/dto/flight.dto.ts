@@ -1,3 +1,4 @@
+import { Type } from 'class-transformer';
 import { IsString, IsNotEmpty, IsOptional, IsNumber, IsEnum, IsDateString, IsArray } from 'class-validator';
 import { FlightStatus, WeatherStatus } from '../entities/flight.entity';
 
@@ -71,6 +72,7 @@ export class SearchFlightsDto {
   date?: string;
 
   @IsOptional()
+  @Type(() => Number)
   @IsNumber()
   guests?: number;
 

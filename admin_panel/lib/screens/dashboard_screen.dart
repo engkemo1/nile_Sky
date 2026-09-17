@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../utils/num_parse.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -257,7 +258,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       DataCell(Text(b['bookingRef']?.toString() ?? '-', style: const TextStyle(color: AdminColors.primary, fontWeight: FontWeight.w600, fontSize: 12))),
                       DataCell(Text(guestName, style: const TextStyle(fontSize: 12))),
                       DataCell(Text('${b['guestCount'] ?? 0}')),
-                      DataCell(Text('${NumberFormat('#,###').format(b['totalPriceEgp'] ?? 0)} EGP', style: const TextStyle(fontWeight: FontWeight.bold))),
+                      DataCell(Text('${NumberFormat('#,###').format(asDouble(b['totalPriceEgp']))} EGP', style: const TextStyle(fontWeight: FontWeight.bold))),
                       DataCell(_StatusChip(label: paymentStatus.toUpperCase(), color: payColor)),
                       DataCell(_StatusChip(label: bookingStatus.toUpperCase(), color: statusColor)),
                     ]);
