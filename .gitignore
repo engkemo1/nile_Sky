@@ -46,3 +46,7 @@ Thumbs.db
 .vscode/*
 !.vscode/settings.json
 !.vscode/launch.json
+
+# Flutter SDK cloned by Vercel during the admin panel build
+_flutter/
+**/_flutter/
