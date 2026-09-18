@@ -72,5 +72,18 @@ async function bootstrap(): Promise<void> {
 export default async function handler(req: any, res: any) {
   if (!bootstrapped) bootstrapped = bootstrap();
   await bootstrapped;
+
+  // vercel.json rewrites every incoming path to /api/<original path> so it
+  // reaches this catch-all function. Nest knows nothing about that prefix,
+  // so strip it back off before Express routes the request.
+  //   GET /              -> /api/        -> /
+  //   GET /weather/luxor -> /api/weather/luxor -> /weather/luxor
+  //   GET /api/docs      -> /api/api/docs      -> /api/docs
+  if (req.url === '/api' || req.url === '/api/') {
+    req.url = '/';
+  } else if (req.url.startsWith('/api/')) {
+    req.url = req.url.slice(4);
+  }
+
   server(req, res);
 }
