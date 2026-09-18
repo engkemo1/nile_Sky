@@ -61,7 +61,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                     backgroundColor: const Color(0xFFFFFBEB),
                     onPressed: () {
                       setDialogState(() {
-                        controller.text = 'https://nilesky-api.onrender.com';
+                        controller.text = 'https://nile-sky.vercel.app';
                       });
                     },
                   ),

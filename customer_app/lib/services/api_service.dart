@@ -10,7 +10,7 @@ class ApiService {
   // For local dev: 'http://localhost:3000'
   static String _baseUrl = const String.fromEnvironment(
     'API_URL',
-    defaultValue: 'https://nilesky-api.onrender.com',
+    defaultValue: 'https://nile-sky.vercel.app',
   );
   static String get baseUrl => _baseUrl;
   static void setBaseUrl(String url) => _baseUrl = url;

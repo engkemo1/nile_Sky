@@ -296,7 +296,7 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                                   ActionChip(
                                     label: const Text('🌐 Live Render', style: TextStyle(color: AdminColors.primary, fontSize: 11)),
                                     backgroundColor: AdminColors.surfaceDark,
-                                    onPressed: () => urlCtrl.text = 'https://nilesky-api.onrender.com',
+                                    onPressed: () => urlCtrl.text = 'https://nile-sky.vercel.app',
                                   ),
                                   ActionChip(
                                     label: const Text('💻 Localhost', style: TextStyle(color: AdminColors.textSecondary, fontSize: 11)),

@@ -8,7 +8,7 @@ class AdminApiService {
   // Configurable at build time via --dart-define=API_URL=... or at runtime via setBaseUrl()
   static String baseUrl = const String.fromEnvironment(
     'API_URL',
-    defaultValue: 'https://nilesky-api.onrender.com',
+    defaultValue: 'https://nile-sky.vercel.app',
   );
 
   static void setBaseUrl(String url) {
