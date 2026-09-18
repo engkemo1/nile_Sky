@@ -5,11 +5,14 @@
   "buildCommand": "npm run build",
   "outputDirectory": "public",
   "functions": {
-    "api/[[...slug]].js": {
+    "api/index.js": {
       "includeFiles": "dist/**"
     }
   },
   "rewrites": [
-    { "source": "/(.*)", "destination": "/api/$1" }
+    {
+      "source": "/(.*)",
+      "destination": "/api?__path=/$1"
+    }
   ]
 }
