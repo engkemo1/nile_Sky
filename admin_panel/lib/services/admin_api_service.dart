@@ -356,6 +356,31 @@ class AdminApiService {
     });
   }
 
+  // ───────── PAYMENTS ─────────
+
+  /// GET /payments/booking/:bookingId — returns the raw Payment rows for one
+  /// booking, newest first. This is the only *read* route the payments module
+  /// exposes: there is no "list all payments" endpoint, so a payments screen
+  /// has to start from bookings and drill in per booking.
+  static Future<List<dynamic>> getPaymentsForBooking(String bookingId) async {
+    return await _get('/payments/booking/$bookingId');
+  }
+
+  /// POST /payments/:id/refund — platform_admin / operator_admin only.
+  /// [paymentId] is the Payment row's id, NOT the booking id. The controller
+  /// reads the reason with @Body('reason'), so it goes in the body as a bare
+  /// `reason` key and may be omitted entirely.
+  ///
+  /// Note: the backend only flips the payment/booking records to `refunded`
+  /// and releases the flight seats — it does not call any payment gateway,
+  /// so no money moves.
+  static Future<Map<String, dynamic>> refundPayment(String paymentId,
+      {String? reason}) async {
+    return await _post('/payments/$paymentId/refund', {
+      if (reason != null) 'reason': reason,
+    });
+  }
+
   // ───────── BALLOONS ─────────
 
   static Future<List<dynamic>> getBalloons({String? operatorId, String? status}) async {

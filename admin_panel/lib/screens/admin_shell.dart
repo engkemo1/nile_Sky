@@ -9,6 +9,7 @@ import 'pilots_screen.dart';
 import 'drivers_screen.dart';
 import 'flights_screen.dart';
 import 'bookings_screen.dart';
+import 'payments_screen.dart';
 import 'coupons_screen.dart';
 import 'analytics_screen.dart';
 import 'packages_screen.dart';
@@ -33,6 +34,7 @@ class _AdminShellState extends State<AdminShell> {
     _NavItem(icon: Icons.directions_car_outlined, activeIcon: Icons.directions_car, label: 'Drivers'),
     _NavItem(icon: Icons.flight_takeoff_outlined, activeIcon: Icons.flight_takeoff, label: 'Flights'),
     _NavItem(icon: Icons.book_online_outlined, activeIcon: Icons.book_online, label: 'Bookings'),
+    _NavItem(icon: Icons.payments_outlined, activeIcon: Icons.payments, label: 'Payments'),
     _NavItem(icon: Icons.local_offer_outlined, activeIcon: Icons.local_offer, label: 'Coupons'),
     _NavItem(icon: Icons.inventory_2_outlined, activeIcon: Icons.inventory_2, label: 'Packages'),
     _NavItem(icon: Icons.people_outline, activeIcon: Icons.people, label: 'Users'),
@@ -48,6 +50,7 @@ class _AdminShellState extends State<AdminShell> {
     DriversScreen(),
     FlightsScreen(),
     BookingsScreen(),
+    PaymentsScreen(),
     CouponsScreen(),
     PackagesScreen(),
     UsersScreen(),

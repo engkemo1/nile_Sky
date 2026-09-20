@@ -53,7 +53,8 @@ class _FlightEditorState extends State<FlightEditor> {
   static const _statuses = [
     'scheduled', 'boarding', 'in_flight', 'landed', 'completed', 'cancelled',
   ];
-  static const _weathers = ['favorable', 'marginal', 'unsafe'];
+  // Must match WeatherStatus in flight.entity.ts exactly, or the save 400s.
+  static const _weathers = ['favorable', 'uncertain', 'unfavorable'];
 
   @override
   void initState() {

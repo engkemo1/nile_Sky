@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
 import '../widgets/operator_picker.dart';
 import '../widgets/admin_form.dart';
+import '../widgets/media_manager.dart';
 
 class BalloonsScreen extends StatefulWidget {
   const BalloonsScreen({super.key});
@@ -15,6 +17,16 @@ class _BalloonsScreenState extends State<BalloonsScreen> {
   List<dynamic> _operators = [];
   bool _isLoading = true;
   String? _error;
+
+  /// Must match BalloonStatus in balloon.entity.ts exactly, or the save 400s.
+  static const List<String> _statuses = [
+    'available',
+    'in_flight',
+    'maintenance',
+    'retired',
+  ];
+
+  static final DateFormat _apiDate = DateFormat('yyyy-MM-dd');
 
   @override
   void initState() { super.initState(); _load(); }
@@ -37,46 +49,210 @@ class _BalloonsScreenState extends State<BalloonsScreen> {
     setState(() => _isLoading = false);
   }
 
+  /// Postgres `date` columns come back as 'yyyy-MM-dd' (sometimes with a time
+  /// part), so take the first 10 characters and parse that.
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    final s = value.toString();
+    if (s.length < 10) return null;
+    return DateTime.tryParse(s.substring(0, 10));
+  }
+
+  /// Red once an expiry is past or less than 30 days away, amber inside 90
+  /// days. An expired insurance has to be obvious from the list.
+  static Color _expiryColor(DateTime? date) {
+    if (date == null) return AdminColors.textMuted;
+    final days = date.difference(DateTime.now()).inDays;
+    if (days <= 30) return AdminColors.error;
+    if (days <= 90) return AdminColors.warning;
+    return AdminColors.textPrimary;
+  }
+
+  Widget _dateField(
+    BuildContext ctx,
+    String label,
+    DateTime? value,
+    ValueChanged<DateTime?> onPicked,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: Row(children: [
+        Expanded(
+          child: InkWell(
+            onTap: () async {
+              final picked = await showDatePicker(
+                context: ctx,
+                initialDate: value ?? DateTime.now(),
+                firstDate: DateTime(2000),
+                lastDate: DateTime(2100),
+              );
+              if (picked != null) onPicked(picked);
+            },
+            child: InputDecorator(
+              decoration: adminInput(label),
+              child: Text(
+                value == null ? 'Not set' : _apiDate.format(value),
+                style: TextStyle(
+                  color: value == null
+                      ? AdminColors.textMuted
+                      : AdminColors.textPrimary,
+                  fontSize: 13,
+                ),
+              ),
+            ),
+          ),
+        ),
+        if (value != null)
+          IconButton(
+            icon: const Icon(Icons.clear, size: 16, color: AdminColors.textMuted),
+            tooltip: 'Clear',
+            onPressed: () => onPicked(null),
+          ),
+      ]),
+    );
+  }
+
   void _showEditDialog([Map<String, dynamic>? b]) {
     final regCtrl = TextEditingController(text: b?['registrationCode'] ?? '');
     final nameCtrl = TextEditingController(text: b?['name'] ?? '');
     final capCtrl = TextEditingController(text: (b?['capacity'] ?? 16).toString());
+    final notesCtrl = TextEditingController(text: b?['notes']?.toString() ?? '');
+    final videoCtrl = TextEditingController(text: b?['videoUrl']?.toString() ?? '');
+
     String? selectedOperatorId = b?['operatorId']?.toString() ??
         (_operators.isNotEmpty ? _operators.first['id']?.toString() : null);
+
+    String status = b?['status']?.toString() ?? 'available';
+    if (!_statuses.contains(status)) status = 'available';
+
+    DateTime? lastInspection = _parseDate(b?['lastInspection']);
+    DateTime? insuranceExpiry = _parseDate(b?['insuranceExpiry']);
+
+    List<String> photos = [];
+    final rawPhotos = b?['photos'];
+    if (rawPhotos is List) {
+      photos = rawPhotos.map((e) => e.toString()).toList();
+    }
+
     final isEdit = b != null;
 
     showDialog(context: context, builder: (ctx) => AlertDialog(
       backgroundColor: AdminColors.cardDark,
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-      title: Text(isEdit ? 'Edit ${b['name']}' : 'Add Balloon', style: const TextStyle(color: AdminColors.textPrimary, fontSize: 16)),
-      content: SizedBox(width: 380, child: Column(mainAxisSize: MainAxisSize.min, children: [
-        StatefulBuilder(
-          builder: (_, setLocal) => OperatorPicker(
-            operators: _operators,
-            value: selectedOperatorId,
-            onChanged: (v) => setLocal(() => selectedOperatorId = v),
+      title: Text(
+        isEdit
+            ? 'Edit ${b?['name'] ?? b?['registrationCode'] ?? 'Balloon'}'
+            : 'Add Balloon',
+        style: const TextStyle(color: AdminColors.textPrimary, fontSize: 16),
+      ),
+      content: SizedBox(
+        width: 420,
+        child: SingleChildScrollView(
+          child: StatefulBuilder(
+            builder: (sctx, setLocal) => Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                OperatorPicker(
+                  operators: _operators,
+                  value: selectedOperatorId,
+                  onChanged: (v) => setLocal(() => selectedOperatorId = v),
+                ),
+                AdminTextField(label: 'Registration Code', controller: regCtrl),
+                AdminTextField(label: 'Name', controller: nameCtrl),
+                AdminTextField(
+                  label: 'Capacity',
+                  controller: capCtrl,
+                  keyboardType: TextInputType.number,
+                ),
+                AdminDropdown(
+                  label: 'Status',
+                  value: status,
+                  items: _statuses
+                      .map<DropdownMenuItem<String>>((s) => DropdownMenuItem<String>(
+                            value: s,
+                            child: Text(s.replaceAll('_', ' ').toUpperCase()),
+                          ))
+                      .toList(),
+                  onChanged: (v) => setLocal(() => status = v ?? status),
+                ),
+                _dateField(
+                  sctx,
+                  'Last Inspection',
+                  lastInspection,
+                  (d) => setLocal(() => lastInspection = d),
+                ),
+                _dateField(
+                  sctx,
+                  'Insurance Expiry',
+                  insuranceExpiry,
+                  (d) => setLocal(() => insuranceExpiry = d),
+                ),
+                AdminTextField(
+                  label: 'Notes (maintenance log)',
+                  controller: notesCtrl,
+                  maxLines: 4,
+                ),
+                MediaManager(
+                  urls: photos,
+                  folder: 'balloons',
+                  onChanged: (next) => setLocal(() => photos = next),
+                ),
+                AdminTextField(
+                  label: 'Video URL (optional)',
+                  controller: videoCtrl,
+                  hint: 'https://…',
+                ),
+              ],
+            ),
           ),
         ),
-        _field('Registration Code', regCtrl),
-        _field('Name', nameCtrl),
-        _field('Capacity', capCtrl),
-      ])),
+      ),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: AdminColors.textMuted))),
         ElevatedButton(
           onPressed: () async {
             if (selectedOperatorId == null) {
-            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select an operator first')));
-            return;
-          }
-          Navigator.pop(ctx);
-            final data = {'registrationCode': regCtrl.text, 'name': nameCtrl.text, 'capacity': int.tryParse(capCtrl.text) ?? 16, 'operatorId': selectedOperatorId};
+              showSnack(context, 'Select an operator first', error: true);
+              return;
+            }
+            if (regCtrl.text.trim().isEmpty) {
+              showSnack(context, 'Registration code is required', error: true);
+              return;
+            }
+            Navigator.pop(ctx);
+            final data = <String, dynamic>{
+              'registrationCode': regCtrl.text.trim(),
+              'capacity': int.tryParse(capCtrl.text.trim()) ?? 16,
+              'operatorId': selectedOperatorId,
+              'status': status,
+              'photos': photos,
+              // @IsOptional() only skips null/undefined, so '' would fail
+              // validation: blank optional strings are omitted entirely.
+              if (nameCtrl.text.trim().isNotEmpty) 'name': nameCtrl.text.trim(),
+              if (notesCtrl.text.trim().isNotEmpty) 'notes': notesCtrl.text.trim(),
+              if (videoCtrl.text.trim().isNotEmpty) 'videoUrl': videoCtrl.text.trim(),
+              if (lastInspection != null)
+                'lastInspection': _apiDate.format(lastInspection!),
+              if (insuranceExpiry != null)
+                'insuranceExpiry': _apiDate.format(insuranceExpiry!),
+            };
             try {
-              if (isEdit) { await AdminApiService.updateBalloon(b['id'], data); }
-              else { await AdminApiService.createBalloon(data); }
+              if (isEdit) {
+                await AdminApiService.updateBalloon(b!['id'].toString(), data);
+              } else {
+                await AdminApiService.createBalloon(data);
+              }
               _load();
-              if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(isEdit ? 'Updated' : 'Created'), backgroundColor: AdminColors.success));
-            } catch (e) { if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: AdminColors.error)); }
+              if (mounted) showSnack(context, isEdit ? 'Updated' : 'Created');
+            } catch (e) {
+              if (mounted) {
+                showSnack(
+                  context,
+                  'Error: ${e.toString().replaceFirst('ApiException: ', '')}',
+                  error: true,
+                );
+              }
+            }
           },
           style: ElevatedButton.styleFrom(backgroundColor: AdminColors.primary, foregroundColor: Colors.black),
           child: Text(isEdit ? 'Save' : 'Create'),
@@ -84,15 +260,6 @@ class _BalloonsScreenState extends State<BalloonsScreen> {
       ],
     ));
   }
-
-  Widget _field(String l, TextEditingController c) => Padding(padding: const EdgeInsets.only(bottom: 12), child: TextField(
-    controller: c, style: const TextStyle(color: AdminColors.textPrimary, fontSize: 13),
-    decoration: InputDecoration(labelText: l, labelStyle: const TextStyle(color: AdminColors.textMuted, fontSize: 12), filled: true, fillColor: AdminColors.surfaceDark,
-      border: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AdminColors.border)),
-      enabledBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AdminColors.border)),
-      focusedBorder: OutlineInputBorder(borderRadius: BorderRadius.circular(10), borderSide: const BorderSide(color: AdminColors.primary)),
-      contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12)),
-  ));
 
   @override
   Widget build(BuildContext context) {
@@ -119,22 +286,56 @@ class _BalloonsScreenState extends State<BalloonsScreen> {
             width: double.infinity, decoration: BoxDecoration(color: AdminColors.cardDark, borderRadius: BorderRadius.circular(16), border: Border.all(color: AdminColors.border)),
             child: DataTable(columnSpacing: 20, columns: const [
               DataColumn(label: Text('REG CODE')), DataColumn(label: Text('NAME')), DataColumn(label: Text('OPERATOR')),
-              DataColumn(label: Text('CAPACITY')), DataColumn(label: Text('STATUS')), DataColumn(label: Text('ACTIONS')),
+              DataColumn(label: Text('CAPACITY')), DataColumn(label: Text('STATUS')), DataColumn(label: Text('INSURANCE')),
+              DataColumn(label: Text('ACTIONS')),
             ], rows: _balloons.map<DataRow>((b) {
               final status = (b['status'] ?? 'available').toString();
               final statusColor = status == 'available' ? AdminColors.success : status == 'in_flight' ? AdminColors.info : status == 'maintenance' ? AdminColors.warning : AdminColors.error;
+              final insurance = _parseDate(b['insuranceExpiry']);
+              final insuranceColor = _expiryColor(insurance);
               return DataRow(cells: [
                 DataCell(Text(b['registrationCode'] ?? '-', style: const TextStyle(color: AdminColors.secondary, fontWeight: FontWeight.w600, fontSize: 12))),
                 DataCell(Text(b['name'] ?? '-', style: const TextStyle(fontSize: 12))),
                 DataCell(Text(b['operator']?['nameEn'] ?? '-', style: const TextStyle(fontSize: 12))),
                 DataCell(Text('${b['capacity'] ?? 0} pax', style: const TextStyle(fontWeight: FontWeight.bold))),
                 DataCell(Container(padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3), decoration: BoxDecoration(color: statusColor.withValues(alpha: 0.15), borderRadius: BorderRadius.circular(6)),
-                  child: Text(status.toUpperCase(), style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold)))),
+                  child: Text(status.replaceAll('_', ' ').toUpperCase(), style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold)))),
+                DataCell(Row(mainAxisSize: MainAxisSize.min, children: [
+                  if (insurance != null && insuranceColor != AdminColors.textPrimary)
+                    Padding(
+                      padding: const EdgeInsets.only(right: 4),
+                      child: Icon(Icons.warning_amber_rounded, size: 14, color: insuranceColor),
+                    ),
+                  Text(
+                    insurance == null ? 'Not set' : _apiDate.format(insurance),
+                    style: TextStyle(
+                      color: insuranceColor,
+                      fontSize: 12,
+                      fontWeight: insuranceColor == AdminColors.error
+                          ? FontWeight.bold
+                          : FontWeight.normal,
+                    ),
+                  ),
+                ])),
                 DataCell(Row(mainAxisSize: MainAxisSize.min, children: [
                   IconButton(icon: const Icon(Icons.edit_outlined, color: AdminColors.secondary, size: 18), tooltip: 'Edit', onPressed: () => _showEditDialog(b)),
                   IconButton(icon: const Icon(Icons.delete_outline, color: AdminColors.error, size: 18), tooltip: 'Delete', onPressed: () async {
-                    try { await AdminApiService.deleteBalloon(b['id']); _load(); } catch (e) {
-                      if (mounted) ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Error: $e'), backgroundColor: AdminColors.error));
+                    final ok = await confirmDelete(
+                      context,
+                      (b['registrationCode'] ?? b['name'] ?? 'this balloon').toString(),
+                    );
+                    if (!ok) return;
+                    try {
+                      await AdminApiService.deleteBalloon(b['id'].toString());
+                      _load();
+                    } catch (e) {
+                      if (mounted) {
+                        showSnack(
+                          context,
+                          'Error: ${e.toString().replaceFirst('ApiException: ', '')}',
+                          error: true,
+                        );
+                      }
                     }
                   }),
                 ])),

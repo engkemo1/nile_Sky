@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
 import '../widgets/admin_form.dart';
+import '../widgets/media_manager.dart';
+import 'package:intl/intl.dart';
 
 class OperatorsScreen extends StatefulWidget {
   const OperatorsScreen({super.key});
@@ -33,12 +35,83 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
     setState(() => _isLoading = false);
   }
 
+
+  /// Reads a date that may arrive as 'yyyy-MM-dd' or a full timestamp.
+  static DateTime? _parseDate(dynamic value) {
+    if (value == null) return null;
+    final text = value.toString();
+    if (text.length < 10) return null;
+    return DateTime.tryParse(text.substring(0, 10));
+  }
+
+  /// A tappable date field with a clear button, for nullable dates.
+  Widget _dateField(
+    BuildContext ctx,
+    String label,
+    DateTime? value,
+    ValueChanged<DateTime?> onPicked,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: InkWell(
+        onTap: () async {
+          final picked = await showDatePicker(
+            context: ctx,
+            initialDate: value ?? DateTime.now(),
+            firstDate: DateTime(2000),
+            lastDate: DateTime(2100),
+          );
+          if (picked != null) onPicked(picked);
+        },
+        child: InputDecorator(
+          decoration: adminInput(label),
+          child: Row(
+            children: [
+              Expanded(
+                child: Text(
+                  value == null
+                      ? 'Not set'
+                      : DateFormat('d MMM yyyy').format(value),
+                  style: TextStyle(
+                    color: value == null
+                        ? AdminColors.textMuted
+                        : AdminColors.textPrimary,
+                    fontSize: 13,
+                  ),
+                ),
+              ),
+              if (value != null)
+                IconButton(
+                  iconSize: 16,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                  icon: const Icon(Icons.close, color: AdminColors.textMuted),
+                  onPressed: () => onPicked(null),
+                ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showEditDialog([Map<String, dynamic>? op]) {
     final nameEnCtrl = TextEditingController(text: op?['nameEn'] ?? '');
     final nameArCtrl = TextEditingController(text: op?['nameAr'] ?? '');
     final emailCtrl = TextEditingController(text: op?['email'] ?? '');
     final phoneCtrl = TextEditingController(text: op?['phone'] ?? '');
     final commissionCtrl = TextEditingController(text: (op?['commissionRate'] ?? 10).toString());
+    final descEnCtrl = TextEditingController(text: op?['descriptionEn']?.toString() ?? '');
+    final whatsappCtrl = TextEditingController(text: op?['whatsapp']?.toString() ?? '');
+    final websiteCtrl = TextEditingController(text: op?['website']?.toString() ?? '');
+    final addressCtrl = TextEditingController(text: op?['address']?.toString() ?? '');
+    final licenseCtrl = TextEditingController(text: op?['licenseNumber']?.toString() ?? '');
+    final videoCtrl = TextEditingController(text: op?['videoUrl']?.toString() ?? '');
+    final rawPhotos = op?['photos'];
+    List<String> photos =
+        rawPhotos is List ? rawPhotos.map((e) => e.toString()).toList() : <String>[];
+    DateTime? licenseExpiry = _parseDate(op?['licenseExpiry']);
+    DateTime? insuranceExpiry = _parseDate(op?['insuranceExpiry']);
     final isEdit = op != null;
 
     showDialog(
@@ -48,17 +121,43 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: Text(isEdit ? 'Edit ${op['nameEn']}' : 'Add Operator', style: const TextStyle(color: AdminColors.textPrimary, fontSize: 16)),
         content: SizedBox(
-          width: 400,
+          width: 440,
           child: SingleChildScrollView(
-            child: Column(
+            child: StatefulBuilder(
+              builder: (ctx2, setLocal) => Column(
               mainAxisSize: MainAxisSize.min,
               children: [
                 _field('Name (EN)', nameEnCtrl),
                 _field('Name (AR)', nameArCtrl),
                 _field('Email', emailCtrl),
                 _field('Phone', phoneCtrl),
+                _field('WhatsApp', whatsappCtrl),
+                _field('Website', websiteCtrl),
+                _field('Address / launch site', addressCtrl),
                 _field('Commission %', commissionCtrl),
+                _field('Licence number', licenseCtrl),
+                _dateField(ctx2, 'Licence expiry', licenseExpiry,
+                    (d) => setLocal(() => licenseExpiry = d)),
+                _dateField(ctx2, 'Insurance expiry', insuranceExpiry,
+                    (d) => setLocal(() => insuranceExpiry = d)),
+                Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: TextField(
+                    controller: descEnCtrl,
+                    maxLines: 3,
+                    style: const TextStyle(
+                        color: AdminColors.textPrimary, fontSize: 13),
+                    decoration: adminInput('Description (EN)'),
+                  ),
+                ),
+                MediaManager(
+                  urls: photos,
+                  folder: 'operators',
+                  onChanged: (next) => setLocal(() => photos = next),
+                ),
+                _field('Video URL', videoCtrl),
               ],
+            ),
             ),
           ),
         ),
@@ -75,6 +174,18 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
                 if (emailCtrl.text.trim().isNotEmpty) 'email': emailCtrl.text.trim(),
                 if (phoneCtrl.text.trim().isNotEmpty) 'phone': phoneCtrl.text.trim(),
                 'commissionRate': double.tryParse(commissionCtrl.text) ?? 10,
+                if (whatsappCtrl.text.trim().isNotEmpty) 'whatsapp': whatsappCtrl.text.trim(),
+                if (websiteCtrl.text.trim().isNotEmpty) 'website': websiteCtrl.text.trim(),
+                if (addressCtrl.text.trim().isNotEmpty) 'address': addressCtrl.text.trim(),
+                if (licenseCtrl.text.trim().isNotEmpty) 'licenseNumber': licenseCtrl.text.trim(),
+                if (descEnCtrl.text.trim().isNotEmpty) 'descriptionEn': descEnCtrl.text.trim(),
+                if (licenseExpiry != null)
+                  'licenseExpiry': DateFormat('yyyy-MM-dd').format(licenseExpiry!),
+                if (insuranceExpiry != null)
+                  'insuranceExpiry': DateFormat('yyyy-MM-dd').format(insuranceExpiry!),
+                'photos': photos,
+                if (photos.isNotEmpty) 'logoUrl': photos.first,
+                if (videoCtrl.text.trim().isNotEmpty) 'videoUrl': videoCtrl.text.trim(),
               };
               try {
                 if (isEdit) {

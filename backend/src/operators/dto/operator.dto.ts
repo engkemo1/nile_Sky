@@ -1,5 +1,5 @@
 import { PartialType } from '@nestjs/mapped-types';
-import { IsString, IsNotEmpty, IsOptional, IsEmail, IsNumber, IsEnum, IsArray } from 'class-validator';
+import { IsString, IsNotEmpty, IsOptional, IsEmail, IsNumber, IsEnum, IsArray, IsDateString } from 'class-validator';
 import { OperatorStatus } from '../entities/operator.entity';
 
 export class CreateOperatorDto {
@@ -62,6 +62,16 @@ export class CreateOperatorDto {
   @IsOptional()
   @IsString()
   insuranceDocUrl?: string;
+
+  // On the entity but previously absent here, so the API could never set them
+  // and no licence/insurance expiry could ever be recorded.
+  @IsOptional()
+  @IsDateString()
+  licenseExpiry?: string;
+
+  @IsOptional()
+  @IsDateString()
+  insuranceExpiry?: string;
 
   @IsOptional()
   @IsString()

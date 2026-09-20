@@ -3,6 +3,7 @@ import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
 import '../utils/num_parse.dart';
 import '../widgets/admin_form.dart';
+import '../widgets/media_manager.dart';
 
 class PackagesScreen extends StatefulWidget {
   const PackagesScreen({super.key});
@@ -91,6 +92,11 @@ class _PackagesScreenState extends State<PackagesScreen> {
     final priceUsdCtrl =
         TextEditingController(text: priceUsdRaw == null ? '' : _money(priceUsdRaw));
     final maxGuestsCtrl = TextEditingController(text: pkg?['maxGuestsIfPrivate']?.toString() ?? '');
+
+    final videoCtrl = TextEditingController(text: pkg?['videoUrl']?.toString() ?? '');
+    final rawPhotos = pkg?['photos'];
+    List<String> photos =
+        rawPhotos is List ? rawPhotos.map((e) => e.toString()).toList() : <String>[];
 
     String? operatorId = pkg?['operatorId']?.toString();
     String type = (pkg?['type'] ?? 'standard').toString();
@@ -186,6 +192,19 @@ class _PackagesScreenState extends State<PackagesScreen> {
                   keyboardType: TextInputType.number,
                 ),
               ),
+            const SizedBox(height: 12),
+            // The package is the customer-facing product page, so it needs its
+            // own gallery — the backend stored photos/videoUrl all along.
+            MediaManager(
+              urls: photos,
+              folder: 'packages',
+              onChanged: (next) => setDialogState(() => photos = next),
+            ),
+            AdminTextField(
+              label: 'Video URL (optional)',
+              controller: videoCtrl,
+              hint: 'https://…',
+            ),
           ],
         ),
       ),
@@ -229,6 +248,10 @@ class _PackagesScreenState extends State<PackagesScreen> {
           if (isPrivate && maxGuests != null) 'maxGuestsIfPrivate': maxGuests,
           'basePriceEgp': basePrice,
           if (priceUsd != null) 'priceUsd': priceUsd,
+          // Always sent so removing the last photo actually persists.
+          'photos': photos,
+          if (videoCtrl.text.trim().isNotEmpty) 'videoUrl': videoCtrl.text.trim(),
+          if (photos.isNotEmpty) 'coverPhotoUrl': photos.first,
         };
 
         try {

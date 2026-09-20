@@ -5,6 +5,9 @@ import { Flight, FlightStatus, WeatherStatus } from './entities/flight.entity';
 import { FlightTemplate } from './entities/flight-template.entity';
 import { Package } from '../packages/entities/package.entity';
 import { CreateFlightDto, UpdateFlightDto, SearchFlightsDto } from './dto/flight.dto';
+import { Booking, BookingStatus, PaymentStatus } from '../bookings/entities/booking.entity';
+import { NotificationsService } from '../notifications/notifications.service';
+import { NotificationType } from '../notifications/entities/notification.entity';
 
 @Injectable()
 export class FlightsService {
@@ -15,6 +18,9 @@ export class FlightsService {
     private readonly templateRepo: Repository<FlightTemplate>,
     @InjectRepository(Package)
     private readonly packageRepo: Repository<Package>,
+    @InjectRepository(Booking)
+    private readonly bookingRepo: Repository<Booking>,
+    private readonly notifications: NotificationsService,
   ) {}
 
   async search(dto: SearchFlightsDto) {
@@ -22,11 +28,29 @@ export class FlightsService {
       .leftJoinAndSelect('flight.operator', 'operator')
       .leftJoinAndSelect('flight.package', 'package')
       .leftJoinAndSelect('flight.balloon', 'balloon')
-      .leftJoinAndSelect('flight.pilot', 'pilot')
-      .where('flight.status = :status', { status: FlightStatus.SCHEDULED });
+      .leftJoinAndSelect('flight.pilot', 'pilot');
+
+    // Default to SCHEDULED (what the customer app wants) but let an explicit
+    // status through, and allow 'all' to drop the filter entirely for the
+    // admin dispatch board.
+    if (dto.status) {
+      query.where('flight.status = :status', { status: dto.status });
+    } else if (!dto.dateFrom && !dto.dateTo) {
+      query.where('flight.status = :status', { status: FlightStatus.SCHEDULED });
+    } else {
+      query.where('1 = 1');
+    }
 
     if (dto.date) {
       query.andWhere('flight.flightDate = :date', { date: dto.date });
+    }
+
+    if (dto.dateFrom) {
+      query.andWhere('flight.flightDate >= :dateFrom', { dateFrom: dto.dateFrom });
+    }
+
+    if (dto.dateTo) {
+      query.andWhere('flight.flightDate <= :dateTo', { dateTo: dto.dateTo });
     }
 
     if (dto.operatorId) {
@@ -106,10 +130,81 @@ export class FlightsService {
   async updateStatus(id: string, status: FlightStatus, cancellationReason?: string) {
     const flight = await this.findOne(id);
     flight.status = status;
+
     if (status === FlightStatus.CANCELLED) {
-      flight.cancellationReason = cancellationReason || 'Weather conditions or operational reasons';
+      const reason =
+        cancellationReason || 'Weather conditions or operational reasons';
+      flight.cancellationReason = reason;
+      await this.flightRepo.save(flight);
+      // The admin panel tells the operator this cancels the passengers too.
+      // It did not, so travellers stayed CONFIRMED, were never told, and were
+      // never refunded.
+      const affected = await this.cancelBookingsForFlight(flight.id, reason);
+      return { ...flight, cancelledBookings: affected };
     }
+
+    if (status === FlightStatus.COMPLETED) {
+      await this.completeBookingsForFlight(flight.id);
+    }
+
     return this.flightRepo.save(flight);
+  }
+
+  /** Cancels every live booking on a flight and notifies each traveller. */
+  private async cancelBookingsForFlight(flightId: string, reason: string): Promise<number> {
+    const bookings = await this.bookingRepo.find({
+      where: { flightId },
+      relations: { flight: true },
+    });
+    let affected = 0;
+
+    for (const booking of bookings) {
+      if (
+        booking.bookingStatus === BookingStatus.CANCELLED ||
+        booking.bookingStatus === BookingStatus.COMPLETED
+      ) {
+        continue;
+      }
+      booking.bookingStatus = BookingStatus.CANCELLED;
+      booking.cancellationReason = `Flight cancelled: ${reason}`;
+      booking.cancelledAt = new Date();
+      // An operator-side cancellation is always a full refund.
+      if (booking.paymentStatus === PaymentStatus.PAID) {
+        booking.paymentStatus = PaymentStatus.REFUNDED;
+      }
+      await this.bookingRepo.save(booking);
+      affected++;
+
+      try {
+        await this.notifications.create({
+          userId: booking.userId,
+          titleEn: 'Flight cancelled',
+          titleAr: 'تم إلغاء الرحلة',
+          bodyEn: `We are sorry — your flight (${booking.bookingRef}) was cancelled. ${reason}. A full refund is being processed.`,
+          bodyAr: `نعتذر — تم إلغاء رحلتك (${booking.bookingRef}). ${reason}. جاري رد المبلغ بالكامل.`,
+          type: NotificationType.FLIGHT_UPDATE,
+          data: { bookingRef: booking.bookingRef, reason },
+        });
+      } catch {
+        // A failed notification must not roll back the cancellation.
+      }
+    }
+    return affected;
+  }
+
+  /** Post-flight close-out: checked-in passengers become COMPLETED. */
+  private async completeBookingsForFlight(flightId: string): Promise<void> {
+    const bookings = await this.bookingRepo.find({ where: { flightId } });
+    for (const booking of bookings) {
+      if (
+        booking.bookingStatus === BookingStatus.CANCELLED ||
+        booking.bookingStatus === BookingStatus.COMPLETED
+      ) {
+        continue;
+      }
+      booking.bookingStatus = BookingStatus.COMPLETED;
+      await this.bookingRepo.save(booking);
+    }
   }
 
   async updateWeatherStatus(id: string, weatherStatus: WeatherStatus) {

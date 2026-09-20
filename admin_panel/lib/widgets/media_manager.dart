@@ -44,33 +44,29 @@ class _MediaManagerState extends State<MediaManager> {
   Future<void> _pick() async {
     setState(() => _error = null);
 
-    FilePickerResult? result;
+    // file_picker 13 returns a List<PlatformFile> directly (older versions
+    // returned a nullable FilePickerResult), drops allowMultiple/withData, and
+    // exposes the contents through readAsBytes() rather than a bytes field.
+    List<PlatformFile> picked;
     try {
-      result = await FilePicker.platform.pickFiles(
+      picked = await FilePicker.platform.pickFiles(
         type: FileType.custom,
         allowedExtensions: _mimeByExt.keys.toList(),
-        allowMultiple: true,
-        withData: true, // needed on web, and gives us bytes directly
       );
     } catch (e) {
       setState(() => _error = 'Could not open the file picker: $e');
       return;
     }
-    if (result == null || result.files.isEmpty) return;
+    if (picked.isEmpty) return;
 
     setState(() => _uploading = true);
     final added = <String>[];
     String? failure;
 
-    for (final file in result.files) {
+    for (final file in picked) {
       if (widget.urls.length + added.length >= widget.maxFiles) {
         failure = 'Only ${widget.maxFiles} files allowed; the rest were skipped.';
         break;
-      }
-      final bytes = file.bytes;
-      if (bytes == null) {
-        failure = '${file.name}: could not read the file.';
-        continue;
       }
       final ext = file.extension?.toLowerCase() ?? '';
       final mime = _mimeByExt[ext];
@@ -79,6 +75,7 @@ class _MediaManagerState extends State<MediaManager> {
         continue;
       }
       try {
+        final bytes = await file.readAsBytes();
         final res = await AdminApiService.uploadImage(
           filename: file.name,
           mimetype: mime,

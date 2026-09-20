@@ -72,6 +72,23 @@ export class SearchFlightsDto {
   @IsDateString()
   date?: string;
 
+  /**
+   * Admin dispatch board filters. Without these the list was hardcoded to
+   * SCHEDULED, so a flight vanished the moment its status changed and there
+   * was no history, no "yesterday", and no way to undo a mis-click.
+   */
+  @IsOptional()
+  @IsEnum(FlightStatus)
+  status?: FlightStatus;
+
+  @IsOptional()
+  @IsDateString()
+  dateFrom?: string;
+
+  @IsOptional()
+  @IsDateString()
+  dateTo?: string;
+
   @IsOptional()
   @Type(() => Number)
   @IsNumber()
