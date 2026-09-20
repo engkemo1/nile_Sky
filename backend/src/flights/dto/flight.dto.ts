@@ -52,6 +52,60 @@ export class CreateFlightDto {
   @IsEnum(WeatherStatus)
   weatherStatus?: WeatherStatus;
 
+  // ── Launch / landing sites ──
+  @IsOptional()
+  @IsString()
+  launchSite?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  launchLat?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  launchLng?: number;
+
+  @IsOptional()
+  @IsString()
+  landingSite?: string;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  landingLat?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  landingLng?: number;
+
+  // ── Post-flight record ──
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  maxAltitudeM?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  actualDurationMin?: number;
+
+  @IsOptional()
+  @Type(() => Number)
+  @IsNumber()
+  recordedWindKph?: number;
+
+  // ── Ground crew & chase vehicle ──
+  @IsOptional()
+  @IsString()
+  chaseDriverId?: string;
+
+  @IsOptional()
+  @IsString()
+  groundCrew?: string;
+
   @IsOptional()
   @IsArray()
   photos?: string[];

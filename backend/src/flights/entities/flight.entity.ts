@@ -6,6 +6,7 @@ import { Operator } from '../../operators/entities/operator.entity';
 import { Package } from '../../packages/entities/package.entity';
 import { Balloon } from '../../balloons/entities/balloon.entity';
 import { Pilot } from '../../pilots/entities/pilot.entity';
+import { Driver } from '../../drivers/entities/driver.entity';
 import { FlightTemplate } from './flight-template.entity';
 
 export enum FlightStatus {
@@ -96,6 +97,58 @@ export class Flight {
 
   @Column({ name: 'confirmed_at', type: 'timestamptz', nullable: true })
   confirmedAt: Date;
+
+  // ───────── Launch / landing sites ─────────
+  // A flight had nowhere to record where it took off from or came down, which
+  // the chase crew and the operational record both need.
+
+  @Column({ name: 'launch_site', nullable: true, length: 200 })
+  launchSite: string;
+
+  @Column({ name: 'launch_lat', type: 'decimal', precision: 10, scale: 7, nullable: true })
+  launchLat: number;
+
+  @Column({ name: 'launch_lng', type: 'decimal', precision: 10, scale: 7, nullable: true })
+  launchLng: number;
+
+  @Column({ name: 'landing_site', nullable: true, length: 200 })
+  landingSite: string;
+
+  @Column({ name: 'landing_lat', type: 'decimal', precision: 10, scale: 7, nullable: true })
+  landingLat: number;
+
+  @Column({ name: 'landing_lng', type: 'decimal', precision: 10, scale: 7, nullable: true })
+  landingLng: number;
+
+  // ───────── Post-flight record ─────────
+  // Filled in after landing; feeds the passenger certificate and the
+  // operational log.
+
+  @Column({ name: 'max_altitude_m', type: 'int', nullable: true })
+  maxAltitudeM: number;
+
+  @Column({ name: 'actual_duration_min', type: 'int', nullable: true })
+  actualDurationMin: number;
+
+  @Column({ name: 'recorded_wind_kph', type: 'decimal', precision: 5, scale: 1, nullable: true })
+  recordedWindKph: number;
+
+  @Column({ name: 'landed_at', type: 'timestamptz', nullable: true })
+  landedAt: Date;
+
+  // ───────── Ground crew & chase vehicle ─────────
+  // Drivers were only ever attached to a booking, so nothing recorded who
+  // chased the balloon or who crewed the launch.
+
+  @Column({ name: 'chase_driver_id', nullable: true })
+  chaseDriverId: string;
+
+  @ManyToOne(() => Driver, { onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'chase_driver_id' })
+  chaseDriver: Driver;
+
+  @Column({ name: 'ground_crew', type: 'text', nullable: true })
+  groundCrew: string;
 
   @Column({ name: 'photos', type: 'jsonb', nullable: true, default: '[]' })
   photos: string[]; // Flight-specific photos (e.g. taken during this flight)

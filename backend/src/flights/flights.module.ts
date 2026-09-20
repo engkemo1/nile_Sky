@@ -8,11 +8,12 @@ import { FlightTemplatesService } from './flight-templates/flight-templates.serv
 import { FlightTemplatesController } from './flight-templates/flight-templates.controller';
 import { Package } from '../packages/entities/package.entity';
 import { Booking } from '../bookings/entities/booking.entity';
+import { Balloon } from '../balloons/entities/balloon.entity';
 import { NotificationsModule } from '../notifications/notifications.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([Flight, FlightTemplate, Package, Booking]),
+    TypeOrmModule.forFeature([Flight, FlightTemplate, Package, Booking, Balloon]),
     NotificationsModule,
   ],
   controllers: [FlightsController, FlightTemplatesController],

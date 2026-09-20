@@ -21,6 +21,21 @@ export class FlightsController {
     return this.flightsService.findOne(id);
   }
 
+  /**
+   * The pre-dawn go/no-go. The pilot confirms the flight will fly (or
+   * un-confirms it), which is the workflow confirmedAt was designed for and
+   * that nothing ever wrote to.
+   */
+  @Patch(':id/confirm')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN, UserRole.OPERATOR_ADMIN)
+  async confirmFlight(
+    @Param('id') id: string,
+    @Body('confirmed') confirmed?: boolean,
+  ) {
+    return this.flightsService.setConfirmed(id, confirmed !== false);
+  }
+
   @Post('generate')
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PLATFORM_ADMIN, UserRole.OPERATOR_ADMIN)

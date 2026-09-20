@@ -318,6 +318,11 @@ class AdminApiService {
 
   /// POST /flights/generate returns {"message": "...", "flights": [...]},
   /// not a bare list.
+  /// The pre-dawn go/no-go. Pass false to withdraw a confirmation.
+  static Future<Map<String, dynamic>> confirmFlight(String id, {bool confirmed = true}) async {
+    return await _patch('/flights/$id/confirm', {'confirmed': confirmed});
+  }
+
   static Future<Map<String, dynamic>> generateFlights(String targetDate) async {
     return await _post('/flights/generate', {'targetDate': targetDate});
   }

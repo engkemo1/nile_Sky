@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Flight, FlightStatus, WeatherStatus } from './entities/flight.entity';
 import { FlightTemplate } from './entities/flight-template.entity';
 import { Package } from '../packages/entities/package.entity';
+import { Balloon } from '../balloons/entities/balloon.entity';
 import { CreateFlightDto, UpdateFlightDto, SearchFlightsDto } from './dto/flight.dto';
 import { Booking, BookingStatus, PaymentStatus } from '../bookings/entities/booking.entity';
 import { NotificationsService } from '../notifications/notifications.service';
@@ -20,6 +21,8 @@ export class FlightsService {
     private readonly packageRepo: Repository<Package>,
     @InjectRepository(Booking)
     private readonly bookingRepo: Repository<Booking>,
+    @InjectRepository(Balloon)
+    private readonly balloonRepo: Repository<Balloon>,
     private readonly notifications: NotificationsService,
   ) {}
 
@@ -117,13 +120,46 @@ export class FlightsService {
   }
 
   async create(dto: CreateFlightDto) {
+    await this.assertFitsBalloon(dto.balloonId, dto.capacity);
     const flight = this.flightRepo.create(dto);
     return this.flightRepo.save(flight);
   }
 
   async update(id: string, dto: UpdateFlightDto) {
     const flight = await this.findOne(id);
+
+    // Capacity must never drop below the seats already sold, and must never
+    // exceed what the assigned balloon can carry.
+    if (dto.capacity !== undefined && dto.capacity !== null) {
+      if (dto.capacity < flight.bookedCount) {
+        throw new BadRequestException(
+          `Capacity cannot be ${dto.capacity}: ${flight.bookedCount} seat(s) are already booked on this flight.`,
+        );
+      }
+      await this.assertFitsBalloon(dto.balloonId ?? flight.balloonId, dto.capacity);
+    } else if (dto.balloonId) {
+      await this.assertFitsBalloon(dto.balloonId, flight.capacity);
+    }
+
     Object.assign(flight, dto);
+    return this.flightRepo.save(flight);
+  }
+
+  /** Rejects a flight whose capacity exceeds the balloon's own capacity. */
+  private async assertFitsBalloon(balloonId: string | undefined, capacity: number) {
+    if (!balloonId) return;
+    const balloon = await this.balloonRepo.findOne({ where: { id: balloonId } });
+    if (balloon && capacity > balloon.capacity) {
+      throw new BadRequestException(
+        `${balloon.name || balloon.registrationCode} seats ${balloon.capacity}; this flight is set to ${capacity}.`,
+      );
+    }
+  }
+
+  /** Records (or clears) the pre-dawn go/no-go confirmation. */
+  async setConfirmed(id: string, confirmed: boolean) {
+    const flight = await this.findOne(id);
+    flight.confirmedAt = confirmed ? new Date() : null;
     return this.flightRepo.save(flight);
   }
 

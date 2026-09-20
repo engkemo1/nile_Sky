@@ -19,6 +19,7 @@ class _FlightsScreenState extends State<FlightsScreen> with SingleTickerProvider
   List<dynamic> _packages = [];
   List<dynamic> _balloons = [];
   List<dynamic> _pilots = [];
+  List<dynamic> _drivers = [];
   List<dynamic> _templates = [];
   bool _templatesLoading = true;
   String? _templatesError;
@@ -47,6 +48,7 @@ class _FlightsScreenState extends State<FlightsScreen> with SingleTickerProvider
         AdminApiService.getPackages(),
         AdminApiService.getBalloons(),
         AdminApiService.getPilots(),
+        AdminApiService.getDrivers(),
       ]);
       if (!mounted) return;
       setState(() {
@@ -55,6 +57,7 @@ class _FlightsScreenState extends State<FlightsScreen> with SingleTickerProvider
         _packages = results[2];
         _balloons = results[3];
         _pilots = results[4];
+        _drivers = results[5];
         _isLoading = false;
       });
     } catch (e) {
@@ -98,11 +101,32 @@ class _FlightsScreenState extends State<FlightsScreen> with SingleTickerProvider
         packages: _packages,
         balloons: _balloons,
         pilots: _pilots,
+        drivers: _drivers,
       ),
     );
     if (saved == true) {
       if (mounted) showSnack(context, flight == null ? 'Flight created' : 'Flight updated');
       _loadFlights();
+    }
+  }
+
+  /// The pre-dawn go/no-go. confirmedAt existed in the schema with nothing
+  /// ever writing to it.
+  Future<void> _toggleConfirm(Map<String, dynamic> flight) async {
+    final isConfirmed = flight['confirmedAt'] != null;
+    try {
+      await AdminApiService.confirmFlight(flight['id'].toString(),
+          confirmed: !isConfirmed);
+      if (mounted) {
+        showSnack(context,
+            isConfirmed ? 'Confirmation withdrawn' : 'Flight confirmed to fly');
+      }
+      _loadFlights();
+    } catch (e) {
+      if (mounted) {
+        showSnack(context, e.toString().replaceFirst('ApiException: ', ''),
+            error: true);
+      }
     }
   }
 
@@ -371,7 +395,9 @@ class _FlightsScreenState extends State<FlightsScreen> with SingleTickerProvider
             DataColumn(label: Text('PRICE')),
             DataColumn(label: Text('WEATHER')),
             DataColumn(label: Text('MEDIA')),
+            DataColumn(label: Text('GO?')),
             DataColumn(label: Text('STATUS')),
+            DataColumn(label: Text('NOTE')),
             DataColumn(label: Text('ACTIONS')),
           ],
           rows: _flights.map<DataRow>((f) {
@@ -404,6 +430,25 @@ class _FlightsScreenState extends State<FlightsScreen> with SingleTickerProvider
                   ],
                 ],
               )),
+              DataCell(
+                Tooltip(
+                  message: f['confirmedAt'] != null
+                      ? 'Confirmed to fly — tap to withdraw'
+                      : 'Not yet confirmed — tap to confirm',
+                  child: IconButton(
+                    icon: Icon(
+                      f['confirmedAt'] != null
+                          ? Icons.verified
+                          : Icons.help_outline,
+                      color: f['confirmedAt'] != null
+                          ? AdminColors.success
+                          : AdminColors.textMuted,
+                      size: 18,
+                    ),
+                    onPressed: () => _toggleConfirm(Map<String, dynamic>.from(f)),
+                  ),
+                ),
+              ),
               DataCell(InkWell(
                 onTap: () => _showStatusDialog(f),
                 child: Container(
@@ -415,6 +460,22 @@ class _FlightsScreenState extends State<FlightsScreen> with SingleTickerProvider
                   child: Text(status.toUpperCase(), style: TextStyle(color: statusColor, fontSize: 10, fontWeight: FontWeight.bold)),
                 ),
               )),
+              DataCell(
+                SizedBox(
+                  width: 150,
+                  child: Text(
+                    // cancellationReason was recorded but never shown back, so
+                    // nobody could answer "why was this flight scrubbed?".
+                    (f['cancellationReason']?.toString() ?? '').isEmpty
+                        ? '—'
+                        : f['cancellationReason'].toString(),
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                        fontSize: 11, color: AdminColors.textSecondary),
+                  ),
+                ),
+              ),
               DataCell(Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [

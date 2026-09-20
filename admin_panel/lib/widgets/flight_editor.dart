@@ -15,6 +15,7 @@ class FlightEditor extends StatefulWidget {
   final List<dynamic> packages;
   final List<dynamic> balloons;
   final List<dynamic> pilots;
+  final List<dynamic> drivers;
 
   const FlightEditor({
     super.key,
@@ -23,6 +24,7 @@ class FlightEditor extends StatefulWidget {
     required this.packages,
     required this.balloons,
     required this.pilots,
+    this.drivers = const [],
   });
 
   @override
@@ -35,11 +37,22 @@ class _FlightEditorState extends State<FlightEditor> {
   late TextEditingController _capacityCtrl;
   late TextEditingController _priceCtrl;
   late TextEditingController _videoCtrl;
+  late TextEditingController _launchSiteCtrl;
+  late TextEditingController _launchLatCtrl;
+  late TextEditingController _launchLngCtrl;
+  late TextEditingController _landingSiteCtrl;
+  late TextEditingController _landingLatCtrl;
+  late TextEditingController _landingLngCtrl;
+  late TextEditingController _altitudeCtrl;
+  late TextEditingController _durationCtrl;
+  late TextEditingController _windCtrl;
+  late TextEditingController _crewCtrl;
 
   String? _operatorId;
   String? _packageId;
   String? _balloonId;
   String? _pilotId;
+  String? _chaseDriverId;
   String _status = 'scheduled';
   String _weather = 'favorable';
   DateTime _date = DateTime.now().add(const Duration(days: 1));
@@ -67,6 +80,17 @@ class _FlightEditorState extends State<FlightEditor> {
       text: f != null ? asDouble(f['priceEgp']).toStringAsFixed(2) : '9000',
     );
     _videoCtrl = TextEditingController(text: f?['videoUrl']?.toString() ?? '');
+    _launchSiteCtrl = TextEditingController(text: f?['launchSite']?.toString() ?? '');
+    _launchLatCtrl = TextEditingController(text: _num(f?['launchLat']));
+    _launchLngCtrl = TextEditingController(text: _num(f?['launchLng']));
+    _landingSiteCtrl = TextEditingController(text: f?['landingSite']?.toString() ?? '');
+    _landingLatCtrl = TextEditingController(text: _num(f?['landingLat']));
+    _landingLngCtrl = TextEditingController(text: _num(f?['landingLng']));
+    _altitudeCtrl = TextEditingController(text: f?['maxAltitudeM']?.toString() ?? '');
+    _durationCtrl = TextEditingController(text: f?['actualDurationMin']?.toString() ?? '');
+    _windCtrl = TextEditingController(text: _num(f?['recordedWindKph']));
+    _crewCtrl = TextEditingController(text: f?['groundCrew']?.toString() ?? '');
+    _chaseDriverId = f?['chaseDriverId']?.toString();
 
     _operatorId = f?['operatorId']?.toString();
     _packageId = f?['packageId']?.toString();
@@ -92,6 +116,16 @@ class _FlightEditorState extends State<FlightEditor> {
     }
   }
 
+  /// Postgres decimals arrive as padded strings ("25.7201000"); show them
+  /// tidily and leave blanks blank.
+  static String _num(dynamic v) {
+    if (v == null) return '';
+    final d = double.tryParse(v.toString());
+    if (d == null) return v.toString();
+    final s = d.toString();
+    return s.endsWith('.0') ? s.substring(0, s.length - 2) : s;
+  }
+
   String _suggestNumber() {
     final d = DateFormat('yyyyMMdd').format(DateTime.now().add(const Duration(days: 1)));
     return 'FL-$d-${DateTime.now().millisecondsSinceEpoch % 1000}';
@@ -104,6 +138,16 @@ class _FlightEditorState extends State<FlightEditor> {
     _capacityCtrl.dispose();
     _priceCtrl.dispose();
     _videoCtrl.dispose();
+    _launchSiteCtrl.dispose();
+    _launchLatCtrl.dispose();
+    _launchLngCtrl.dispose();
+    _landingSiteCtrl.dispose();
+    _landingLatCtrl.dispose();
+    _landingLngCtrl.dispose();
+    _altitudeCtrl.dispose();
+    _durationCtrl.dispose();
+    _windCtrl.dispose();
+    _crewCtrl.dispose();
     super.dispose();
   }
 
@@ -127,6 +171,21 @@ class _FlightEditorState extends State<FlightEditor> {
     final price = double.tryParse(_priceCtrl.text.trim());
     if (price == null || price < 0) return 'Price must be a number.';
     return null;
+  }
+
+  /// Includes the key only when there is text; blank optional strings are
+  /// rejected by @IsOptional() + @IsString().
+  Map<String, dynamic> _text(String key, TextEditingController c) {
+    final v = c.text.trim();
+    return v.isEmpty ? const {} : {key: v};
+  }
+
+  /// Same for numbers — a blank field must be omitted, not sent as 0.
+  Map<String, dynamic> _number(String key, TextEditingController c) {
+    final v = c.text.trim();
+    if (v.isEmpty) return const {};
+    final n = double.tryParse(v);
+    return n == null ? const {} : {key: n};
   }
 
   Future<void> _save() async {
@@ -159,6 +218,17 @@ class _FlightEditorState extends State<FlightEditor> {
       // Optional strings must be omitted when blank: @IsOptional() only skips
       // null/undefined, so '' would fail validation.
       if (_videoCtrl.text.trim().isNotEmpty) 'videoUrl': _videoCtrl.text.trim(),
+      if (_chaseDriverId != null) 'chaseDriverId': _chaseDriverId,
+      ..._text('launchSite', _launchSiteCtrl),
+      ..._text('landingSite', _landingSiteCtrl),
+      ..._text('groundCrew', _crewCtrl),
+      ..._number('launchLat', _launchLatCtrl),
+      ..._number('launchLng', _launchLngCtrl),
+      ..._number('landingLat', _landingLatCtrl),
+      ..._number('landingLng', _landingLngCtrl),
+      ..._number('maxAltitudeM', _altitudeCtrl),
+      ..._number('actualDurationMin', _durationCtrl),
+      ..._number('recordedWindKph', _windCtrl),
     };
 
     try {
@@ -176,6 +246,27 @@ class _FlightEditorState extends State<FlightEditor> {
         _error = e.toString().replaceFirst('ApiException: ', '');
       });
     }
+  }
+
+  Widget _section(String title) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 4, bottom: 10),
+      child: Row(
+        children: [
+          Text(
+            title.toUpperCase(),
+            style: const TextStyle(
+              color: AdminColors.primary,
+              fontSize: 11,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 0.6,
+            ),
+          ),
+          const SizedBox(width: 10),
+          const Expanded(child: Divider(color: AdminColors.border, height: 1)),
+        ],
+      ),
+    );
   }
 
   @override
@@ -328,6 +419,103 @@ class _FlightEditorState extends State<FlightEditor> {
                   ),
                 ],
               ),
+              _section('Launch & landing'),
+              AdminTextField(
+                label: 'Launch site',
+                controller: _launchSiteCtrl,
+                hint: 'e.g. Al Dabbaya launch field, West Bank',
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: AdminTextField(
+                      label: 'Launch latitude',
+                      controller: _launchLatCtrl,
+                      keyboardType: TextInputType.number,
+                      hint: '25.7201',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: AdminTextField(
+                      label: 'Launch longitude',
+                      controller: _launchLngCtrl,
+                      keyboardType: TextInputType.number,
+                      hint: '32.6100',
+                    ),
+                  ),
+                ],
+              ),
+              AdminTextField(
+                label: 'Landing site',
+                controller: _landingSiteCtrl,
+                hint: 'Filled in after the flight',
+              ),
+              Row(
+                children: [
+                  Expanded(
+                    child: AdminTextField(
+                      label: 'Landing latitude',
+                      controller: _landingLatCtrl,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: AdminTextField(
+                      label: 'Landing longitude',
+                      controller: _landingLngCtrl,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+
+              _section('Ground crew & chase vehicle'),
+              AdminDropdown(
+                label: 'Chase driver',
+                value: _chaseDriverId,
+                items: itemsFrom(_forOperator(widget.drivers),
+                    labelKeys: const ['name']),
+                onChanged: (v) => setState(() => _chaseDriverId = v),
+              ),
+              AdminTextField(
+                label: 'Ground crew',
+                controller: _crewCtrl,
+                hint: 'e.g. Ahmed (crew chief), Mostafa, Sayed',
+                maxLines: 2,
+              ),
+
+              _section('After the flight'),
+              Row(
+                children: [
+                  Expanded(
+                    child: AdminTextField(
+                      label: 'Max altitude (m)',
+                      controller: _altitudeCtrl,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: AdminTextField(
+                      label: 'Duration (min)',
+                      controller: _durationCtrl,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  Expanded(
+                    child: AdminTextField(
+                      label: 'Wind (km/h)',
+                      controller: _windCtrl,
+                      keyboardType: TextInputType.number,
+                    ),
+                  ),
+                ],
+              ),
+
+              _section('Media'),
               MediaManager(
                 urls: _photos,
                 folder: 'flights',
