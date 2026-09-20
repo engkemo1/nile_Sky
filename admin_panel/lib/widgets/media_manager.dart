@@ -44,12 +44,14 @@ class _MediaManagerState extends State<MediaManager> {
   Future<void> _pick() async {
     setState(() => _error = null);
 
-    // file_picker 13 returns a List<PlatformFile> directly (older versions
-    // returned a nullable FilePickerResult), drops allowMultiple/withData, and
-    // exposes the contents through readAsBytes() rather than a bytes field.
+    // file_picker 13 differs from 8.x in four ways: pickFiles is a STATIC
+    // method (there is no .platform instance any more), it returns a
+    // List<PlatformFile> directly rather than a nullable FilePickerResult,
+    // allowMultiple/withData are gone, and the bytes come from readAsBytes()
+    // rather than a bytes field.
     List<PlatformFile> picked;
     try {
-      picked = await FilePicker.platform.pickFiles(
+      picked = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: _mimeByExt.keys.toList(),
       );
