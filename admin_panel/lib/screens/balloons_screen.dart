@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
 import '../widgets/operator_picker.dart';
+import '../widgets/admin_form.dart';
 
 class BalloonsScreen extends StatefulWidget {
   const BalloonsScreen({super.key});
@@ -13,14 +14,26 @@ class _BalloonsScreenState extends State<BalloonsScreen> {
   List<dynamic> _balloons = [];
   List<dynamic> _operators = [];
   bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
     setState(() => _isLoading = true);
-    try { _balloons = await AdminApiService.getBalloons(); } catch (_) {}
-    try { _operators = await AdminApiService.getOperators(); } catch (_) {}
+    try {
+      _balloons = await AdminApiService.getBalloons();
+      _error = null;
+    } catch (e) {
+      _error = 'Could not load balloons: '
+          '${e.toString().replaceFirst('ApiException: ', '')}';
+    }
+    try {
+      _operators = await AdminApiService.getOperators();
+    } catch (e) {
+      // Secondary lookup: the picker degrades but the list still renders.
+      debugPrint('operators lookup failed: $e');
+    }
     setState(() => _isLoading = false);
   }
 
@@ -99,6 +112,7 @@ class _BalloonsScreenState extends State<BalloonsScreen> {
         ],
       )),
       const SizedBox(height: 16), const Divider(color: AdminColors.border, height: 1),
+      ErrorBanner(error: _error, onRetry: _load),
       Expanded(child: _isLoading ? const Center(child: CircularProgressIndicator(color: AdminColors.primary))
         : _balloons.isEmpty ? const Center(child: Text('No balloons found.', style: TextStyle(color: AdminColors.textMuted)))
         : SingleChildScrollView(padding: const EdgeInsets.all(28), child: Container(

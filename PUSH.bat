@@ -1,14 +1,11 @@
 @echo off
-title NileSky - Push to GitHub
+title NileSky - Push new admin features
 cd /d "%~dp0"
 echo.
-echo   Sending your changes to GitHub...
+echo   Sending the new admin panel features to GitHub...
 echo.
-REM Remove the leftover Next.js-style catch-all (not honoured by Vercel)
-if exist "backend\api\[[...slug]].js" del /q "backend\api\[[...slug]].js"
-git rm --cached "backend/api/[[...slug]].js" >nul 2>&1
 git add -A
-git commit -m "Build the admin panel on Vercel; drop the stray catch-all file"
+git commit -m "Add missing admin features: media storage, flight editor, packages/users/reviews screens"
 git push origin main
 echo.
 if errorlevel 1 (

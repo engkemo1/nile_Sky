@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { IsString, IsNotEmpty, IsOptional, IsEmail, IsNumber, IsEnum, IsArray } from 'class-validator';
 import { OperatorStatus } from '../entities/operator.entity';
 
@@ -79,7 +80,7 @@ export class CreateOperatorDto {
   commissionRate?: number;
 }
 
-export class UpdateOperatorDto extends CreateOperatorDto {
+export class UpdateOperatorDto extends PartialType(CreateOperatorDto) {
   @IsOptional()
   @IsEnum(OperatorStatus)
   status?: OperatorStatus;

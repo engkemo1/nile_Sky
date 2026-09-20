@@ -3,6 +3,7 @@ import 'package:intl/intl.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
 import '../utils/num_parse.dart';
+import '../widgets/admin_form.dart';
 
 class BookingsScreen extends StatefulWidget {
   const BookingsScreen({super.key});
@@ -13,6 +14,7 @@ class BookingsScreen extends StatefulWidget {
 
 class _BookingsScreenState extends State<BookingsScreen> {
   List<dynamic> _bookings = [];
+  List<dynamic> _drivers = [];
   bool _isLoading = true;
   String? _error;
 
@@ -26,7 +28,15 @@ class _BookingsScreenState extends State<BookingsScreen> {
     setState(() { _isLoading = true; _error = null; });
     try {
       final data = await AdminApiService.getBookings();
-      setState(() { _bookings = data; _isLoading = false; });
+      List<dynamic> drivers = _drivers;
+      try {
+        drivers = await AdminApiService.getDrivers();
+      } catch (_) {
+        // A failing driver list must not hide the bookings; assignment just
+        // has nothing to choose from until it loads.
+      }
+      if (!mounted) return;
+      setState(() { _bookings = data; _drivers = drivers; _isLoading = false; });
     } catch (e) {
       setState(() { _error = e.toString(); _isLoading = false; });
     }
@@ -116,6 +126,132 @@ class _BookingsScreenState extends State<BookingsScreen> {
         ],
       ),
     );
+  }
+
+  Future<void> _assignDriver(Map<String, dynamic> booking) async {
+    if (_drivers.isEmpty) {
+      showSnack(context, 'No drivers available — add one on the Drivers screen.',
+          error: true);
+      return;
+    }
+    String? driverId = booking['driverId']?.toString() ??
+        _drivers.first['id']?.toString();
+    final pickupCtrl = TextEditingController(
+        text: booking['pickupTime']?.toString() ?? '');
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setLocal) => AlertDialog(
+          backgroundColor: AdminColors.cardDark,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text('Assign driver — ${booking['bookingRef']}',
+              style: const TextStyle(
+                  color: AdminColors.textPrimary, fontSize: 16)),
+          content: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AdminDropdown(
+                  label: 'Driver',
+                  value: driverId,
+                  items: itemsFrom(_drivers, labelKeys: const ['name']),
+                  onChanged: (v) => setLocal(() => driverId = v),
+                ),
+                AdminTextField(
+                  label: 'Pickup time (optional)',
+                  controller: pickupCtrl,
+                  hint: '03:45:00',
+                ),
+                Text(
+                  'Hotel: ${booking['pickupHotelName'] ?? '-'}',
+                  style: const TextStyle(
+                      color: AdminColors.textMuted, fontSize: 12),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+                onPressed: () => Navigator.pop(ctx),
+                child: const Text('Cancel',
+                    style: TextStyle(color: AdminColors.textMuted))),
+            ElevatedButton(
+              onPressed: () async {
+                if (driverId == null) return;
+                Navigator.pop(ctx);
+                try {
+                  await AdminApiService.assignDriver(
+                    booking['id'].toString(),
+                    driverId!,
+                    pickupTime: pickupCtrl.text.trim().isEmpty
+                        ? null
+                        : pickupCtrl.text.trim(),
+                  );
+                  if (mounted) showSnack(context, 'Driver assigned');
+                  _loadBookings();
+                } catch (e) {
+                  if (mounted) {
+                    showSnack(context,
+                        e.toString().replaceFirst('ApiException: ', ''),
+                        error: true);
+                  }
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                  backgroundColor: AdminColors.primary,
+                  foregroundColor: Colors.black),
+              child: const Text('Assign'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Future<void> _cancelBooking(Map<String, dynamic> booking) async {
+    final reasonCtrl = TextEditingController();
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AdminColors.cardDark,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: Text('Cancel ${booking['bookingRef']}?',
+            style: const TextStyle(
+                color: AdminColors.textPrimary, fontSize: 16)),
+        content: SizedBox(
+          width: 400,
+          child: AdminTextField(
+              label: 'Reason (optional)', controller: reasonCtrl),
+        ),
+        actions: [
+          TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Keep booking',
+                  style: TextStyle(color: AdminColors.textMuted))),
+          ElevatedButton(
+            onPressed: () => Navigator.pop(ctx, true),
+            style: ElevatedButton.styleFrom(
+                backgroundColor: AdminColors.error,
+                foregroundColor: Colors.white),
+            child: const Text('Cancel booking'),
+          ),
+        ],
+      ),
+    );
+    if (confirmed != true) return;
+    try {
+      await AdminApiService.cancelBooking(booking['id'].toString(),
+          reason: reasonCtrl.text.trim().isEmpty ? null : reasonCtrl.text.trim());
+      if (mounted) showSnack(context, 'Booking cancelled');
+      _loadBookings();
+    } catch (e) {
+      if (mounted) {
+        showSnack(context, e.toString().replaceFirst('ApiException: ', ''),
+            error: true);
+      }
+    }
   }
 
   @override
@@ -210,6 +346,28 @@ class _BookingsScreenState extends State<BookingsScreen> {
                                     mainAxisSize: MainAxisSize.min,
                                     children: [
                                       IconButton(icon: const Icon(Icons.info_outline, color: AdminColors.secondary, size: 18), tooltip: 'Details', onPressed: () => _showBookingDetails(b)),
+                                      if (status != 'cancelled')
+                                        IconButton(
+                                          icon: Icon(
+                                            b['driverId'] == null
+                                                ? Icons.local_taxi_outlined
+                                                : Icons.local_taxi,
+                                            color: b['driverId'] == null
+                                                ? AdminColors.textMuted
+                                                : AdminColors.success,
+                                            size: 18,
+                                          ),
+                                          tooltip: b['driverId'] == null
+                                              ? 'Assign driver'
+                                              : 'Change driver',
+                                          onPressed: () => _assignDriver(Map<String, dynamic>.from(b)),
+                                        ),
+                                      if (status != 'cancelled')
+                                        IconButton(
+                                          icon: const Icon(Icons.cancel_outlined, color: AdminColors.error, size: 18),
+                                          tooltip: 'Cancel booking',
+                                          onPressed: () => _cancelBooking(Map<String, dynamic>.from(b)),
+                                        ),
                                       if (status == 'confirmed')
                                         IconButton(
                                           icon: const Icon(Icons.check_circle_outline, color: AdminColors.success, size: 18),

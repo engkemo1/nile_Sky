@@ -31,8 +31,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         AdminApiService.getDashboard(),
         AdminApiService.getBookings(),
         AdminApiService.getLuxorWeather().catchError((_) => <String, dynamic>{
-          'condition': 'Clear ☀️',
-          'flightStatus': 'favorable',
+          // A failed weather call must never render as an affirmative go/no-go
+          // for balloon flights. Fall back to an explicit unknown.
+          'condition': 'Unavailable',
+          'flightStatus': 'unknown',
         }),
       ]);
       setState(() {
@@ -81,9 +83,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final allTime = _dashboardData?['allTime'] ?? {};
     final todayFlights = (_dashboardData?['todayFlightsSummary'] as List?) ?? [];
     final weatherCondition = _weather?['condition'] ?? 'Clear ☀️';
-    final flightStatus = _weather?['flightStatus'] ?? 'favorable';
-    final flightStatusLabel = flightStatus == 'favorable' ? 'Flights: GO ✅' : flightStatus == 'uncertain' ? 'Flights: HOLD ⚠️' : 'Flights: NO-GO ❌';
-    final flightStatusColor = flightStatus == 'favorable' ? AdminColors.success : flightStatus == 'uncertain' ? AdminColors.warning : AdminColors.error;
+    final flightStatus = _weather?['flightStatus'] ?? 'unknown';
+    final flightStatusLabel = flightStatus == 'favorable'
+        ? 'Flights: GO ✅'
+        : flightStatus == 'uncertain' || flightStatus == 'marginal'
+            ? 'Flights: HOLD ⚠️'
+            : flightStatus == 'unknown'
+                ? 'Weather: unavailable'
+                : 'Flights: NO-GO ❌';
+    final flightStatusColor = flightStatus == 'favorable'
+        ? AdminColors.success
+        : flightStatus == 'uncertain' || flightStatus == 'marginal'
+            ? AdminColors.warning
+            : flightStatus == 'unknown'
+                ? AdminColors.textMuted
+                : AdminColors.error;
 
     return RefreshIndicator(
       onRefresh: _loadData,

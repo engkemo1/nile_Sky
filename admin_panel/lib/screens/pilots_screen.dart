@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
 import '../widgets/operator_picker.dart';
+import '../widgets/admin_form.dart';
 
 class PilotsScreen extends StatefulWidget {
   const PilotsScreen({super.key});
@@ -13,14 +14,26 @@ class _PilotsScreenState extends State<PilotsScreen> {
   List<dynamic> _pilots = [];
   List<dynamic> _operators = [];
   bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
     setState(() => _isLoading = true);
-    try { _pilots = await AdminApiService.getPilots(); } catch (_) {}
-    try { _operators = await AdminApiService.getOperators(); } catch (_) {}
+    try {
+      _pilots = await AdminApiService.getPilots();
+      _error = null;
+    } catch (e) {
+      _error = 'Could not load pilots: '
+          '${e.toString().replaceFirst('ApiException: ', '')}';
+    }
+    try {
+      _operators = await AdminApiService.getOperators();
+    } catch (e) {
+      // Secondary lookup: the picker degrades but the list still renders.
+      debugPrint('operators lookup failed: $e');
+    }
     setState(() => _isLoading = false);
   }
 
@@ -90,6 +103,7 @@ class _PilotsScreenState extends State<PilotsScreen> {
         ]),
       ])),
       const SizedBox(height: 16), const Divider(color: AdminColors.border, height: 1),
+      ErrorBanner(error: _error, onRetry: _load),
       Expanded(child: _isLoading ? const Center(child: CircularProgressIndicator(color: AdminColors.primary))
         : _pilots.isEmpty ? const Center(child: Text('No pilots found.', style: TextStyle(color: AdminColors.textMuted)))
         : SingleChildScrollView(padding: const EdgeInsets.all(28), child: Container(

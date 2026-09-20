@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
 import '../widgets/operator_picker.dart';
+import '../widgets/admin_form.dart';
 
 class DriversScreen extends StatefulWidget {
   const DriversScreen({super.key});
@@ -13,14 +14,26 @@ class _DriversScreenState extends State<DriversScreen> {
   List<dynamic> _drivers = [];
   List<dynamic> _operators = [];
   bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
     setState(() => _isLoading = true);
-    try { _drivers = await AdminApiService.getDrivers(); } catch (_) {}
-    try { _operators = await AdminApiService.getOperators(); } catch (_) {}
+    try {
+      _drivers = await AdminApiService.getDrivers();
+      _error = null;
+    } catch (e) {
+      _error = 'Could not load drivers: '
+          '${e.toString().replaceFirst('ApiException: ', '')}';
+    }
+    try {
+      _operators = await AdminApiService.getOperators();
+    } catch (e) {
+      // Secondary lookup: the picker degrades but the list still renders.
+      debugPrint('operators lookup failed: $e');
+    }
     setState(() => _isLoading = false);
   }
 
@@ -89,6 +102,7 @@ class _DriversScreenState extends State<DriversScreen> {
         ]),
       ])),
       const SizedBox(height: 16), const Divider(color: AdminColors.border, height: 1),
+      ErrorBanner(error: _error, onRetry: _load),
       Expanded(child: _isLoading ? const Center(child: CircularProgressIndicator(color: AdminColors.primary))
         : _drivers.isEmpty ? const Center(child: Text('No drivers found.', style: TextStyle(color: AdminColors.textMuted)))
         : SingleChildScrollView(padding: const EdgeInsets.all(28), child: Container(

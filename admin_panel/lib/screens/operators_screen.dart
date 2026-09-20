@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../widgets/admin_form.dart';
 
 class OperatorsScreen extends StatefulWidget {
   const OperatorsScreen({super.key});
@@ -12,6 +13,7 @@ class OperatorsScreen extends StatefulWidget {
 class _OperatorsScreenState extends State<OperatorsScreen> {
   List<dynamic> _operators = [];
   bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() {
@@ -23,7 +25,11 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
     setState(() => _isLoading = true);
     try {
       _operators = await AdminApiService.getOperators();
-    } catch (_) {}
+      _error = null;
+    } catch (e) {
+      _error = 'Could not load operators: '
+          '${e.toString().replaceFirst('ApiException: ', '')}';
+    }
     setState(() => _isLoading = false);
   }
 
@@ -138,6 +144,7 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
         ),
         const SizedBox(height: 16),
         const Divider(color: AdminColors.border, height: 1),
+      ErrorBanner(error: _error, onRetry: _load),
         Expanded(
           child: _isLoading
               ? const Center(child: CircularProgressIndicator(color: AdminColors.primary))

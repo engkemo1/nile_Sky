@@ -14,6 +14,7 @@ import { User, UserRole } from '../users/entities/user.entity';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { NotificationType } from './entities/notification.entity';
+import { SendNotificationDto } from './dto/notification.dto';
 
 @Controller('notifications')
 export class NotificationsController {
@@ -43,18 +44,7 @@ export class NotificationsController {
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PLATFORM_ADMIN)
   @Post('send')
-  async sendNotification(
-    @Body()
-    dto: {
-      userId: string;
-      titleEn: string;
-      titleAr?: string;
-      bodyEn: string;
-      bodyAr?: string;
-      type: NotificationType;
-      data?: any;
-    },
-  ) {
+  async sendNotification(@Body() dto: SendNotificationDto) {
     return this.notificationsService.create(dto);
   }
 }

@@ -14,6 +14,7 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
   Map<String, dynamic>? _data;
   List<dynamic> _bookings = [];
   bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() { super.initState(); _load(); }
@@ -27,7 +28,11 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
       ]);
       _data = results[0] as Map<String, dynamic>;
       _bookings = results[1] as List;
-    } catch (_) {}
+      _error = null;
+    } catch (e) {
+      _error = 'Could not load analytics: '
+          '${e.toString().replaceFirst('ApiException: ', '')}';
+    }
     setState(() => _isLoading = false);
   }
 

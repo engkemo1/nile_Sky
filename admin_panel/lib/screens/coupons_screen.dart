@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../widgets/admin_form.dart';
 
 class CouponsScreen extends StatefulWidget {
   const CouponsScreen({super.key});
@@ -11,13 +12,20 @@ class CouponsScreen extends StatefulWidget {
 class _CouponsScreenState extends State<CouponsScreen> {
   List<dynamic> _coupons = [];
   bool _isLoading = true;
+  String? _error;
 
   @override
   void initState() { super.initState(); _load(); }
 
   Future<void> _load() async {
     setState(() => _isLoading = true);
-    try { _coupons = await AdminApiService.getCoupons(); } catch (_) {}
+    try {
+      _coupons = await AdminApiService.getCoupons();
+      _error = null;
+    } catch (e) {
+      _error = 'Could not load coupons: '
+          '${e.toString().replaceFirst('ApiException: ', '')}';
+    }
     setState(() => _isLoading = false);
   }
 
@@ -97,6 +105,7 @@ class _CouponsScreenState extends State<CouponsScreen> {
         ]),
       ])),
       const SizedBox(height: 16), const Divider(color: AdminColors.border, height: 1),
+      ErrorBanner(error: _error, onRetry: _load),
       Expanded(child: _isLoading ? const Center(child: CircularProgressIndicator(color: AdminColors.primary))
         : _coupons.isEmpty ? const Center(child: Text('No coupons found.', style: TextStyle(color: AdminColors.textMuted)))
         : SingleChildScrollView(padding: const EdgeInsets.all(28), child: Container(

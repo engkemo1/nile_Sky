@@ -11,6 +11,9 @@ import 'flights_screen.dart';
 import 'bookings_screen.dart';
 import 'coupons_screen.dart';
 import 'analytics_screen.dart';
+import 'packages_screen.dart';
+import 'users_screen.dart';
+import 'reviews_screen.dart';
 
 class AdminShell extends StatefulWidget {
   const AdminShell({super.key});
@@ -31,6 +34,9 @@ class _AdminShellState extends State<AdminShell> {
     _NavItem(icon: Icons.flight_takeoff_outlined, activeIcon: Icons.flight_takeoff, label: 'Flights'),
     _NavItem(icon: Icons.book_online_outlined, activeIcon: Icons.book_online, label: 'Bookings'),
     _NavItem(icon: Icons.local_offer_outlined, activeIcon: Icons.local_offer, label: 'Coupons'),
+    _NavItem(icon: Icons.inventory_2_outlined, activeIcon: Icons.inventory_2, label: 'Packages'),
+    _NavItem(icon: Icons.people_outline, activeIcon: Icons.people, label: 'Users'),
+    _NavItem(icon: Icons.star_outline, activeIcon: Icons.star, label: 'Reviews'),
     _NavItem(icon: Icons.analytics_outlined, activeIcon: Icons.analytics, label: 'Analytics'),
   ];
 
@@ -43,6 +49,9 @@ class _AdminShellState extends State<AdminShell> {
     FlightsScreen(),
     BookingsScreen(),
     CouponsScreen(),
+    PackagesScreen(),
+    UsersScreen(),
+    ReviewsScreen(),
     AnalyticsScreen(),
   ];
 

@@ -10,6 +10,7 @@
  * Nest is bootstrapped once per warm instance and the promise is cached,
  * so concurrent requests during a cold start all wait on the same init.
  */
+import { json, urlencoded } from 'express';
 import { NestFactory } from '@nestjs/core';
 import { ValidationPipe } from '@nestjs/common';
 import { ExpressAdapter } from '@nestjs/platform-express';
@@ -26,6 +27,10 @@ let bootstrapped: Promise<void> | null = null;
 
 async function bootstrap(): Promise<void> {
   const app = await NestFactory.create(AppModule, new ExpressAdapter(server));
+
+  // Uploads arrive as base64 JSON; express defaults to a 100kb body limit.
+  app.use(json({ limit: '8mb' }));
+  app.use(urlencoded({ extended: true, limit: '8mb' }));
 
   app.enableCors({
     origin: '*',

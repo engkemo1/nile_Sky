@@ -36,6 +36,7 @@ import { Payment } from './payments/entities/payment.entity';
 import { Review } from './reviews/entities/review.entity';
 import { Notification } from './notifications/entities/notification.entity';
 import { Coupon } from './coupons/entities/coupon.entity';
+import { Media } from './upload/entities/media.entity';
 
 // Build TypeORM config — supports DATABASE_URL (Neon, Render, etc.) or individual env vars
 function buildTypeOrmConfig() {
@@ -47,7 +48,7 @@ function buildTypeOrmConfig() {
     entities: [
       User, Operator, Package, Balloon, Pilot, Driver,
       FlightTemplate, Flight, Booking, Payment, Review,
-      Notification, Coupon,
+      Notification, Coupon, Media,
     ],
     synchronize: true, // Auto-sync schema (safe for MVP — disable for large prod)
   };
@@ -78,7 +79,7 @@ function buildTypeOrmConfig() {
     TypeOrmModule.forFeature([
       User, Operator, Package, Balloon, Pilot, Driver,
       FlightTemplate, Flight, Booking, Payment, Review,
-      Notification, Coupon,
+      Notification, Coupon, Media,
     ]),
     ConfigModule,
     AuthModule,

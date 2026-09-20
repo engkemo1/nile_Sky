@@ -1,3 +1,4 @@
+import { PartialType } from '@nestjs/mapped-types';
 import { Type } from 'class-transformer';
 import { IsString, IsNotEmpty, IsOptional, IsNumber, IsEnum, IsDateString, IsArray } from 'class-validator';
 import { FlightStatus, WeatherStatus } from '../entities/flight.entity';
@@ -60,7 +61,7 @@ export class CreateFlightDto {
   videoUrl?: string;
 }
 
-export class UpdateFlightDto extends CreateFlightDto {
+export class UpdateFlightDto extends PartialType(CreateFlightDto) {
   @IsOptional()
   @IsString()
   cancellationReason?: string;

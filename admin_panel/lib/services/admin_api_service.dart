@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
 
 /// Central API service for the NileSky Admin Panel.
 /// Connects to the NileSky NestJS backend for all CRUD operations.
@@ -48,9 +49,75 @@ class AdminApiService {
     _accessToken = null;
     _refreshToken = null;
     _currentUser = null;
+    // Fire and forget: clearing storage must not block the UI.
+    _clearSession();
   }
 
   // ───────── AUTH ─────────
+
+  // ───────── Session persistence ─────────
+  // Without this the tokens live only in memory, so every page refresh (and
+  // every app restart) drops the admin back to the login screen.
+  static const _kAccess = 'nilesky.accessToken';
+  static const _kRefresh = 'nilesky.refreshToken';
+  static const _kUser = 'nilesky.user';
+
+  static Future<void> _persistSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      if (_accessToken != null) {
+        await prefs.setString(_kAccess, _accessToken!);
+      } else {
+        await prefs.remove(_kAccess);
+      }
+      if (_refreshToken != null) {
+        await prefs.setString(_kRefresh, _refreshToken!);
+      } else {
+        await prefs.remove(_kRefresh);
+      }
+      if (_currentUser != null) {
+        await prefs.setString(_kUser, jsonEncode(_currentUser));
+      } else {
+        await prefs.remove(_kUser);
+      }
+    } catch (_) {
+      // Storage can be unavailable (private windows, blocked site data).
+      // A lost session is recoverable; a crash here is not worth it.
+    }
+  }
+
+  /// Restores a saved session on startup. Returns true if one was found and
+  /// the token still works.
+  static Future<bool> restoreSession() async {
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final access = prefs.getString(_kAccess);
+      if (access == null) return false;
+      _accessToken = access;
+      _refreshToken = prefs.getString(_kRefresh);
+      final user = prefs.getString(_kUser);
+      if (user != null) _currentUser = jsonDecode(user) as Map<String, dynamic>;
+
+      // Verify rather than trust: the token may have expired while away.
+      await _get('/users/me');
+      return true;
+    } catch (_) {
+      await _clearSession();
+      return false;
+    }
+  }
+
+  static Future<void> _clearSession() async {
+    _accessToken = null;
+    _refreshToken = null;
+    _currentUser = null;
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      await prefs.remove(_kAccess);
+      await prefs.remove(_kRefresh);
+      await prefs.remove(_kUser);
+    } catch (_) {}
+  }
 
   static Future<Map<String, dynamic>> login(String email, String password) async {
     final res = await http
@@ -65,6 +132,7 @@ class AdminApiService {
       _accessToken = data['accessToken'];
       _refreshToken = data['refreshToken'];
       _currentUser = data['user'];
+      await _persistSession();
       return data;
     }
     throw ApiException(res.statusCode, _parseError(res.body));
@@ -83,6 +151,7 @@ class AdminApiService {
       final data = jsonDecode(res.body);
       _accessToken = data['accessToken'];
       _refreshToken = data['refreshToken'];
+      await _persistSession();
     } else {
       logout();
       throw ApiException(401, 'Session expired');
@@ -385,6 +454,105 @@ class AdminApiService {
   }
 
   // ───────── WEATHER ─────────
+
+  // ───────── PACKAGES ─────────
+
+  static Future<List<dynamic>> getPackages({String? operatorId}) async {
+    return await _get('/packages', queryParams: {
+      if (operatorId != null) 'operatorId': operatorId,
+    });
+  }
+
+  static Future<Map<String, dynamic>> createPackage(Map<String, dynamic> data) async {
+    return await _post('/packages', data);
+  }
+
+  static Future<Map<String, dynamic>> updatePackage(String id, Map<String, dynamic> data) async {
+    return await _patch('/packages/$id', data);
+  }
+
+  static Future<void> deletePackage(String id) async {
+    await _delete('/packages/$id');
+  }
+
+  // ───────── FLIGHT TEMPLATES ─────────
+
+  static Future<Map<String, dynamic>> createFlightTemplate(Map<String, dynamic> data) async {
+    return await _post('/flight-templates', data);
+  }
+
+  static Future<Map<String, dynamic>> updateFlightTemplate(String id, Map<String, dynamic> data) async {
+    return await _patch('/flight-templates/$id', data);
+  }
+
+  static Future<void> deleteFlightTemplate(String id) async {
+    await _delete('/flight-templates/$id');
+  }
+
+  // ───────── USERS ─────────
+
+  static Future<Map<String, dynamic>> updateUserStatus(String id, bool isActive) async {
+    return await _patch('/users/$id/status', {'isActive': isActive});
+  }
+
+  // ───────── NOTIFICATIONS ─────────
+
+  /// type must be one of: booking_confirm, reminder, pickup, flight_update,
+  /// weather, review_request, promo.
+  static Future<Map<String, dynamic>> sendNotification({
+    required String userId,
+    required String titleEn,
+    required String bodyEn,
+    required String type,
+    String? titleAr,
+    String? bodyAr,
+  }) async {
+    return await _post('/notifications/send', {
+      'userId': userId,
+      'titleEn': titleEn,
+      'bodyEn': bodyEn,
+      'type': type,
+      if (titleAr != null && titleAr.isNotEmpty) 'titleAr': titleAr,
+      if (bodyAr != null && bodyAr.isNotEmpty) 'bodyAr': bodyAr,
+    });
+  }
+
+  // ───────── MEDIA ─────────
+
+  /// Uploads raw bytes and returns the stored file's metadata, including a
+  /// `url` such as /upload/<id>. Pair it with [mediaUrl] to display it.
+  static Future<Map<String, dynamic>> uploadImage({
+    required String filename,
+    required String mimetype,
+    required List<int> bytes,
+    String folder = 'flights',
+  }) async {
+    return await _post('/upload/image', {
+      'filename': filename,
+      'mimetype': mimetype,
+      'base64': base64Encode(bytes),
+      'folder': folder,
+    });
+  }
+
+  static Future<List<dynamic>> listMedia({String? folder}) async {
+    return await _get('/upload/list', queryParams: {
+      if (folder != null) 'folder': folder,
+    });
+  }
+
+  static Future<void> deleteMedia(String id) async {
+    await _delete('/upload/$id');
+  }
+
+  /// Turns a stored path such as /upload/<id> into a full URL. Absolute URLs
+  /// (older records, or links typed by hand) are returned untouched.
+  static String mediaUrl(String pathOrUrl) {
+    if (pathOrUrl.startsWith('http://') || pathOrUrl.startsWith('https://')) {
+      return pathOrUrl;
+    }
+    return '$baseUrl${pathOrUrl.startsWith('/') ? '' : '/'}$pathOrUrl';
+  }
 
   static Future<Map<String, dynamic>> getLuxorWeather() async {
     return await _get('/weather/luxor');
