@@ -47,6 +47,15 @@ class LanguageService {
     // ENGLISH
     // -------------------------------------------------------------
     'en': {
+      // Flight map
+      'whereYouFly': 'Where you fly',
+      'launchSite': 'Launch site',
+      'landingSite': 'Landing area',
+      'meetingPoint': 'Meeting point',
+      'mapHint': 'Drag to move, double-tap to zoom in.',
+      'landingVaries': 'The landing spot changes with the wind — your chase crew follows you and drives you back.',
+      'launchAreaGeneric': 'Luxor west bank launch field',
+
       // General & Common
       'appName': 'NileSky',
       'tagline': 'Luxor Hot Air Balloon Flights',
@@ -276,6 +285,15 @@ class LanguageService {
     // ARABIC (العربية) - With Egyptian tourism context
     // -------------------------------------------------------------
     'ar': {
+      // Flight map
+      'whereYouFly': 'أين تطير',
+      'launchSite': 'موقع الإقلاع',
+      'landingSite': 'منطقة الهبوط',
+      'meetingPoint': 'نقطة اللقاء',
+      'mapHint': 'اسحب للتحريك، واضغط مرتين للتكبير.',
+      'landingVaries': 'مكان الهبوط يتغير حسب الرياح — فريق المطاردة يتابعك ويعيدك بالسيارة.',
+      'launchAreaGeneric': 'أرض الإقلاع بالبر الغربي بالأقصر',
+
       // General & Common
       'appName': 'نايل سكاي',
       'tagline': 'رحلات المنطاد الطائر بالأقصر',

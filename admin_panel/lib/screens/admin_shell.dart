@@ -116,19 +116,15 @@ class _AdminShellState extends State<AdminShell> {
                   alignment: Alignment.centerLeft,
                   child: Row(
                     children: [
-                      Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [AdminColors.primary, AdminColors.accent],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
-                          ),
-                          borderRadius: BorderRadius.circular(10),
-                        ),
-                        child: const Center(
-                          child: Text('🎈', style: TextStyle(fontSize: 18)),
+                      Image.asset(
+                        'assets/images/logo.png',
+                        width: 38,
+                        height: 38,
+                        filterQuality: FilterQuality.high,
+                        errorBuilder: (_, __, ___) => const Icon(
+                          Icons.airplanemode_active,
+                          size: 28,
+                          color: AdminColors.primary,
                         ),
                       ),
                       const SizedBox(width: 12),

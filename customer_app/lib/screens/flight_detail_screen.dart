@@ -4,6 +4,7 @@ import '../models/flight.dart';
 import '../services/api_service.dart';
 import '../services/localization_service.dart';
 import '../widgets/media_album_viewer.dart';
+import '../widgets/nile_map.dart';
 import 'booking_flow_screen.dart';
 
 class FlightDetailScreen extends StatelessWidget {
@@ -286,6 +287,51 @@ class FlightDetailScreen extends StatelessWidget {
                     _buildLandmarkChip('🗿 ${context.tr('colossiOfMemnon')}'),
                     _buildLandmarkChip('🌊 ${context.tr('nileRiverDawn')}'),
                     _buildLandmarkChip('🌾 ${context.tr('luxorFarms')}'),
+                  ],
+                ),
+                const SizedBox(height: 20),
+
+                // 7b. Where the flight starts and ends
+                Text(
+                  context.tr('whereYouFly'),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17, color: AppColors.textPrimary),
+                ),
+                const SizedBox(height: 10),
+                NileMap(
+                  height: 230,
+                  initialZoom: flight.hasLaunchPoint ? 13 : 12,
+                  connectPins: flight.hasLandingPoint,
+                  pins: [
+                    MapPin(
+                      point: flight.hasLaunchPoint
+                          ? MapPoint(flight.launchLat!, flight.launchLng!)
+                          : kLuxorLaunchArea,
+                      label: flight.launchSite ?? context.tr('launchAreaGeneric'),
+                      icon: Icons.flight_takeoff,
+                    ),
+                    if (flight.hasLandingPoint)
+                      MapPin(
+                        point: MapPoint(flight.landingLat!, flight.landingLng!),
+                        label: flight.landingSite ?? context.tr('landingSite'),
+                        icon: Icons.flight_land,
+                        color: const Color(0xFF3A8C96),
+                      ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.info_outline, size: 14, color: AppColors.textMuted),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        flight.hasLandingPoint
+                            ? context.tr('landingVaries')
+                            : context.tr('mapHint'),
+                        style: const TextStyle(color: AppColors.textMuted, fontSize: 11.5, height: 1.4),
+                      ),
+                    ),
                   ],
                 ),
                 const SizedBox(height: 20),

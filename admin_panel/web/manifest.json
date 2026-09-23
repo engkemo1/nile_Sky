@@ -1,11 +1,11 @@
 {
-    "name": "admin_panel",
-    "short_name": "admin_panel",
+    "name": "NileSky Admin",
+    "short_name": "NileSky Admin",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#0C1626",
+    "theme_color": "#D4A843",
+    "description": "Operations control centre for NileSky balloon flights.",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [

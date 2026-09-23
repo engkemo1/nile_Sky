@@ -7,6 +7,7 @@ import '../services/api_service.dart';
 import '../services/localization_service.dart';
 import '../utils/date_helper.dart';
 import '../widgets/hot_air_balloon_logo.dart';
+import '../widgets/nile_map.dart';
 import 'active_flight_screen.dart';
 import 'home_screen.dart';
 
@@ -174,6 +175,33 @@ class BookingConfirmationScreen extends StatelessWidget {
                     ),
                   ],
                 ),
+              ),
+              const SizedBox(height: 24),
+
+              // Where the balloon lifts off from
+              Align(
+                alignment: AlignmentDirectional.centerStart,
+                child: Text(
+                  context.tr('meetingPoint'),
+                  style: Theme.of(context).textTheme.titleLarge?.copyWith(
+                        fontSize: 16,
+                        color: AppColors.textPrimary,
+                      ),
+                ),
+              ),
+              const SizedBox(height: 8),
+              NileMap(
+                height: 190,
+                initialZoom: flight.hasLaunchPoint ? 14 : 12,
+                pins: [
+                  MapPin(
+                    point: flight.hasLaunchPoint
+                        ? MapPoint(flight.launchLat!, flight.launchLng!)
+                        : kLuxorLaunchArea,
+                    label: flight.launchSite ?? context.tr('launchAreaGeneric'),
+                    icon: Icons.flight_takeoff,
+                  ),
+                ],
               ),
               const SizedBox(height: 24),
 

@@ -92,26 +92,15 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   // Logo
-                  Container(
-                    width: 72,
-                    height: 72,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [AdminColors.primary, AdminColors.accent],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      borderRadius: BorderRadius.circular(20),
-                      boxShadow: [
-                        BoxShadow(
-                          color: AdminColors.primary.withValues(alpha: 0.3),
-                          blurRadius: 24,
-                          offset: const Offset(0, 8),
-                        ),
-                      ],
-                    ),
-                    child: const Center(
-                      child: Text('🎈', style: TextStyle(fontSize: 34)),
+                  Image.asset(
+                    'assets/images/logo.png',
+                    width: 96,
+                    height: 96,
+                    filterQuality: FilterQuality.high,
+                    errorBuilder: (_, __, ___) => const Icon(
+                      Icons.airplanemode_active,
+                      size: 72,
+                      color: AdminColors.primary,
                     ),
                   ),
                   const SizedBox(height: 20),

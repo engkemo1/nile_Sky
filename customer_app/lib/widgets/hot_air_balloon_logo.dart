@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 
-/// Ultra-luxury NileSky Hot Air Balloon Brand Emblem.
-/// Integrates high-res generated asset with dynamic golden glow and floating physics.
+/// The NileSky brand mark, with an optional golden glow and a slow float.
 class HotAirBalloonLogo extends StatefulWidget {
   final double size;
   final bool animate;
@@ -44,19 +43,19 @@ class _HotAirBalloonLogoState extends State<HotAirBalloonLogo>
 
   @override
   Widget build(BuildContext context) {
-    // The stunning newly generated logo asset
-    final imageWidget = ClipRRect(
-      borderRadius: BorderRadius.circular(widget.size * 0.22),
-      child: Image.asset(
-        'assets/images/nilesky_logo.jpg',
-        width: widget.size,
-        height: widget.size,
-        fit: BoxFit.cover,
-        errorBuilder: (context, error, stackTrace) => Icon(
-          Icons.airplanemode_active,
-          size: widget.size,
-          color: const Color(0xFFFFB800),
-        ),
+    // The NileSky mark: a gold balloon over the Nile, inside a gold ring.
+    // It is a circular badge on a transparent background, so it needs no clip
+    // and sits correctly on both the dark app background and a white card.
+    final imageWidget = Image.asset(
+      'assets/images/logo.png',
+      width: widget.size,
+      height: widget.size,
+      fit: BoxFit.contain,
+      filterQuality: FilterQuality.high,
+      errorBuilder: (context, error, stackTrace) => Icon(
+        Icons.airplanemode_active,
+        size: widget.size,
+        color: const Color(0xFFD4A843),
       ),
     );
 
@@ -84,7 +83,7 @@ class _HotAirBalloonLogoState extends State<HotAirBalloonLogo>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFFFB800).withOpacity(0.25 + pulse * 0.2),
+                        color: const Color(0xFFD4A843).withOpacity(0.25 + pulse * 0.2),
                         blurRadius: widget.size * 0.45,
                         spreadRadius: widget.size * 0.08,
                       ),

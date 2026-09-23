@@ -31,6 +31,16 @@ class FlightModel {
   final String? pilotName;
   final String? balloonName;
 
+  // Where the flight starts and ends. Set by the operator in the admin panel;
+  // null until they fill it in, in which case the map falls back to the
+  // general Luxor west-bank launch area.
+  final String? launchSite;
+  final double? launchLat;
+  final double? launchLng;
+  final String? landingSite;
+  final double? landingLat;
+  final double? landingLng;
+
   FlightModel({
     required this.id,
     required this.flightNumber,
@@ -63,7 +73,16 @@ class FlightModel {
     this.videoUrl,
     this.pilotName,
     this.balloonName,
+    this.launchSite,
+    this.launchLat,
+    this.launchLng,
+    this.landingSite,
+    this.landingLat,
+    this.landingLng,
   });
+
+  bool get hasLaunchPoint => launchLat != null && launchLng != null;
+  bool get hasLandingPoint => landingLat != null && landingLng != null;
 
   factory FlightModel.fromJson(Map<String, dynamic> json) {
     final operator = json['operator'] ?? {};
@@ -112,6 +131,13 @@ class FlightModel {
       videoUrl: pkg['videoUrl'] ?? json['videoUrl'],
       pilotName: pilot['nameEn'],
       balloonName: balloon['name'],
+      launchSite: json['launchSite'],
+      // Postgres hands numerics back as strings, so parse rather than cast.
+      launchLat: double.tryParse(json['launchLat']?.toString() ?? ''),
+      launchLng: double.tryParse(json['launchLng']?.toString() ?? ''),
+      landingSite: json['landingSite'],
+      landingLat: double.tryParse(json['landingLat']?.toString() ?? ''),
+      landingLng: double.tryParse(json['landingLng']?.toString() ?? ''),
     );
   }
 }
