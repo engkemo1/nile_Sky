@@ -79,6 +79,27 @@ export class UsersService {
     return this.userRepo.save(user);
   }
 
+  /**
+   * Sets a user's role and, for an operator admin, which operator they belong
+   * to. Bookings and flights are scoped by that link, so an operator admin
+   * with no operator is refused rather than shown everyone's data.
+   */
+  async setRoleAndOperator(
+    id: string,
+    role: UserRole,
+    operatorId: string | null,
+  ): Promise<User> {
+    const user = await this.findById(id);
+    if (role === UserRole.OPERATOR_ADMIN && !operatorId) {
+      throw new BadRequestException(
+        'An operator admin must be linked to an operator',
+      );
+    }
+    user.role = role;
+    user.operatorId = role === UserRole.OPERATOR_ADMIN ? operatorId : null;
+    return this.userRepo.save(user);
+  }
+
   async updateStatus(id: string, isActive: boolean): Promise<User> {
     const user = await this.findById(id);
     user.isActive = isActive;

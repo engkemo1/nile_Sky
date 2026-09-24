@@ -77,6 +77,22 @@ export class UsersController {
 
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PLATFORM_ADMIN)
+  @Patch(':id/role')
+  async updateUserRole(
+    @Param('id') id: string,
+    @Body() dto: { role: UserRole; operatorId?: string | null },
+  ) {
+    return this.sanitize(
+      await this.usersService.setRoleAndOperator(
+        id,
+        dto?.role,
+        dto?.operatorId ?? null,
+      ),
+    );
+  }
+
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN)
   @Patch(':id/status')
   async updateUserStatus(
     @Param('id') id: string,

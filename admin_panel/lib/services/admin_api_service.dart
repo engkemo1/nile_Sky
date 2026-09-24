@@ -280,6 +280,20 @@ class AdminApiService {
     await _delete('/operators/$id');
   }
 
+  /// Sets a user's role, and for an operator admin which operator they belong
+  /// to. Bookings and flights are scoped by that link, so an operator admin
+  /// without one is refused rather than shown every operator's data.
+  static Future<void> setUserRole(
+    String id,
+    String role, {
+    String? operatorId,
+  }) async {
+    await _patch('/users/$id/role', {
+      'role': role,
+      if (operatorId != null) 'operatorId': operatorId,
+    });
+  }
+
   /// Rotates the signed-in admin's own password. The seeded one ended up in
   /// a public repository, so there has to be a way to change it from the UI.
   static Future<void> changeMyPassword({

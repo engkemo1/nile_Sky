@@ -20,6 +20,7 @@ class _UsersScreenState extends State<UsersScreen> {
   bool _isLoading = true;
   String? _error;
   String _roleFilter = 'all';
+  List<dynamic> _operators = [];
 
   /// Must match NotificationType in the backend entity exactly — the server
   /// rejects anything else with a 400.
@@ -51,10 +52,14 @@ class _UsersScreenState extends State<UsersScreen> {
       _error = null;
     });
     try {
-      final data = await AdminApiService.getUsers();
+      final results = await Future.wait([
+        AdminApiService.getUsers(),
+        AdminApiService.getOperators(),
+      ]);
       if (!mounted) return;
       setState(() {
-        _users = data;
+        _users = results[0];
+        _operators = results[1];
         _isLoading = false;
       });
     } catch (e) {
@@ -102,6 +107,96 @@ class _UsersScreenState extends State<UsersScreen> {
       default:
         return AdminColors.textSecondary;
     }
+  }
+
+  /// Assign a role, and for an operator admin the operator they work for.
+  void _showRoleDialog(Map<String, dynamic> user) {
+    final id = user['id']?.toString();
+    if (id == null) {
+      showSnack(context, 'This user has no id; cannot update.', error: true);
+      return;
+    }
+    String role = (user['role'] ?? 'customer').toString();
+    String? operatorId = user['operatorId']?.toString();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setInner) => AlertDialog(
+          backgroundColor: AdminColors.cardDark,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+          title: Text(
+            'Role — ${user['name'] ?? user['email'] ?? ''}',
+            style: const TextStyle(color: AdminColors.textPrimary, fontSize: 16),
+          ),
+          content: SizedBox(
+            width: 420,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                AdminDropdown(
+                  label: 'Role',
+                  value: role,
+                  items: _roles
+                      .map((r) => DropdownMenuItem<String>(
+                          value: r, child: Text(_roleLabel(r))))
+                      .toList(),
+                  onChanged: (v) => setInner(() => role = v ?? role),
+                ),
+                if (role == 'operator_admin')
+                  AdminDropdown(
+                    label: 'Operator this admin works for',
+                    value: operatorId,
+                    items: itemsFrom(_operators),
+                    onChanged: (v) => setInner(() => operatorId = v),
+                  ),
+                if (role == 'operator_admin')
+                  const Padding(
+                    padding: EdgeInsets.only(top: 4),
+                    child: Text(
+                      'An operator admin only ever sees this operator\'s '
+                      'flights, bookings and passengers.',
+                      style: TextStyle(
+                          color: AdminColors.textMuted, fontSize: 11, height: 1.4),
+                    ),
+                  ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Cancel',
+                  style: TextStyle(color: AdminColors.textMuted)),
+            ),
+            ElevatedButton(
+              onPressed: () async {
+                if (role == 'operator_admin' && operatorId == null) {
+                  showSnack(context, 'Pick the operator first', error: true);
+                  return;
+                }
+                Navigator.pop(ctx);
+                try {
+                  await AdminApiService.setUserRole(id, role,
+                      operatorId: role == 'operator_admin' ? operatorId : null);
+                  if (!mounted) return;
+                  showSnack(context, 'Role updated');
+                  await _load();
+                } catch (e) {
+                  if (!mounted) return;
+                  showSnack(context, 'Error: $e', error: true);
+                }
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AdminColors.primary,
+                foregroundColor: Colors.black,
+              ),
+              child: const Text('Save'),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<void> _toggleActive(Map<String, dynamic> user, bool isActive) async {
@@ -359,6 +454,12 @@ class _UsersScreenState extends State<UsersScreen> {
                               value: isActive,
                               onChanged: (v) => _toggleActive(u, v),
                             ),
+                          ),
+                          IconButton(
+                            icon: const Icon(Icons.admin_panel_settings_outlined,
+                                color: AdminColors.primary, size: 18),
+                            tooltip: 'Change role / operator',
+                            onPressed: () => _showRoleDialog(u),
                           ),
                           IconButton(
                             icon: const Icon(Icons.notifications_active_outlined,
