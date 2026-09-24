@@ -48,6 +48,19 @@ export class UsersController {
     return this.sanitize(await this.usersService.updateProfile(user.id, dto));
   }
 
+  @UseGuards(JwtAuthGuard)
+  @Patch('me/password')
+  async changeMyPassword(
+    @CurrentUser() user: User,
+    @Body() dto: { currentPassword: string; newPassword: string },
+  ) {
+    return this.usersService.changePassword(
+      user.id,
+      dto?.currentPassword ?? '',
+      dto?.newPassword ?? '',
+    );
+  }
+
   @UseGuards(JwtAuthGuard, RolesGuard)
   @Roles(UserRole.PLATFORM_ADMIN)
   @Get()

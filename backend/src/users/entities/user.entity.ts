@@ -33,6 +33,14 @@ export class User {
   @Column({ type: 'enum', enum: UserRole, default: UserRole.CUSTOMER })
   role: UserRole;
 
+  /**
+   * Which operator an OPERATOR_ADMIN belongs to. Null for customers and for
+   * platform admins, who see everything. Without this an operator admin could
+   * read every rival operator's bookings and every passenger's contact details.
+   */
+  @Column({ name: 'operator_id', type: 'uuid', nullable: true })
+  operatorId: string | null;
+
   @Column({ name: 'language_pref', default: 'en', length: 5 })
   languagePref: string;
 

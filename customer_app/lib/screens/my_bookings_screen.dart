@@ -44,6 +44,12 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
           _bookings = list;
           _isLoading = false;
         });
+        // An empty list after an expired session is not "no bookings".
+        if (ApiService.sessionExpired && list.isEmpty) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(context.tr('sessionExpired'))),
+          );
+        }
       }
     } catch (_) {
       if (mounted) {
@@ -335,7 +341,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
                     onPressed: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (_) => const ActiveFlightScreen()),
+                        MaterialPageRoute(builder: (_) => ActiveFlightScreen(booking: booking)),
                       );
                     },
                     style: ElevatedButton.styleFrom(
@@ -368,76 +374,20 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
 
   Widget _buildPastTab(List<BookingModel> pastBookings) {
     if (pastBookings.isEmpty) {
-      return SingleChildScrollView(
-        padding: const EdgeInsets.all(20),
-        child: Container(
-          padding: const EdgeInsets.all(18),
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(22),
-            border: Border.all(color: AppColors.border),
-          ),
+      // This used to render an invented completed flight, complete with a
+      // certificate to download and a review button wired to no booking.
+      return Center(
+        child: Padding(
+          padding: const EdgeInsets.all(32),
           child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
+            mainAxisSize: MainAxisSize.min,
             children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: const Color(0xFFF1F5F9),
-                      borderRadius: BorderRadius.circular(10),
-                    ),
-                    child: Text(
-                      context.tr('completedTrip'),
-                      style: const TextStyle(color: AppColors.textSecondary, fontSize: 11, fontWeight: FontWeight.bold),
-                    ),
-                  ),
-                  const Text('NLK-2026-02-0089', style: TextStyle(color: AppColors.textMuted, fontSize: 11)),
-                ],
-              ),
+              const Icon(Icons.history, size: 40, color: AppColors.textMuted),
               const SizedBox(height: 12),
-              const Text(
-                'NileSky Premium Sunrise + Breakfast',
-                style: TextStyle(color: AppColors.textPrimary, fontSize: 16, fontWeight: FontWeight.bold),
-              ),
-              const SizedBox(height: 2),
-              const Text('NileSky Fleet • 2 Guests • 20 Feb 2026', style: TextStyle(color: AppColors.textSecondary, fontSize: 12)),
-              const Divider(color: AppColors.border, height: 24),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(context.tr('flightCertificate'), style: const TextStyle(color: AppColors.textSecondary, fontSize: 13)),
-                  TextButton.icon(
-                    onPressed: () {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(content: Text('Downloading Official Luxor Flight Certificate (PDF)...')),
-                      );
-                    },
-                    icon: const Icon(Icons.download, size: 16, color: AppColors.primaryDark),
-                    label: Text(context.tr('download'), style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold)),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 8),
-              SizedBox(
-                width: double.infinity,
-                child: OutlinedButton.icon(
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ReviewScreen(
-                          operatorName: 'NileSky Fleet',
-                          flightName: 'NileSky Premium Sunrise + Breakfast',
-                        ),
-                      ),
-                    );
-                  },
-                  icon: const Icon(Icons.star_outline, color: AppColors.primaryDark, size: 18),
-                  label: const Text('Write Flight Review', style: TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold)),
-                ),
+              Text(
+                context.tr('noPastFlights'),
+                textAlign: TextAlign.center,
+                style: const TextStyle(color: AppColors.textSecondary, fontSize: 13.5),
               ),
             ],
           ),
@@ -484,6 +434,29 @@ class _MyBookingsScreenState extends State<MyBookingsScreen>
                   Text(b.bookingRef, style: const TextStyle(color: AppColors.textMuted, fontSize: 11)),
                 ],
               ),
+              // The operator types a reason when they call a flight off; it
+              // used to stop at the database. A passenger who only sees the
+              // word CANCELLED phones the operator to ask why.
+              if (b.isCancelled && (b.cancellationReason ?? '').trim().isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    const Icon(Icons.info_outline, size: 14, color: AppColors.error),
+                    const SizedBox(width: 6),
+                    Expanded(
+                      child: Text(
+                        b.cancellationReason!,
+                        style: const TextStyle(
+                          color: AppColors.error,
+                          fontSize: 11.5,
+                          height: 1.4,
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+              ],
               const SizedBox(height: 12),
               Text(
                 b.packageName,

@@ -29,13 +29,20 @@ export class BookingsController {
 
   @Get(':id')
   @UseGuards(JwtAuthGuard)
-  async findOne(@Param('id') id: string) {
-    return this.bookingsService.findOne(id);
+  async findOne(@CurrentUser() user: any, @Param('id') id: string) {
+    // The caller is passed through so a customer cannot read a stranger's
+    // booking — and with it their name, phone and pickup hotel — by guessing
+    // or harvesting a UUID.
+    return this.bookingsService.findOne(id, user);
   }
 
+  // Booking refs are short and sequential (NLK-YYYYMM-0001), so this used to
+  // let anyone walk the whole customer list. It is a check-in tool: staff only.
   @Get('ref/:ref')
-  async findByRef(@Param('ref') ref: string) {
-    return this.bookingsService.findByRef(ref);
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN, UserRole.OPERATOR_ADMIN)
+  async findByRef(@CurrentUser() user: any, @Param('ref') ref: string) {
+    return this.bookingsService.findByRef(ref, user);
   }
 
   @Patch(':id/cancel')

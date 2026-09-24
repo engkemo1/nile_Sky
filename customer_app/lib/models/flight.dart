@@ -1,3 +1,10 @@
+import '../services/api_service.dart';
+
+String _firstNonEmpty(List<String> candidates) =>
+    candidates.firstWhere((c) => c.trim().isNotEmpty, orElse: () => '');
+
+String? _nullIfEmpty(String value) => value.trim().isEmpty ? null : value;
+
 class FlightModel {
   final String id;
   final String flightNumber;
@@ -90,9 +97,14 @@ class FlightModel {
     final balloon = json['balloon'] ?? {};
     final pilot = json['pilot'] ?? {};
 
+    // The upload endpoint stores a path relative to the API ("/upload/<id>").
+    // Every media field is made absolute here, once, so no screen can forget.
     final photosRaw = json['photos'] ?? pkg['photos'] ?? [];
     final List<String> photosList = (photosRaw is List)
-        ? photosRaw.map((e) => e.toString()).toList()
+        ? photosRaw
+            .map((e) => ApiService.mediaUrl(e?.toString()))
+            .where((u) => u.isNotEmpty)
+            .toList()
         : [];
 
     return FlightModel(
@@ -100,7 +112,7 @@ class FlightModel {
       flightNumber: json['flightNumber'] ?? '',
       operatorId: json['operatorId'] ?? operator['id'] ?? '',
       operatorName: operator['nameEn'] ?? 'Luxor Operator',
-      operatorLogo: operator['logoUrl'] ?? '',
+      operatorLogo: ApiService.mediaUrl(operator['logoUrl']?.toString()),
       operatorRating: double.tryParse(operator['rating']?.toString() ?? '4.9') ?? 4.9,
       totalReviews: int.tryParse(operator['totalReviews']?.toString() ?? '0') ?? 0,
       packageId: json['packageId'] ?? pkg['id'] ?? '',
@@ -122,13 +134,20 @@ class FlightModel {
       status: json['status'] ?? 'scheduled',
       weatherStatus: json['weatherStatus'] ?? 'favorable',
       badge: json['badge'],
-      coverPhotoUrl: pkg['coverPhotoUrl'] ?? json['photoUrl'] ?? 'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?w=800',
+      coverPhotoUrl: _firstNonEmpty([
+        ApiService.mediaUrl(pkg['coverPhotoUrl']?.toString()),
+        photosList.isNotEmpty ? photosList.first : '',
+        'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?w=800',
+      ]),
       photos: photosList.isNotEmpty ? photosList : [
         'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?w=800',
         'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800',
         'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800',
       ],
-      videoUrl: pkg['videoUrl'] ?? json['videoUrl'],
+      // The flight's own video wins over the package's generic one.
+      videoUrl: _nullIfEmpty(ApiService.mediaUrl(
+        (json['videoUrl'] ?? pkg['videoUrl'])?.toString(),
+      )),
       pilotName: pilot['nameEn'],
       balloonName: balloon['name'],
       launchSite: json['launchSite'],

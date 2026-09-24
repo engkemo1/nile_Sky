@@ -11,7 +11,11 @@ import { UserRole } from '../users/entities/user.entity';
 export class DriversController {
   constructor(private readonly driversService: DriversService) {}
 
+  // Driver records carry names, phone numbers, car plates and live GPS, and
+  // the joined operator carries licence and insurance documents. Staff only.
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN, UserRole.OPERATOR_ADMIN)
   async findAll(
     @Query('operatorId') operatorId?: string,
     @Query('status') status?: DriverStatus,
@@ -20,6 +24,8 @@ export class DriversController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN, UserRole.OPERATOR_ADMIN)
   async findOne(@Param('id') id: string) {
     return this.driversService.findOne(id);
   }
@@ -38,8 +44,11 @@ export class DriversController {
     return this.driversService.update(id, dto);
   }
 
+  // Was JwtAuthGuard only, which let any registered passenger move any
+  // driver's pin on the map.
   @Patch(':id/location')
-  @UseGuards(JwtAuthGuard)
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN, UserRole.OPERATOR_ADMIN)
   async updateLocation(
     @Param('id') id: string,
     @Body('latitude') lat: number,

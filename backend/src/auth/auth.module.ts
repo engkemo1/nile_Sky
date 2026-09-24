@@ -6,14 +6,19 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { User } from '../users/entities/user.entity';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { jwtSecret, accessTokenTtl } from '../common/security';
 
 @Module({
   imports: [
     TypeOrmModule.forFeature([User]),
     PassportModule.register({ defaultStrategy: 'jwt' }),
-    JwtModule.register({
-      secret: process.env.JWT_SECRET || 'super-secret-key-change-me-in-production',
-      signOptions: { expiresIn: '15m' },
+    JwtModule.registerAsync({
+      // Resolved lazily so a missing secret fails at boot with a clear message
+      // rather than silently signing with a public fallback.
+      useFactory: () => ({
+        secret: jwtSecret(),
+        signOptions: { expiresIn: accessTokenTtl() as any },
+      }),
     }),
   ],
   controllers: [AuthController],

@@ -139,7 +139,11 @@ export class BookingsService {
     return this.findOne(saved.id);
   }
 
-  async findAll(user: { id: string; role: UserRole }, operatorId?: string, flightId?: string) {
+  async findAll(
+    user: { id: string; role: UserRole; operatorId?: string | null },
+    operatorId?: string,
+    flightId?: string,
+  ) {
     const query = this.bookingRepo.createQueryBuilder('b')
       .leftJoinAndSelect('b.user', 'user')
       .leftJoinAndSelect('b.flight', 'flight')
@@ -150,9 +154,18 @@ export class BookingsService {
     if (user.role === UserRole.CUSTOMER) {
       query.andWhere('b.userId = :userId', { userId: user.id });
     } else if (user.role === UserRole.OPERATOR_ADMIN) {
-      if (operatorId) {
-        query.andWhere('b.operatorId = :operatorId', { operatorId });
+      // An operator admin is always pinned to their own operator. Falling back
+      // to "no filter" here is what let one operator read every other
+      // operator's bookings.
+      const own = user.operatorId ?? operatorId;
+      if (!own) {
+        throw new ForbiddenException(
+          'This account is not linked to an operator yet. Ask a platform admin to link it.',
+        );
       }
+      query.andWhere('b.operatorId = :operatorId', { operatorId: own });
+    } else if (operatorId) {
+      query.andWhere('b.operatorId = :operatorId', { operatorId });
     }
 
     if (flightId) {
@@ -162,7 +175,11 @@ export class BookingsService {
     return query.orderBy('b.createdAt', 'DESC').getMany();
   }
 
-  async findOne(id: string) {
+  /**
+   * @param viewer omitted for internal callers that have already authorised
+   *        the request; supplied for anything reached straight from a route.
+   */
+  async findOne(id: string, viewer?: { id: string; role: UserRole; operatorId?: string | null }) {
     const booking = await this.bookingRepo.findOne({
       where: { id },
       relations: {
@@ -181,10 +198,26 @@ export class BookingsService {
       throw new NotFoundException(`Booking with ID ${id} not found`);
     }
 
+    if (viewer) this.assertMayView(booking, viewer);
     return booking;
   }
 
-  async findByRef(ref: string) {
+  /** Customers see only their own; operator admins only their operator's. */
+  private assertMayView(
+    booking: Booking,
+    viewer: { id: string; role: UserRole; operatorId?: string | null },
+  ) {
+    if (viewer.role === UserRole.PLATFORM_ADMIN) return;
+    if (viewer.role === UserRole.OPERATOR_ADMIN) {
+      if (viewer.operatorId && booking.operatorId === viewer.operatorId) return;
+      throw new ForbiddenException('This booking belongs to another operator');
+    }
+    if (booking.userId !== viewer.id) {
+      throw new ForbiddenException('This booking belongs to another passenger');
+    }
+  }
+
+  async findByRef(ref: string, viewer?: { id: string; role: UserRole; operatorId?: string | null }) {
     const booking = await this.bookingRepo.findOne({
       where: { bookingRef: ref },
       relations: {
@@ -199,6 +232,7 @@ export class BookingsService {
     if (!booking) {
       throw new NotFoundException(`Booking ref ${ref} not found`);
     }
+    if (viewer) this.assertMayView(booking, viewer);
     return booking;
   }
 

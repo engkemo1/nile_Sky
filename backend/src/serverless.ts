@@ -17,6 +17,7 @@ import { ExpressAdapter } from '@nestjs/platform-express';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { StripSecretsInterceptor } from './common/interceptors/strip-secrets.interceptor';
+import { corsOrigin, swaggerEnabled } from './common/security';
 
 // tsconfig has no esModuleInterop, so a default import of express compiles
 // to `express_1.default`, which is undefined. require() is unambiguous.
@@ -33,7 +34,9 @@ async function bootstrap(): Promise<void> {
   app.use(urlencoded({ extended: true, limit: '8mb' }));
 
   app.enableCors({
-    origin: '*',
+    // Set CORS_ORIGINS (comma separated) in the deployment to lock this down
+    // to the admin panel's origin; '*' is the open default.
+    origin: corsOrigin(),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: false,
   });
@@ -69,7 +72,11 @@ async function bootstrap(): Promise<void> {
     .addTag('analytics', 'Dashboard Analytics')
     .build();
 
-  SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, config));
+  // Off in production unless ENABLE_SWAGGER=true: no reason to publish a map
+  // of every admin route to the internet.
+  if (swaggerEnabled()) {
+    SwaggerModule.setup('api/docs', app, SwaggerModule.createDocument(app, config));
+  }
 
   await app.init();
 }

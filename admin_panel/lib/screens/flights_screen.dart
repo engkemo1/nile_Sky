@@ -43,7 +43,12 @@ class _FlightsScreenState extends State<FlightsScreen> with SingleTickerProvider
     setState(() { _isLoading = true; _error = null; });
     try {
       final results = await Future.wait([
-        AdminApiService.getFlights(),
+        // A wide window, so cancelled and completed flights stay on the
+        // board instead of vanishing the moment their status changes.
+        AdminApiService.getFlights(
+          dateFrom: '2020-01-01',
+          dateTo: '2100-01-01',
+        ),
         AdminApiService.getOperators(),
         AdminApiService.getPackages(),
         AdminApiService.getBalloons(),

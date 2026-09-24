@@ -1,4 +1,10 @@
-import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+  UnauthorizedException,
+} from '@nestjs/common';
+import * as bcrypt from 'bcrypt';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User, UserRole } from './entities/user.entity';
@@ -28,6 +34,29 @@ export class UsersService {
 
   async findByEmail(email: string): Promise<User | null> {
     return this.userRepo.findOne({ where: { email: email.toLowerCase() } });
+  }
+
+  /**
+   * Lets a signed-in user rotate their own password. Needed because the
+   * seeded admin password ended up in a public repository and the only other
+   * way to change it was to edit the database by hand.
+   */
+  async changePassword(userId: string, currentPassword: string, newPassword: string) {
+    const user = await this.userRepo.findOne({ where: { id: userId } });
+    if (!user) throw new NotFoundException('User not found');
+    if (!user.passwordHash) {
+      throw new BadRequestException('This account has no password to change');
+    }
+    const matches = await bcrypt.compare(currentPassword, user.passwordHash);
+    if (!matches) throw new UnauthorizedException('Current password is incorrect');
+    if (newPassword.length < 10) {
+      throw new BadRequestException('The new password must be at least 10 characters');
+    }
+    user.passwordHash = await bcrypt.hash(newPassword, 10);
+    // Any refresh token issued against the old password stops working.
+    user.refreshTokenHash = null;
+    await this.userRepo.save(user);
+    return { changed: true };
   }
 
   async updateProfile(

@@ -83,12 +83,12 @@ class _HotAirBalloonLogoState extends State<HotAirBalloonLogo>
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFFD4A843).withOpacity(0.25 + pulse * 0.2),
+                        color: const Color(0xFFD4A843).withValues(alpha: 0.25 + pulse * 0.2),
                         blurRadius: widget.size * 0.45,
                         spreadRadius: widget.size * 0.08,
                       ),
                       BoxShadow(
-                        color: const Color(0xFF0284C7).withOpacity(0.15 + pulse * 0.1),
+                        color: const Color(0xFF0284C7).withValues(alpha: 0.15 + pulse * 0.1),
                         blurRadius: widget.size * 0.6,
                         spreadRadius: 2,
                       ),

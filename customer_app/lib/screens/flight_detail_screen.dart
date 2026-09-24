@@ -291,6 +291,56 @@ class FlightDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
+                // 7a. The operator's weather call, which the app used to parse
+                // and then never show. An uncertain morning is exactly what a
+                // passenger needs to know before they book.
+                if (flight.weatherStatus == 'uncertain' ||
+                    flight.weatherStatus == 'unfavorable') ...[
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: flight.weatherStatus == 'unfavorable'
+                          ? const Color(0xFFFEF2F2)
+                          : const Color(0xFFFFFBEB),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: flight.weatherStatus == 'unfavorable'
+                            ? AppColors.error.withValues(alpha: 0.4)
+                            : AppColors.primary.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    child: Row(
+                      children: [
+                        Icon(
+                          flight.weatherStatus == 'unfavorable'
+                              ? Icons.cloud_off
+                              : Icons.air,
+                          size: 20,
+                          color: flight.weatherStatus == 'unfavorable'
+                              ? AppColors.error
+                              : AppColors.primaryDark,
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            flight.weatherStatus == 'unfavorable'
+                                ? context.tr('weatherUnfavorable')
+                                : context.tr('weatherUncertain'),
+                            style: TextStyle(
+                              fontSize: 12.5,
+                              height: 1.4,
+                              color: flight.weatherStatus == 'unfavorable'
+                                  ? const Color(0xFF991B1B)
+                                  : const Color(0xFF92400E),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+                ],
+
                 // 7b. Where the flight starts and ends
                 Text(
                   context.tr('whereYouFly'),

@@ -33,35 +33,39 @@ class _ReviewScreenState extends State<ReviewScreen> {
   }
 
   Future<void> _submit() async {
+    final bookingId = widget.bookingId;
+    if (bookingId == null || bookingId.isEmpty) {
+      // It used to fall back to the literal string 'sample-booking-id', which
+      // the API rejects — and the screen said "thank you" anyway.
+      setState(() => _errorMessage = context.tr('reviewNoBooking'));
+      return;
+    }
+
     setState(() {
       _isSubmitting = true;
       _errorMessage = null;
     });
 
+    bool ok;
     try {
-      await ApiService.submitReview(
-        bookingId: widget.bookingId ?? 'sample-booking-id',
+      ok = await ApiService.submitReview(
+        bookingId: bookingId,
         rating: _rating,
         comment: _commentController.text.trim().isNotEmpty
             ? _commentController.text.trim()
             : null,
       );
-
-      if (mounted) {
-        setState(() {
-          _isSubmitting = false;
-          _submitted = true;
-        });
-      }
-    } catch (e) {
-      if (mounted) {
-        // Even if not logged in or backend error, show success after feedback
-        setState(() {
-          _isSubmitting = false;
-          _submitted = true;
-        });
-      }
+    } catch (_) {
+      ok = false;
     }
+
+    if (!mounted) return;
+    setState(() {
+      _isSubmitting = false;
+      // Only claim it worked when it worked.
+      _submitted = ok;
+      _errorMessage = ok ? null : context.tr('reviewFailed');
+    });
   }
 
   @override

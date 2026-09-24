@@ -41,6 +41,42 @@ class ApiService {
     return '${priceEgp.toInt()} EGP';
   }
 
+  /// Turns a stored media path into something `Image.network` can actually
+  /// fetch. The upload endpoint stores `/upload/<id>`, a path relative to the
+  /// API — passed to `Image.network` as-is it resolves against the app's own
+  /// origin and 404s, which is why every photo an operator uploaded came up
+  /// blank. Absolute URLs and data URIs are returned untouched.
+  static String mediaUrl(String? path) {
+    final p = (path ?? '').trim();
+    if (p.isEmpty) return '';
+    if (p.startsWith('http://') || p.startsWith('https://') || p.startsWith('data:')) {
+      return p;
+    }
+    return p.startsWith('/') ? '$baseUrl$p' : '$baseUrl/$p';
+  }
+
+  /// Set when a request still comes back 401 after refreshing, i.e. the
+  /// session is really gone and the user has to sign in again. Screens read it
+  /// so an expired session stops looking like "you have no bookings".
+  static bool sessionExpired = false;
+
+  /// Runs an authenticated request; on a 401 it refreshes the access token
+  /// once and retries. Without this the customer app simply went quiet an hour
+  /// after login — every list came back empty and nothing said why.
+  static Future<http.Response> _authed(
+    Future<http.Response> Function() send,
+  ) async {
+    var res = await send();
+    if (res.statusCode == 401 && _refreshToken != null) {
+      await _refreshAuth();
+      res = await send();
+    }
+    if (res.statusCode == 401) {
+      sessionExpired = true;
+    }
+    return res;
+  }
+
   static Map<String, String> get _authHeaders => {
     'Content-Type': 'application/json',
     if (_accessToken != null) 'Authorization': 'Bearer $_accessToken',
@@ -69,6 +105,7 @@ class ApiService {
       _accessToken = data['accessToken'];
       _refreshToken = data['refreshToken'];
       currentUser = data['user'];
+      sessionExpired = false;
       return data;
     }
     throw Exception(_parseError(res.body));
@@ -100,6 +137,7 @@ class ApiService {
       _accessToken = data['accessToken'];
       _refreshToken = data['refreshToken'];
       currentUser = data['user'];
+      sessionExpired = false;
       return data;
     }
     throw Exception(_parseError(res.body));
@@ -109,6 +147,7 @@ class ApiService {
     _accessToken = null;
     _refreshToken = null;
     currentUser = null;
+    sessionExpired = false;
   }
 
   static Future<void> _refreshAuth() async {
@@ -212,7 +251,7 @@ class ApiService {
     // Try real API first
     if (_accessToken != null) {
       try {
-        final res = await http
+        final res = await _authed(() => http
             .post(
               Uri.parse('$baseUrl/bookings'),
               headers: _authHeaders,
@@ -226,7 +265,7 @@ class ApiService {
                 if (specialRequests != null) 'specialRequests': specialRequests,
               }),
             )
-            .timeout(const Duration(seconds: 60));
+            .timeout(const Duration(seconds: 60)));
 
         if (res.statusCode == 200 || res.statusCode == 201) {
           final data = jsonDecode(res.body);
@@ -270,42 +309,15 @@ class ApiService {
   static Future<List<BookingModel>> getMyBookings() async {
     if (_accessToken != null) {
       try {
-        final res = await http
+        final res = await _authed(() => http
             .get(Uri.parse('$baseUrl/bookings'), headers: _authHeaders)
-            .timeout(const Duration(seconds: 60));
+            .timeout(const Duration(seconds: 60)));
 
         if (res.statusCode == 200) {
           final List list = jsonDecode(res.body);
+          // One parser, so a field added to BookingModel shows up here too.
           return list
-              .map(
-                (data) => BookingModel(
-                  id: data['id'] ?? '',
-                  bookingRef: data['bookingRef'] ?? '',
-                  flightId: data['flightId'] ?? '',
-                  flightNumber: data['flight']?['flightNumber'] ?? '-',
-                  flightDate:
-                      data['flight']?['flightDate']?.toString().substring(
-                        0,
-                        10,
-                      ) ??
-                      '-',
-                  departureTime: data['flight']?['departureTime'] ?? '-',
-                  operatorName: data['operator']?['nameEn'] ?? '-',
-                  packageName: data['flight']?['package']?['nameEn'] ?? '-',
-                  guestCount: data['guestCount'] ?? 0,
-                  totalPriceEgp: double.tryParse(data['totalPriceEgp']?.toString() ?? '0') ?? 0,
-                  paymentStatus: data['paymentStatus'] ?? 'pending',
-                  bookingStatus: data['bookingStatus'] ?? 'pending',
-                  pickupHotelName: data['pickupHotelName'] ?? '-',
-                  pickupTime: data['pickupTime'] ?? '-',
-                  driverName: data['driver']?['name'],
-                  driverPhone: data['driver']?['phone'],
-                  driverCarModel: data['driver']?['carModel'],
-                  driverCarPlate: data['driver']?['carPlate'],
-                  qrCodeData: data['qrCodeData'] ?? data['bookingRef'] ?? '',
-                  specialRequests: data['specialRequests'],
-                ),
-              )
+              .map((data) => BookingModel.fromJson(data as Map<String, dynamic>))
               .toList();
         }
       } catch (_) {}
@@ -317,13 +329,13 @@ class ApiService {
   static Future<bool> cancelBooking(String bookingId, {String? reason}) async {
     if (_accessToken == null) return false;
     try {
-      final res = await http
+      final res = await _authed(() => http
           .patch(
             Uri.parse('$baseUrl/bookings/$bookingId/cancel'),
             headers: _authHeaders,
             body: jsonEncode({'reason': reason ?? 'Cancelled by customer'}),
           )
-          .timeout(const Duration(seconds: 60));
+          .timeout(const Duration(seconds: 60)));
       return res.statusCode >= 200 && res.statusCode < 300;
     } catch (_) {
       return false;
@@ -340,7 +352,7 @@ class ApiService {
   }) async {
     if (_accessToken == null) return false;
     try {
-      final res = await http
+      final res = await _authed(() => http
           .post(
             Uri.parse('$baseUrl/reviews'),
             headers: _authHeaders,
@@ -351,7 +363,7 @@ class ApiService {
               if (photos != null) 'photos': photos,
             }),
           )
-          .timeout(const Duration(seconds: 60));
+          .timeout(const Duration(seconds: 60)));
       return res.statusCode >= 200 && res.statusCode < 300;
     } catch (_) {
       return false;

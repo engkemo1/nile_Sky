@@ -50,3 +50,13 @@ Thumbs.db
 # Flutter SDK cloned by Vercel during the admin panel build
 _flutter/
 **/_flutter/
+
+# Android signing — a keystore in a public repo is the whole app's identity
+*.jks
+*.keystore
+**/key.properties
+
+# Deploy and build noise
+.vercel/
+build-log.txt
+**/__pycache__/

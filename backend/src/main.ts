@@ -4,6 +4,7 @@ import { ValidationPipe } from '@nestjs/common';
 import { SwaggerModule, DocumentBuilder } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { StripSecretsInterceptor } from './common/interceptors/strip-secrets.interceptor';
+import { corsOrigin, swaggerEnabled } from './common/security';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -14,7 +15,9 @@ async function bootstrap() {
   app.use(urlencoded({ extended: true, limit: '8mb' }));
 
   app.enableCors({
-    origin: '*',
+    // Set CORS_ORIGINS (comma separated) in the deployment to lock this down
+    // to the admin panel's origin; '*' is the open default.
+    origin: corsOrigin(),
     methods: 'GET,HEAD,PUT,PATCH,POST,DELETE,OPTIONS',
     credentials: false,
   });
@@ -53,12 +56,16 @@ async function bootstrap() {
     .addTag('analytics', 'Dashboard Analytics')
     .build();
 
-  const document = SwaggerModule.createDocument(app, config);
-  SwaggerModule.setup('api/docs', app, document);
+  if (swaggerEnabled()) {
+    const document = SwaggerModule.createDocument(app, config);
+    SwaggerModule.setup('api/docs', app, document);
+  }
 
   const port = process.env.PORT || 3000;
   await app.listen(port, '0.0.0.0');
   console.log(`🚀 NileSky Backend API running on: http://localhost:${port}`);
-  console.log(`📄 Swagger Docs: http://localhost:${port}/api/docs`);
+  if (swaggerEnabled()) {
+    console.log(`📄 Swagger Docs: http://localhost:${port}/api/docs`);
+  }
 }
 bootstrap();

@@ -60,6 +60,29 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  /// Opens the day-of screen for the nearest upcoming booking.
+  Future<void> _openNextFlight() async {
+    final bookings = await ApiService.getMyBookings();
+    if (!mounted) return;
+
+    final upcoming = bookings.where((b) => !b.isCancelled).toList()
+      ..sort((a, b) => a.flightDate.compareTo(b.flightDate));
+
+    if (upcoming.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(context.tr('noUpcomingFlight'))),
+      );
+      return;
+    }
+    if (!mounted) return;
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (_) => ActiveFlightScreen(booking: upcoming.first),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final List<Widget> pages = [
@@ -282,12 +305,11 @@ class _HomeScreenState extends State<HomeScreen> {
 
               // Active Flight Quick Access Banner (Soft Amber Glow)
               GestureDetector(
-                onTap: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (_) => const ActiveFlightScreen()),
-                  );
-                },
+                // The banner used to open a day-of screen with no booking
+                // behind it, which is how everyone saw the same invented
+                // driver. Now it opens the passenger's own next flight, or
+                // says plainly that there isn't one.
+                onTap: _openNextFlight,
                 child: Container(
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
                   decoration: BoxDecoration(

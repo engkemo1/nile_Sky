@@ -37,6 +37,8 @@ import { Review } from './reviews/entities/review.entity';
 import { Notification } from './notifications/entities/notification.entity';
 import { Coupon } from './coupons/entities/coupon.entity';
 import { Media } from './upload/entities/media.entity';
+import { APP_GUARD } from '@nestjs/core';
+import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
 // Build TypeORM config — supports DATABASE_URL (Neon, Render, etc.) or individual env vars
 function buildTypeOrmConfig() {
@@ -50,7 +52,11 @@ function buildTypeOrmConfig() {
       FlightTemplate, Flight, Booking, Payment, Review,
       Notification, Coupon, Media,
     ],
-    synchronize: true, // Auto-sync schema (safe for MVP — disable for large prod)
+    // TypeORM rewrites the live schema on every boot to match the entities.
+    // That is how new columns appear without migrations, and also how a
+    // renamed column silently drops its data — set DB_SYNCHRONIZE=false once
+    // the schema has settled and there is real customer data to lose.
+    synchronize: process.env.DB_SYNCHRONIZE !== 'false',
   };
 
   if (databaseUrl) {
@@ -75,6 +81,9 @@ function buildTypeOrmConfig() {
 @Module({
   imports: [
     NestConfigModule.forRoot({ isGlobal: true }),
+    // A blanket ceiling on request rate. Login is tightened further on its own
+    // route; without this, an admin email plus a wordlist was all it took.
+    ThrottlerModule.forRoot([{ name: 'default', ttl: 60_000, limit: 120 }]),
     TypeOrmModule.forRoot(buildTypeOrmConfig()),
     TypeOrmModule.forFeature([
       User, Operator, Package, Balloon, Pilot, Driver,
@@ -101,6 +110,10 @@ function buildTypeOrmConfig() {
     I18nModule,
   ],
   controllers: [AppController],
-  providers: [AppService, SeedService],
+  providers: [
+    AppService,
+    SeedService,
+    { provide: APP_GUARD, useClass: ThrottlerGuard },
+  ],
 })
 export class AppModule {}

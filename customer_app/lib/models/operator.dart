@@ -1,3 +1,5 @@
+import '../services/api_service.dart';
+
 class OperatorModel {
   final String id;
   final String nameEn;
@@ -40,7 +42,10 @@ class OperatorModel {
   factory OperatorModel.fromJson(Map<String, dynamic> json) {
     final photosRaw = json['photos'] ?? [];
     final List<String> photosList = (photosRaw is List)
-        ? photosRaw.map((e) => e.toString()).toList()
+        ? photosRaw
+            .map((e) => ApiService.mediaUrl(e?.toString()))
+            .where((u) => u.isNotEmpty)
+            .toList()
         : [];
 
     return OperatorModel(
@@ -49,14 +54,20 @@ class OperatorModel {
       nameAr: json['nameAr'] ?? '',
       descriptionEn: json['descriptionEn'] ?? '',
       descriptionAr: json['descriptionAr'] ?? '',
-      logoUrl: json['logoUrl'] ?? '',
-      coverPhotoUrl: json['coverPhotoUrl'] ?? 'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?w=800',
+      logoUrl: ApiService.mediaUrl(json['logoUrl']?.toString()),
+      coverPhotoUrl: [
+        ApiService.mediaUrl(json['coverPhotoUrl']?.toString()),
+        photosList.isNotEmpty ? photosList.first : '',
+        'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?w=800',
+      ].firstWhere((c) => c.trim().isNotEmpty),
       photos: photosList.isNotEmpty ? photosList : [
         'https://images.unsplash.com/photo-1507608869274-d3177c8bb4c7?w=800',
         'https://images.unsplash.com/photo-1534447677768-be436bb09401?w=800',
         'https://images.unsplash.com/photo-1518709268805-4e9042af9f23?w=800',
       ],
-      videoUrl: json['videoUrl'],
+      videoUrl: (json['videoUrl'] == null || json['videoUrl'].toString().isEmpty)
+          ? null
+          : ApiService.mediaUrl(json['videoUrl'].toString()),
       phone: json['phone'] ?? '',
       whatsapp: json['whatsapp'] ?? '',
       website: json['website'] ?? '',

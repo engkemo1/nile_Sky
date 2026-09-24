@@ -36,7 +36,7 @@ This guide walks you through deploying the complete NileSky platform to **free h
    *(Keep this string for Step 2)*.
 
 > [!NOTE]
-> The NestJS backend uses `synchronize: true` on startup, which will **automatically generate all 14 tables, relations, and enums** on Neon upon first connect, and seed initial test operators, flights, coupons, and admins (`admin@nilesky.com / Admin@123456`).
+> The NestJS backend uses `synchronize: true` on startup, which will **automatically generate all 14 tables, relations, and enums** on Neon upon first connect, and seed initial test operators, flights, coupons, and an admin account (`admin@nilesky.com`). Its password comes from the `SEED_PASSWORD` environment variable and the API refuses to seed without one in production.
 
 ---
 
@@ -162,7 +162,7 @@ static String baseUrl = const String.fromEnvironment(
 ## 🔐 Default Credentials
 
 - **Admin Email**: `admin@nilesky.com`
-- **Admin Password**: `Admin@123456`
+- **Admin Password**: whatever you set in `SEED_PASSWORD`; change it from the admin panel after the first sign-in. Never commit it.
 - **Role**: `platform_admin`
 - **Operator Admin Email**: `operator@nilesky.com`
-- **Operator Admin Password**: `Operator@123456`
+- **Operator Admin Password**: not seeded. Create operator admins from the Users screen in the admin panel.

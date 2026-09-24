@@ -165,11 +165,19 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
           TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: AdminColors.textMuted))),
           ElevatedButton(
             onPressed: () async {
+              // nameEn is @IsNotEmpty() on the API.
+              if (nameEnCtrl.text.trim().isEmpty) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('English name is required'),
+                  backgroundColor: AdminColors.error,
+                ));
+                return;
+              }
               Navigator.pop(ctx);
               // @IsOptional() only skips null/undefined, so an empty string
               // fails @IsEmail(). Omit blank optional fields entirely.
               final data = <String, dynamic>{
-                'nameEn': nameEnCtrl.text,
+                'nameEn': nameEnCtrl.text.trim(),
                 'nameAr': nameArCtrl.text,
                 if (emailCtrl.text.trim().isNotEmpty) 'email': emailCtrl.text.trim(),
                 if (phoneCtrl.text.trim().isNotEmpty) 'phone': phoneCtrl.text.trim(),

@@ -14,12 +14,16 @@
 
 ```
 admin@nilesky.com
-IG8dH1lihIbdRc2d@Ns1
 ```
 
-The old password `Admin@123456` is written in DEPLOY.md inside your **public**
-repo, so it was replaced. Change this one after you sign in, and consider
-making the repository private.
+The password is **not written down here any more**. Both passwords this project
+has used — `Admin@123456` and the one that replaced it — were committed to a
+public repository, so both must be treated as burned.
+
+To set a new one: sign in to the admin panel, click the key icon next to your
+name at the bottom of the sidebar, and change it there. The new password is
+never stored in the repo. Removing it from these files does not remove it from
+git history, so rotating it is the only thing that actually helps.
 
 ## Cost
 

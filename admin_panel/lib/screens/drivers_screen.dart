@@ -66,8 +66,23 @@ class _DriversScreenState extends State<DriversScreen> {
             ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Select an operator first')));
             return;
           }
+          // Name and phone are @IsNotEmpty() on the API; without this check a
+          // blank field came back as a raw 400 in a snackbar.
+          if (nameCtrl.text.trim().isEmpty || phoneCtrl.text.trim().isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('Name and phone are required'),
+              backgroundColor: AdminColors.error,
+            ));
+            return;
+          }
           Navigator.pop(ctx);
-          final data = {'name': nameCtrl.text, 'phone': phoneCtrl.text, 'carModel': carCtrl.text, 'carPlate': plateCtrl.text, 'operatorId': selectedOperatorId};
+          final data = {
+            'name': nameCtrl.text.trim(),
+            'phone': phoneCtrl.text.trim(),
+            if (carCtrl.text.trim().isNotEmpty) 'carModel': carCtrl.text.trim(),
+            if (plateCtrl.text.trim().isNotEmpty) 'carPlate': plateCtrl.text.trim(),
+            'operatorId': selectedOperatorId,
+          };
           try {
             if (isEdit) { await AdminApiService.updateDriver(d['id'], data); } else { await AdminApiService.createDriver(data); }
             _load();

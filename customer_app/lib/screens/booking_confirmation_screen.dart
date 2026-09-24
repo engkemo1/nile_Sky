@@ -212,7 +212,7 @@ class BookingConfirmationScreen extends StatelessWidget {
                   onPressed: () {
                     Navigator.pushReplacement(
                       context,
-                      MaterialPageRoute(builder: (_) => const ActiveFlightScreen()),
+                      MaterialPageRoute(builder: (_) => ActiveFlightScreen(booking: booking)),
                     );
                   },
                   style: ElevatedButton.styleFrom(

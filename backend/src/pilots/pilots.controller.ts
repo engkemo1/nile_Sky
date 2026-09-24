@@ -11,7 +11,10 @@ import { UserRole } from '../users/entities/user.entity';
 export class PilotsController {
   constructor(private readonly pilotsService: PilotsService) {}
 
+  // Pilot records carry licence numbers and expiry dates. Staff only.
   @Get()
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN, UserRole.OPERATOR_ADMIN)
   async findAll(
     @Query('operatorId') operatorId?: string,
     @Query('status') status?: PilotStatus,
@@ -20,6 +23,8 @@ export class PilotsController {
   }
 
   @Get(':id')
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.PLATFORM_ADMIN, UserRole.OPERATOR_ADMIN)
   async findOne(@Param('id') id: string) {
     return this.pilotsService.findOne(id);
   }

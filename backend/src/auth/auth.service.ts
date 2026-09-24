@@ -5,6 +5,12 @@ import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { User, UserRole } from '../users/entities/user.entity';
 import { RegisterDto, LoginDto } from './dto/auth.dto';
+import {
+  jwtSecret,
+  jwtRefreshSecret,
+  accessTokenTtl,
+  refreshTokenTtl,
+} from '../common/security';
 
 @Injectable()
 export class AuthService {
@@ -60,7 +66,7 @@ export class AuthService {
   async refreshToken(refreshToken: string) {
     try {
       const payload = this.jwtService.verify(refreshToken, {
-        secret: process.env.JWT_REFRESH_SECRET,
+        secret: jwtRefreshSecret(),
       });
 
       const user = await this.userRepo.findOne({ where: { id: payload.sub } });
@@ -87,13 +93,15 @@ export class AuthService {
     const payload = { sub: user.id, email: user.email, role: user.role };
 
     const accessToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_SECRET,
-      expiresIn: (process.env.JWT_EXPIRES_IN || '15m') as any,
+      secret: jwtSecret(),
+      expiresIn: accessTokenTtl() as any,
     });
 
+    // Signed with a different key, so a refresh token cannot be replayed as an
+    // access token by JwtStrategy.
     const refreshToken = this.jwtService.sign(payload, {
-      secret: process.env.JWT_REFRESH_SECRET,
-      expiresIn: (process.env.JWT_REFRESH_EXPIRES_IN || '7d') as any,
+      secret: jwtRefreshSecret(),
+      expiresIn: refreshTokenTtl() as any,
     });
 
     // Store hashed refresh token

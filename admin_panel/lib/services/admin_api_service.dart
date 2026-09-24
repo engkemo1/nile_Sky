@@ -280,12 +280,35 @@ class AdminApiService {
     await _delete('/operators/$id');
   }
 
+  /// Rotates the signed-in admin's own password. The seeded one ended up in
+  /// a public repository, so there has to be a way to change it from the UI.
+  static Future<void> changeMyPassword({
+    required String currentPassword,
+    required String newPassword,
+  }) async {
+    await _patch('/users/me/password', {
+      'currentPassword': currentPassword,
+      'newPassword': newPassword,
+    });
+  }
+
   // ───────── FLIGHTS ─────────
 
-  static Future<List<dynamic>> getFlights({String? date, String? status}) async {
+  /// The API defaults to SCHEDULED only when it is given no filter at all, so
+  /// a board that asked for "everything" silently lost every flight the moment
+  /// it was cancelled or completed. Passing a date range instead keeps the
+  /// whole history visible.
+  static Future<List<dynamic>> getFlights({
+    String? date,
+    String? status,
+    String? dateFrom,
+    String? dateTo,
+  }) async {
     return await _get('/flights', queryParams: {
       if (date != null) 'date': date,
       if (status != null) 'status': status,
+      if (dateFrom != null) 'dateFrom': dateFrom,
+      if (dateTo != null) 'dateTo': dateTo,
     });
   }
 

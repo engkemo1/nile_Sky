@@ -1,0 +1,15 @@
+# Copy this file to android/key.properties and fill it in with your own values.
+# key.properties and the .jks itself are gitignored on purpose — never commit
+# either one. Losing the keystore means you can never update the app on Play
+# again, so back it up somewhere safe.
+#
+# Create the keystore once, on your own machine:
+#
+#   keytool -genkey -v -keystore %USERPROFILE%\nilesky-upload.jks ^
+#           -storetype JKS -keyalg RSA -keysize 2048 -validity 10000 ^
+#           -alias nilesky
+#
+storePassword=<the store password you chose>
+keyPassword=<the key password you chose>
+keyAlias=nilesky
+storeFile=C:/Users/<you>/nilesky-upload.jks

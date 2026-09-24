@@ -21,6 +21,18 @@ class BookingModel {
   final String? qrCodeData;
   final String? specialRequests;
 
+  /// Why the flight or the booking was called off, as the operator typed it.
+  final String? cancellationReason;
+
+  /// The flight's own launch point, so the day-of screen can map the real one.
+  final String? launchSite;
+  final double? launchLat;
+  final double? launchLng;
+
+  /// A driver is only shown once the operator has actually assigned one.
+  bool get hasDriver => (driverName ?? '').trim().isNotEmpty;
+  bool get isCancelled => bookingStatus.toLowerCase() == 'cancelled';
+
   BookingModel({
     required this.id,
     required this.bookingRef,
@@ -43,6 +55,10 @@ class BookingModel {
     this.driverCarPlate,
     this.qrCodeData,
     this.specialRequests,
+    this.cancellationReason,
+    this.launchSite,
+    this.launchLat,
+    this.launchLng,
   });
 
   factory BookingModel.fromJson(Map<String, dynamic> json) {
@@ -55,24 +71,31 @@ class BookingModel {
       id: json['id'] ?? '',
       bookingRef: json['bookingRef'] ?? '',
       flightId: json['flightId'] ?? flight['id'] ?? '',
-      flightNumber: flight['flightNumber'] ?? 'FL-101',
+      flightNumber: flight['flightNumber'] ?? '-',
       flightDate: (json['flightDate'] ?? flight['flightDate'] ?? '').toString().split('T')[0],
       departureTime: (flight['departureTime'] ?? '06:15').toString().substring(0, 5),
-      operatorName: operator['nameEn'] ?? 'Luxor Operator',
+      operatorName: operator['nameEn'] ?? '-',
       packageName: pkg['nameEn'] ?? 'Sunrise Flight',
-      guestCount: json['guestCount'] ?? 2,
-      totalPriceEgp: double.tryParse(json['totalPriceEgp']?.toString() ?? '3000') ?? 3000,
-      paymentStatus: json['paymentStatus'] ?? 'paid',
-      bookingStatus: json['bookingStatus'] ?? 'confirmed',
+      guestCount: json['guestCount'] ?? 0,
+      totalPriceEgp: double.tryParse(json['totalPriceEgp']?.toString() ?? '') ?? 0,
+      paymentStatus: json['paymentStatus'] ?? 'pending',
+      bookingStatus: json['bookingStatus'] ?? 'pending',
       pickupLocation: json['pickupLocation'],
-      pickupHotelName: json['pickupHotelName'] ?? 'Hilton Luxor Resort',
-      pickupTime: (json['pickupTime'] ?? '03:45').toString().substring(0, 5),
-      driverName: driver['name'] ?? 'Ahmed Mahmoud',
-      driverPhone: driver['phone'] ?? '01012345678',
-      driverCarModel: driver['carModel'] ?? 'Toyota HiAce (White Van)',
-      driverCarPlate: driver['carPlate'] ?? 'ل م ط ١٢٣٤',
-      qrCodeData: json['qrCodeData'] ?? json['bookingRef'] ?? 'NLK-2026-09-0142',
+      pickupHotelName: json['pickupHotelName'],
+      pickupTime: json['pickupTime']?.toString().padRight(5).substring(0, 5).trim(),
+      // No invented driver. These stay null until an operator assigns someone,
+      // so the app can say "not assigned yet" instead of naming a driver who
+      // is not coming and a van the passenger should not get into.
+      driverName: driver['name'],
+      driverPhone: driver['phone'],
+      driverCarModel: driver['carModel'],
+      driverCarPlate: driver['carPlate'],
+      qrCodeData: json['qrCodeData'] ?? json['bookingRef'],
       specialRequests: json['specialRequests'],
+      cancellationReason: json['cancellationReason'] ?? flight['cancellationReason'],
+      launchSite: flight['launchSite'],
+      launchLat: double.tryParse(flight['launchLat']?.toString() ?? ''),
+      launchLng: double.tryParse(flight['launchLng']?.toString() ?? ''),
     );
   }
 }

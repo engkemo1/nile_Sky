@@ -1,13 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:qr_flutter/qr_flutter.dart';
 import '../theme/app_colors.dart';
 import '../services/localization_service.dart';
 import 'review_screen.dart';
 import '../widgets/flight_animation_bg.dart';
 import '../widgets/hot_air_balloon_logo.dart';
+import '../models/booking.dart';
 
 class ActiveFlightScreen extends StatelessWidget {
-  const ActiveFlightScreen({super.key});
+  /// The booking this screen is about. It used to be absent entirely, so every
+  /// passenger saw the same invented driver, van and plate — which is how
+  /// somebody ends up climbing into the wrong vehicle at four in the morning.
+  final BookingModel? booking;
+
+  const ActiveFlightScreen({super.key, this.booking});
 
   @override
   Widget build(BuildContext context) {
@@ -196,7 +203,9 @@ class ActiveFlightScreen extends StatelessWidget {
                           ],
                         ),
                         child: QrImageView(
-                          data: 'NLK-2026-09-0142',
+                          data: booking?.qrCodeData ??
+                              booking?.bookingRef ??
+                              'NO-BOOKING',
                           version: QrVersions.auto,
                           size: 140.0,
                         ),
@@ -212,161 +221,7 @@ class ActiveFlightScreen extends StatelessWidget {
                 const SizedBox(height: 20),
 
                 // Driver & Vehicle Card
-                Container(
-                  padding: const EdgeInsets.all(18),
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(22),
-                    border: Border.all(color: AppColors.border),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.03),
-                        blurRadius: 10,
-                        offset: const Offset(0, 3),
-                      ),
-                    ],
-                  ),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.all(3),
-                            decoration: const BoxDecoration(
-                              gradient: AppColors.goldenGradient,
-                              shape: BoxShape.circle,
-                            ),
-                            child: const CircleAvatar(
-                              radius: 22,
-                              backgroundColor: Color(0xFFFFFBEB),
-                              child: Text(
-                                'AM',
-                                style: TextStyle(
-                                  color: AppColors.primaryDark,
-                                  fontWeight: FontWeight.bold,
-                                  fontSize: 14,
-                                ),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(width: 14),
-                          Expanded(
-                            child: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'Captain Ahmed Mahmoud',
-                                  style: TextStyle(
-                                    color: AppColors.textPrimary,
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 15.5,
-                                  ),
-                                ),
-                                const SizedBox(height: 2),
-                                Text(
-                                  context.tr('driverAssigned'),
-                                  style: const TextStyle(
-                                    color: AppColors.textSecondary,
-                                    fontSize: 12,
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                      const Divider(color: AppColors.border, height: 24),
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                const Icon(Icons.airport_shuttle, color: AppColors.secondary, size: 18),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    context.tr('driverVanModel'),
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: const TextStyle(color: AppColors.textPrimary, fontSize: 12),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFFFFBEB),
-                              borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: AppColors.primary.withValues(alpha: 0.5)),
-                            ),
-                            child: Text(
-                              context.tr('driverPlate'),
-                              style: const TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold, fontSize: 11),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 14),
-
-                      // Contact Buttons (Call & WhatsApp)
-                      Row(
-                        children: [
-                          Expanded(
-                            child: OutlinedButton.icon(
-                              onPressed: () {
-                                ScaffoldMessenger.of(context).showSnackBar(
-                                  const SnackBar(content: Text('Calling Driver: +20 101 234 5678')),
-                                );
-                              },
-                              style: OutlinedButton.styleFrom(
-                                side: const BorderSide(color: AppColors.border),
-                                padding: const EdgeInsets.symmetric(vertical: 12),
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                              ),
-                              icon: const Icon(Icons.phone, size: 16, color: AppColors.textPrimary),
-                              label: Text(context.tr('callDriver'), style: const TextStyle(color: AppColors.textPrimary, fontSize: 12)),
-                            ),
-                          ),
-                          const SizedBox(width: 10),
-                          Expanded(
-                            child: Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(14),
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: const Color(0xFF25D366).withValues(alpha: 0.25),
-                                    blurRadius: 10,
-                                    offset: const Offset(0, 2),
-                                  ),
-                                ],
-                              ),
-                              child: ElevatedButton.icon(
-                                onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(content: Text('Opening WhatsApp with Captain Ahmed...')),
-                                  );
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFF25D366),
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(vertical: 12),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
-                                ),
-                                icon: const Icon(Icons.chat, size: 16, color: Colors.white),
-                                label: Text(context.tr('whatsappDriver'), style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
+                _driverCard(context),
                 const SizedBox(height: 20),
 
                 // Morning Experience Timeline
@@ -422,9 +277,11 @@ class ActiveFlightScreen extends StatelessWidget {
                       Navigator.push(
                         context,
                         MaterialPageRoute(
-                          builder: (_) => const ReviewScreen(
-                            operatorName: 'NileSky',
-                            flightName: 'NileSky Classic Sunrise Ride',
+                          builder: (_) => ReviewScreen(
+                            bookingId: booking?.id,
+                            operatorName: booking?.operatorName ?? 'NileSky',
+                            flightName:
+                                booking?.packageName ?? 'NileSky Sunrise Ride',
                           ),
                         ),
                       );
@@ -448,6 +305,204 @@ class ActiveFlightScreen extends StatelessWidget {
         ),
       ),
     );
+  }
+
+  /// The driver the operator actually assigned — or an honest "not yet".
+  Widget _driverCard(BuildContext context) {
+    final b = booking;
+    final assigned = b != null && b.hasDriver;
+
+    Widget shell(Widget child) => Container(
+          padding: const EdgeInsets.all(18),
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(22),
+            border: Border.all(color: AppColors.border),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.03),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
+              ),
+            ],
+          ),
+          child: child,
+        );
+
+    if (!assigned) {
+      return shell(
+        Row(
+          children: [
+            const Icon(Icons.schedule, color: AppColors.textMuted, size: 22),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    context.tr('driverNotAssigned'),
+                    style: const TextStyle(
+                      color: AppColors.textPrimary,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    context.tr('driverNotAssignedSub'),
+                    style: const TextStyle(
+                        color: AppColors.textSecondary, fontSize: 12, height: 1.4),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    final name = b.driverName!.trim();
+    final initials = name
+        .split(RegExp(r'\s+'))
+        .where((w) => w.isNotEmpty)
+        .take(2)
+        .map((w) => w[0].toUpperCase())
+        .join();
+    final phone = (b.driverPhone ?? '').trim();
+
+    return shell(
+      Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(3),
+                decoration: const BoxDecoration(
+                  gradient: AppColors.goldenGradient,
+                  shape: BoxShape.circle,
+                ),
+                child: CircleAvatar(
+                  radius: 22,
+                  backgroundColor: const Color(0xFFFFFBEB),
+                  child: Text(
+                    initials.isEmpty ? '?' : initials,
+                    style: const TextStyle(
+                      color: AppColors.primaryDark,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 14,
+                    ),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 14),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      name,
+                      style: const TextStyle(
+                        color: AppColors.textPrimary,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 15.5,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      context.tr('driverAssigned'),
+                      style: const TextStyle(
+                          color: AppColors.textSecondary, fontSize: 12),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const Divider(color: AppColors.border, height: 24),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Expanded(
+                child: Row(
+                  children: [
+                    const Icon(Icons.airport_shuttle,
+                        color: AppColors.secondary, size: 18),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        (b.driverCarModel ?? '').trim().isEmpty
+                            ? '—'
+                            : b.driverCarModel!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                            color: AppColors.textPrimary, fontSize: 12),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              if ((b.driverCarPlate ?? '').trim().isNotEmpty) ...[
+                const SizedBox(width: 8),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFFBEB),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                        color: AppColors.primary.withValues(alpha: 0.5)),
+                  ),
+                  child: Text(
+                    b.driverCarPlate!,
+                    style: const TextStyle(
+                      color: AppColors.primaryDark,
+                      fontWeight: FontWeight.bold,
+                      fontSize: 11,
+                    ),
+                  ),
+                ),
+              ],
+            ],
+          ),
+          if (phone.isNotEmpty) ...[
+            const SizedBox(height: 14),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => _copy(context, phone,
+                        context.tr('driverNumberCopied')),
+                    style: OutlinedButton.styleFrom(
+                      side: const BorderSide(color: AppColors.border),
+                      padding: const EdgeInsets.symmetric(vertical: 12),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(14)),
+                    ),
+                    icon: const Icon(Icons.phone,
+                        size: 16, color: AppColors.textPrimary),
+                    label: Text(
+                      phone,
+                      style: const TextStyle(
+                          color: AppColors.textPrimary, fontSize: 12),
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ],
+      ),
+    );
+  }
+
+  /// No url_launcher in this app, so the number is copied to the clipboard
+  /// rather than promising a dialler that will not open.
+  void _copy(BuildContext context, String value, String message) {
+    Clipboard.setData(ClipboardData(text: value));
+    ScaffoldMessenger.of(context)
+        .showSnackBar(SnackBar(content: Text(message)));
   }
 
   Widget _buildTimelineItem(String step, String title, String subtitle, bool isActive, {bool isLast = false}) {

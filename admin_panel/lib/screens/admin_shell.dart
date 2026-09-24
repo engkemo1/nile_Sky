@@ -58,6 +58,113 @@ class _AdminShellState extends State<AdminShell> {
     AnalyticsScreen(),
   ];
 
+  /// Change your own password without touching the database by hand.
+  void _changePassword() {
+    final currentCtrl = TextEditingController();
+    final newCtrl = TextEditingController();
+    final confirmCtrl = TextEditingController();
+
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        backgroundColor: AdminColors.cardDark,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+        title: const Text('Change password',
+            style: TextStyle(color: AdminColors.textPrimary, fontSize: 16)),
+        content: SizedBox(
+          width: 380,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              _passwordField('Current password', currentCtrl),
+              _passwordField('New password (10+ characters)', newCtrl),
+              _passwordField('Repeat the new password', confirmCtrl),
+            ],
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Cancel',
+                style: TextStyle(color: AdminColors.textMuted)),
+          ),
+          ElevatedButton(
+            onPressed: () async {
+              if (newCtrl.text != confirmCtrl.text) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('The two new passwords do not match'),
+                  backgroundColor: AdminColors.error,
+                ));
+                return;
+              }
+              if (newCtrl.text.length < 10) {
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Use at least 10 characters'),
+                  backgroundColor: AdminColors.error,
+                ));
+                return;
+              }
+              Navigator.pop(ctx);
+              try {
+                await AdminApiService.changeMyPassword(
+                  currentPassword: currentCtrl.text,
+                  newPassword: newCtrl.text,
+                );
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+                  content: Text('Password changed. Sign in again on your other devices.'),
+                  backgroundColor: AdminColors.success,
+                ));
+              } catch (e) {
+                if (!mounted) return;
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(e.toString().replaceFirst('ApiException: ', '')),
+                  backgroundColor: AdminColors.error,
+                ));
+              }
+            },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: AdminColors.primary,
+              foregroundColor: Colors.black,
+            ),
+            child: const Text('Change'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _passwordField(String label, TextEditingController controller) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 12),
+      child: TextField(
+        controller: controller,
+        obscureText: true,
+        style: const TextStyle(color: AdminColors.textPrimary, fontSize: 13),
+        decoration: InputDecoration(
+          labelText: label,
+          labelStyle: const TextStyle(color: AdminColors.textMuted, fontSize: 12),
+          filled: true,
+          fillColor: AdminColors.surfaceDark,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: AdminColors.border),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: AdminColors.border),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(10),
+            borderSide: const BorderSide(color: AdminColors.primary),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+        ),
+      ),
+    );
+  }
+
   void _handleLogout() {
     showDialog(
       context: context,
@@ -218,6 +325,16 @@ class _AdminShellState extends State<AdminShell> {
                           ],
                         ),
                       ),
+                      InkWell(
+                        onTap: _changePassword,
+                        borderRadius: BorderRadius.circular(8),
+                        child: const Padding(
+                          padding: EdgeInsets.all(4),
+                          child: Icon(Icons.key_outlined,
+                              color: AdminColors.textMuted, size: 18),
+                        ),
+                      ),
+                      const SizedBox(width: 4),
                       InkWell(
                         onTap: _handleLogout,
                         borderRadius: BorderRadius.circular(8),
