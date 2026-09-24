@@ -8,19 +8,53 @@
  * is the only safe way for it to fail.
  */
 
+import { createHash } from 'crypto';
+
 const DEV_FALLBACK = 'dev-only-insecure-secret-do-not-use-in-production';
 
 function isProduction(): boolean {
   return process.env.NODE_ENV === 'production';
 }
 
+/**
+ * A signing key derived from the database credentials, used when no JWT_SECRET
+ * has been set.
+ *
+ * The point of a signing key is that an attacker cannot guess it. A literal
+ * written in this repository fails that immediately — the repository is
+ * public. DATABASE_URL is not: it is already set in the deployment because
+ * nothing works without it, it is the same across cold starts and across every
+ * serverless instance, and it is never committed. Hashing it with a fixed
+ * label gives a stable key per deployment and per purpose, with nothing to
+ * configure.
+ *
+ * Two consequences worth knowing. Rotating the database password rotates this
+ * key too, so everyone signs in again — a nuisance, not a failure. And anyone
+ * holding DATABASE_URL can derive this key; they already own the database, so
+ * nothing new is exposed. Setting JWT_SECRET explicitly avoids both and always
+ * takes precedence.
+ */
+function derivedSecret(label: string): string | null {
+  const seed =
+    process.env.DATABASE_URL ||
+    (process.env.DB_PASSWORD && process.env.DB_HOST
+      ? `${process.env.DB_HOST}:${process.env.DB_DATABASE}:${process.env.DB_PASSWORD}`
+      : null);
+  if (!seed) return null;
+  return createHash('sha256').update(`nilesky:jwt:${label}:${seed}`).digest('hex');
+}
+
 export function jwtSecret(): string {
   const secret = process.env.JWT_SECRET;
   if (secret && secret.length >= 16) return secret;
+
+  const derived = derivedSecret('access');
+  if (derived) return derived;
+
   if (isProduction()) {
     throw new Error(
-      'JWT_SECRET is missing or too short. Set it (32+ random characters) in ' +
-        'the deployment environment before starting the API.',
+      'No JWT_SECRET and no DATABASE_URL, so there is nothing to sign tokens ' +
+        'with. Set one of them before starting the API.',
     );
   }
   return DEV_FALLBACK;
@@ -33,9 +67,12 @@ export function jwtSecret(): string {
 export function jwtRefreshSecret(): string {
   const secret = process.env.JWT_REFRESH_SECRET;
   if (secret && secret.length >= 16) return secret;
-  if (isProduction() && !process.env.JWT_SECRET) {
-    throw new Error('JWT_REFRESH_SECRET or JWT_SECRET must be set in production.');
-  }
+
+  // A different label, so this is a genuinely different key from the access
+  // one rather than the same value with a suffix.
+  const derived = derivedSecret('refresh');
+  if (derived) return derived;
+
   return `${jwtSecret()}::refresh`;
 }
 
