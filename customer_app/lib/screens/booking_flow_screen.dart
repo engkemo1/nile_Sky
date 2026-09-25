@@ -253,7 +253,7 @@ class _BookingFlowScreenState extends State<BookingFlowScreen> {
                             ),
                             const SizedBox(height: 2),
                             Text(
-                              'NileSky Fleet • ${widget.flight.departureTime} AM Takeoff',
+                              '${widget.flight.packageName} • ${widget.flight.departureTime}',
                               style: const TextStyle(color: AppColors.secondary, fontSize: 11.5, fontWeight: FontWeight.w600),
                             ),
                           ],

@@ -142,6 +142,11 @@ Widget _detailRow(String label, String value) {
 
 class _PaymentsScreenState extends State<PaymentsScreen> {
   List<dynamic> _bookings = [];
+
+  /// What each operator is owed, computed by the API from paid bookings and
+  /// the operator's commission rate. Settling up used to mean exporting the
+  /// bookings and doing the arithmetic in a spreadsheet.
+  Map<String, dynamic>? _payouts;
   bool _isLoading = true;
   String? _error;
   String _statusFilter = 'all';
@@ -154,6 +159,19 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
   void initState() {
     super.initState();
     _load();
+    _loadPayouts();
+  }
+
+  Future<void> _loadPayouts() async {
+    try {
+      final data = await AdminApiService.getPayouts();
+      if (!mounted) return;
+      setState(() => _payouts = data);
+    } catch (_) {
+      // The payments table is the main thing on this screen; a failed
+      // settlement query should not take it down with it.
+      if (mounted) setState(() => _payouts = null);
+    }
   }
 
   Future<void> _load() async {
@@ -320,6 +338,112 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     }
   }
 
+  /// Who is owed what. Gross is the money collected from paid, non-cancelled
+  /// bookings; the platform keeps the operator's commission rate and the rest
+  /// is payable to them.
+  Widget _payoutSection() {
+    final payouts = _payouts;
+    if (payouts == null) return const SizedBox.shrink();
+
+    final lines = (payouts['lines'] as List?) ?? const [];
+    if (lines.isEmpty) return const SizedBox.shrink();
+    final totals = (payouts['totals'] as Map?) ?? const {};
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Operator settlement',
+          style: TextStyle(
+            color: AdminColors.textPrimary,
+            fontSize: 16,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        const SizedBox(height: 4),
+        const Text(
+          'Collected money, minus commission, per operator.',
+          style: TextStyle(color: AdminColors.textMuted, fontSize: 12),
+        ),
+        const SizedBox(height: 12),
+        Container(
+          width: double.infinity,
+          decoration: BoxDecoration(
+            color: AdminColors.cardDark,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(color: AdminColors.border),
+          ),
+          child: DataTable(
+            columnSpacing: 22,
+            columns: const [
+              DataColumn(label: Text('OPERATOR')),
+              DataColumn(label: Text('BOOKINGS')),
+              DataColumn(label: Text('PASSENGERS')),
+              DataColumn(label: Text('GROSS')),
+              DataColumn(label: Text('COMMISSION')),
+              DataColumn(label: Text('NET PAYABLE')),
+            ],
+            rows: [
+              ...lines.map<DataRow>((raw) {
+                final l = Map<String, dynamic>.from(raw as Map);
+                return DataRow(cells: [
+                  DataCell(Text(l['operatorName']?.toString() ?? '-',
+                      style: const TextStyle(fontSize: 12))),
+                  DataCell(Text('${l['bookings'] ?? 0}',
+                      style: const TextStyle(fontSize: 12))),
+                  DataCell(Text('${l['passengers'] ?? 0}',
+                      style: const TextStyle(fontSize: 12))),
+                  DataCell(Text(_money(asDouble(l['grossEgp'])),
+                      style: const TextStyle(fontSize: 12))),
+                  DataCell(Text(
+                    '${_money(asDouble(l['commissionEgp']))}  '
+                    '(${asDouble(l['commissionRate']).toStringAsFixed(1)}%)',
+                    style: const TextStyle(
+                        fontSize: 12, color: AdminColors.textSecondary),
+                  )),
+                  DataCell(Text(
+                    _money(asDouble(l['netPayableEgp'])),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AdminColors.success,
+                    ),
+                  )),
+                ]);
+              }),
+              DataRow(
+                color: WidgetStateProperty.all(
+                    AdminColors.primary.withValues(alpha: 0.06)),
+                cells: [
+                  const DataCell(Text('Total',
+                      style: TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.bold))),
+                  const DataCell(Text('')),
+                  const DataCell(Text('')),
+                  DataCell(Text(_money(asDouble(totals['grossEgp'])),
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.bold))),
+                  DataCell(Text(_money(asDouble(totals['commissionEgp'])),
+                      style: const TextStyle(
+                          fontSize: 12, fontWeight: FontWeight.bold))),
+                  DataCell(Text(
+                    _money(asDouble(totals['netPayableEgp'])),
+                    style: const TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.bold,
+                      color: AdminColors.success,
+                    ),
+                  )),
+                ],
+              ),
+            ],
+          ),
+        ),
+        const SizedBox(height: 28),
+      ],
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final rows = _filtered;
@@ -417,6 +541,7 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _payoutSection(),
                   Row(
                     children: [
                       Expanded(
@@ -729,6 +854,19 @@ class _BookingPaymentsDialogState extends State<_BookingPaymentsDialog> {
   void initState() {
     super.initState();
     _load();
+    _loadPayouts();
+  }
+
+  Future<void> _loadPayouts() async {
+    try {
+      final data = await AdminApiService.getPayouts();
+      if (!mounted) return;
+      setState(() => _payouts = data);
+    } catch (_) {
+      // The payments table is the main thing on this screen; a failed
+      // settlement query should not take it down with it.
+      if (mounted) setState(() => _payouts = null);
+    }
   }
 
   Future<void> _load() async {

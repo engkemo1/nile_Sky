@@ -91,6 +91,16 @@ class LanguageService {
       'continueToPayment': 'Continue to payment',
       'confirmBookingBtn': 'Confirm booking',
 
+      // Notifications, reviews and package copy
+      'notifications': 'Notifications',
+      'noNotifications': 'Nothing yet. Updates about your flight — pickup times, weather calls, cancellations — appear here.',
+      'passengerReviews': 'What passengers said',
+      'sunriseFlightLabel': 'Sunrise flight over the west bank',
+      'safetyBriefingNote': 'Safety briefing before every take-off',
+      'pickupNotIncluded': 'Hotel pickup not included in this package',
+      'privateBasket': 'Private basket — your group only',
+      'overviewFallback': 'A sunrise hot air balloon flight over Luxor\'s west bank.',
+
       // Driver, reviews and session
       'driverNotAssigned': 'Your driver has not been assigned yet',
       'driverNotAssignedSub': 'The operator assigns a driver the evening before the flight. Their name, van and plate will appear here.',
@@ -384,6 +394,16 @@ class LanguageService {
       'totalDue': 'الإجمالي المستحق',
       'continueToPayment': 'كمّل للدفع',
       'confirmBookingBtn': 'أكّد الحجز',
+
+      // Notifications, reviews and package copy
+      'notifications': 'الإشعارات',
+      'noNotifications': 'مفيش حاجة لسه. أي جديد عن رحلتك — مواعيد التوصيل، حالة الجو، الإلغاء — هيظهر هنا.',
+      'passengerReviews': 'الركاب قالوا إيه',
+      'sunriseFlightLabel': 'رحلة شروق فوق البر الغربي',
+      'safetyBriefingNote': 'شرح إجراءات الأمان قبل كل إقلاع',
+      'pickupNotIncluded': 'التوصيل من الفندق مش مشمول في الباقة دي',
+      'privateBasket': 'سلة خاصة — مجموعتك بس',
+      'overviewFallback': 'رحلة منطاد مع شروق الشمس فوق البر الغربي بالأقصر.',
 
       // Driver, reviews and session
       'driverNotAssigned': 'لسه متحددش سواق لرحلتك',

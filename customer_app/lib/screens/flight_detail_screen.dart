@@ -95,12 +95,15 @@ class FlightDetailScreen extends StatelessWidget {
                             ),
                           ),
                           const SizedBox(height: 4),
+                          // The operator's own name is deliberately not shown:
+                          // passengers book NileSky, not a company behind it.
                           Row(
                             children: [
-                              const Icon(Icons.verified, color: AppColors.secondary, size: 16),
+                              const Icon(Icons.wb_twilight,
+                                  color: AppColors.secondary, size: 16),
                               const SizedBox(width: 5),
                               Text(
-                                'NileSky Verified Direct Operations',
+                                context.tr('sunriseFlightLabel'),
                                 style: const TextStyle(
                                   color: AppColors.secondary,
                                   fontSize: 13,
@@ -136,8 +139,11 @@ class FlightDetailScreen extends StatelessWidget {
                     children: [
                       _buildHighlightItem(Icons.timer_outlined, '${flight.durationMinutes}m', context.tr('duration')),
                       _buildDivider(),
-                      _buildHighlightItem(Icons.terrain_outlined, '650m', context.tr('maxAltitude')),
-                      _buildDivider(),
+                      if (flight.maxAltitudeM != null) ...[
+                        _buildHighlightItem(Icons.terrain_outlined,
+                            '${flight.maxAltitudeM}m', context.tr('maxAltitude')),
+                        _buildDivider(),
+                      ],
                       _buildHighlightItem(Icons.wb_sunny_outlined, '${flight.departureTime} AM', context.tr('takeoff')),
                       _buildDivider(),
                       _buildHighlightItem(Icons.people_outline, '${flight.capacity} max', context.tr('basketSize')),
@@ -189,8 +195,9 @@ class FlightDetailScreen extends StatelessWidget {
                                 ),
                                 const SizedBox(height: 2),
                                 Text(
-                                  'Ministry of Civil Aviation Certified (#EGY-LXR-088)',
-                                  style: const TextStyle(color: AppColors.textSecondary, fontSize: 11.5),
+                                  context.tr('safetyBriefingNote'),
+                                  style: const TextStyle(
+                                      color: AppColors.textSecondary, fontSize: 11.5),
                                 ),
                               ],
                             ),
@@ -225,10 +232,11 @@ class FlightDetailScreen extends StatelessWidget {
                     borderRadius: BorderRadius.circular(18),
                     border: Border.all(color: AppColors.border),
                   ),
+                  // Written by whoever runs the flight, in the admin panel.
+                  // It used to be a fixed paragraph, so editing the package
+                  // description changed nothing a passenger could see.
                   child: Text(
-                    LanguageService.isArabic
-                        ? 'انطلق في تجربة خيالية مع شروق الشمس فوق وادي الملوك ومعابد حتشبسوت ومدينة هابو. استمتع بأعلى معايير السلامة العالمية مع طيارين محترفين معتمدين وانتقالات مكيفة خاصة وقارب نيل تقليدي.'
-                        : 'Embark on an unforgettable sunrise hot air balloon flight over the Valley of the Kings, Hatshepsut Temple, and the majestic Nile River. Certified by the Egyptian Civil Aviation Authority with master pilot guidance and VIP hotel transfers.',
+                    _overviewText(context),
                     style: const TextStyle(
                       color: AppColors.textSecondary,
                       fontSize: 13.5,
@@ -253,8 +261,21 @@ class FlightDetailScreen extends StatelessWidget {
                   ),
                   child: Column(
                     children: [
-                      _buildInclusionRow(Icons.check_circle, AppColors.success, context.tr('hotelPickupIncluded')),
+                      // These follow the package the operator configured; the
+                      // list used to claim hotel pickup whether or not the
+                      // package included it.
+                      if (flight.hasPickup)
+                        _buildInclusionRow(Icons.check_circle, AppColors.success,
+                            context.tr('hotelPickupIncluded'))
+                      else
+                        _buildInclusionRow(Icons.cancel, AppColors.textMuted,
+                            context.tr('pickupNotIncluded')),
                       const SizedBox(height: 10),
+                      if (flight.isPrivate) ...[
+                        _buildInclusionRow(Icons.check_circle, AppColors.success,
+                            context.tr('privateBasket')),
+                        const SizedBox(height: 10),
+                      ],
                       _buildInclusionRow(Icons.check_circle, AppColors.success, context.tr('nileMotorboatCrossing')),
                       const SizedBox(height: 10),
                       _buildInclusionRow(Icons.check_circle, AppColors.success, '${flight.durationMinutes} ${context.tr('sunriseFlightAirtime')}'),
@@ -386,6 +407,36 @@ class FlightDetailScreen extends StatelessWidget {
                 ),
                 const SizedBox(height: 20),
 
+                // 7c. What passengers who actually flew this package said.
+                // The app used to show two invented reviews on a screen
+                // nothing linked to, and never fetched the real ones.
+                FutureBuilder<List<Map<String, dynamic>>>(
+                  future: ApiService.getReviews(packageId: flight.packageId),
+                  builder: (context, snap) {
+                    final reviews = snap.data ?? const [];
+                    if (snap.connectionState != ConnectionState.done ||
+                        reviews.isEmpty) {
+                      return const SizedBox.shrink();
+                    }
+                    return Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          context.tr('passengerReviews'),
+                          style: Theme.of(context)
+                              .textTheme
+                              .titleLarge
+                              ?.copyWith(
+                                  fontSize: 17, color: AppColors.textPrimary),
+                        ),
+                        const SizedBox(height: 10),
+                        ...reviews.take(5).map(_reviewCard),
+                        const SizedBox(height: 20),
+                      ],
+                    );
+                  },
+                ),
+
                 // 8. Cancellation Policy Info Card
                 Container(
                   padding: const EdgeInsets.all(16),
@@ -500,6 +551,78 @@ class FlightDetailScreen extends StatelessWidget {
               ),
             ),
           ),
+        ],
+      ),
+    );
+  }
+
+  /// The operator's description in the reader's language, falling back to the
+  /// other language and then to a plain sentence when they have written none.
+  String _overviewText(BuildContext context) {
+    final ar = (flight.descriptionAr ?? '').trim();
+    final en = (flight.descriptionEn ?? '').trim();
+    if (LanguageService.isArabic && ar.isNotEmpty) return ar;
+    if (!LanguageService.isArabic && en.isNotEmpty) return en;
+    if (en.isNotEmpty) return en;
+    if (ar.isNotEmpty) return ar;
+    return context.tr('overviewFallback');
+  }
+
+  /// One real review. The reviewer's first name only — the API returns the
+  /// whole user record and a full name on a public screen is more than a
+  /// passenger agreed to.
+  Widget _reviewCard(Map<String, dynamic> r) {
+    final rating = int.tryParse(r['rating']?.toString() ?? '') ?? 5;
+    final comment = (r['comment'] ?? '').toString().trim();
+    final fullName = (r['user']?['name'] ?? '').toString().trim();
+    final name = fullName.isEmpty ? 'Passenger' : fullName.split(' ').first;
+
+    return Container(
+      width: double.infinity,
+      margin: const EdgeInsets.only(bottom: 10),
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: AppColors.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text(
+                name,
+                style: const TextStyle(
+                  color: AppColors.textPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 13,
+                ),
+              ),
+              const Spacer(),
+              Row(
+                children: List.generate(
+                  5,
+                  (i) => Icon(
+                    i < rating ? Icons.star : Icons.star_border,
+                    size: 14,
+                    color: AppColors.primaryDark,
+                  ),
+                ),
+              ),
+            ],
+          ),
+          if (comment.isNotEmpty) ...[
+            const SizedBox(height: 6),
+            Text(
+              comment,
+              style: const TextStyle(
+                color: AppColors.textSecondary,
+                fontSize: 12.5,
+                height: 1.45,
+              ),
+            ),
+          ],
         ],
       ),
     );

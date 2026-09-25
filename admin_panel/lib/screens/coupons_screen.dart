@@ -29,12 +29,48 @@ class _CouponsScreenState extends State<CouponsScreen> {
     setState(() => _isLoading = false);
   }
 
+  /// A tappable date, so a promotion can run for a real window.
+  Widget _dateField(
+    BuildContext ctx,
+    String label,
+    DateTime value,
+    ValueChanged<DateTime> onPicked,
+  ) {
+    return Padding(
+      padding: const EdgeInsets.only(top: 8, bottom: 4),
+      child: InkWell(
+        onTap: () async {
+          final picked = await showDatePicker(
+            context: ctx,
+            initialDate: value,
+            firstDate: DateTime.now().subtract(const Duration(days: 365)),
+            lastDate: DateTime.now().add(const Duration(days: 365 * 5)),
+          );
+          if (picked != null) onPicked(picked);
+        },
+        borderRadius: BorderRadius.circular(10),
+        child: InputDecorator(
+          decoration: adminInput(label),
+          child: Text(
+            value.toIso8601String().substring(0, 10),
+            style: const TextStyle(
+                color: AdminColors.textPrimary, fontSize: 13),
+          ),
+        ),
+      ),
+    );
+  }
+
   void _showCreateDialog() {
     final codeCtrl = TextEditingController();
     final valueCtrl = TextEditingController();
     final maxDiscountCtrl = TextEditingController();
     final maxUsesCtrl = TextEditingController();
     String type = 'percentage';
+    // The window used to be forced to today..today+1 year with no way to
+    // change it, so a dated promotion was impossible.
+    DateTime validFrom = DateTime.now();
+    DateTime validTo = DateTime.now().add(const Duration(days: 30));
 
     showDialog(context: context, builder: (ctx) => StatefulBuilder(builder: (ctx, setDialogState) => AlertDialog(
       backgroundColor: AdminColors.cardDark, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -56,19 +92,41 @@ class _CouponsScreenState extends State<CouponsScreen> {
         _field(type == 'percentage' ? 'Discount %' : 'Discount (EGP)', valueCtrl),
         if (type == 'percentage') _field('Max Discount (EGP)', maxDiscountCtrl),
         _field('Max Uses (optional)', maxUsesCtrl),
+        Row(children: [
+          Expanded(
+            child: _dateField(ctx, 'Valid from', validFrom, (d) {
+              setDialogState(() {
+                validFrom = d;
+                if (validTo.isBefore(validFrom)) validTo = validFrom;
+              });
+            }),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: _dateField(ctx, 'Valid to', validTo, (d) {
+              setDialogState(() => validTo = d.isBefore(validFrom) ? validFrom : d);
+            }),
+          ),
+        ]),
       ])),
       actions: [
         TextButton(onPressed: () => Navigator.pop(ctx), child: const Text('Cancel', style: TextStyle(color: AdminColors.textMuted))),
         ElevatedButton(onPressed: () async {
+          if (codeCtrl.text.trim().isEmpty) {
+            ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+              content: Text('The coupon needs a code'),
+              backgroundColor: AdminColors.error,
+            ));
+            return;
+          }
           Navigator.pop(ctx);
-          final now = DateTime.now();
           final data = {
-            'code': codeCtrl.text.toUpperCase(),
+            'code': codeCtrl.text.trim().toUpperCase(),
             'type': type,
             'value': double.tryParse(valueCtrl.text) ?? 10,
             if (type == 'percentage' && maxDiscountCtrl.text.isNotEmpty) 'maxDiscountEgp': double.tryParse(maxDiscountCtrl.text),
-            'validFrom': now.toIso8601String().substring(0, 10),
-            'validTo': DateTime(now.year + 1, now.month, now.day).toIso8601String().substring(0, 10),
+            'validFrom': validFrom.toIso8601String().substring(0, 10),
+            'validTo': validTo.toIso8601String().substring(0, 10),
             if (maxUsesCtrl.text.isNotEmpty) 'maxUses': int.tryParse(maxUsesCtrl.text),
           };
           try {

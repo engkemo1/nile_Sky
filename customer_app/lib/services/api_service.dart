@@ -23,6 +23,7 @@ class ApiService {
 
   // Selected Currency helper
   static String selectedCurrency = 'EGP';
+  // Starting values only — replaced by loadExchangeRates() at startup.
   static double usdRate = 49.5;
   static double eurRate = 53.2;
   static double gbpRate = 62.1;
@@ -367,6 +368,80 @@ class ApiService {
       return res.statusCode >= 200 && res.statusCode < 300;
     } catch (_) {
       return false;
+    }
+  }
+
+  /// Reviews left by passengers who actually flew this package.
+  static Future<List<Map<String, dynamic>>> getReviews({
+    String? packageId,
+    String? flightId,
+  }) async {
+    final q = <String, String>{
+      if (packageId != null) 'packageId': packageId,
+      if (flightId != null) 'flightId': flightId,
+    };
+    try {
+      final uri = Uri.parse('$baseUrl/reviews').replace(queryParameters: q);
+      final res = await http
+          .get(uri, headers: _publicHeaders)
+          .timeout(const Duration(seconds: 30));
+      if (res.statusCode != 200) return [];
+      final List list = jsonDecode(res.body);
+      return list.cast<Map<String, dynamic>>();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  // ──── NOTIFICATIONS ────
+
+  /// What the operator has sent this passenger — cancellations, pickup times,
+  /// reminders. The app used to never ask for any of it.
+  static Future<List<Map<String, dynamic>>> getNotifications() async {
+    if (_accessToken == null) return [];
+    try {
+      final res = await _authed(() => http
+          .get(Uri.parse('$baseUrl/notifications/me'), headers: _authHeaders)
+          .timeout(const Duration(seconds: 30)));
+      if (res.statusCode != 200) return [];
+      final List list = jsonDecode(res.body);
+      return list.cast<Map<String, dynamic>>();
+    } catch (_) {
+      return [];
+    }
+  }
+
+  static Future<bool> markNotificationRead(String id) async {
+    if (_accessToken == null) return false;
+    try {
+      final res = await _authed(() => http
+          .patch(Uri.parse('$baseUrl/notifications/$id/read'),
+              headers: _authHeaders)
+          .timeout(const Duration(seconds: 30)));
+      return res.statusCode >= 200 && res.statusCode < 300;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  // ──── PLATFORM CONFIG ────
+
+  /// Exchange rates used to come from constants compiled into the app, so a
+  /// change in the pound meant shipping a new release. They are set in the
+  /// admin panel now; this pulls them at startup and falls back to the last
+  /// known values if the call fails.
+  static Future<void> loadExchangeRates() async {
+    try {
+      final res = await http
+          .get(Uri.parse('$baseUrl/config/rates'), headers: _publicHeaders)
+          .timeout(const Duration(seconds: 20));
+      if (res.statusCode != 200) return;
+      final data = jsonDecode(res.body) as Map<String, dynamic>;
+      usdRate = double.tryParse(data['USD']?.toString() ?? '') ?? usdRate;
+      eurRate = double.tryParse(data['EUR']?.toString() ?? '') ?? eurRate;
+      gbpRate = double.tryParse(data['GBP']?.toString() ?? '') ?? gbpRate;
+    } catch (_) {
+      // Keep whatever we had; stale rates beat no prices at all.
     }
   }
 

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 import '../widgets/hot_air_balloon_logo.dart';
 import 'onboarding_screen.dart';
 
@@ -19,6 +20,11 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   void initState() {
     super.initState();
+
+    // Exchange rates come from the admin panel rather than constants compiled
+    // into this build. The splash already waits four seconds, so this costs
+    // nothing, and a failure just leaves the previous rates in place.
+    ApiService.loadExchangeRates();
 
     // The incredible 4-second immersive flight takeoff animation
     _flightController = AnimationController(

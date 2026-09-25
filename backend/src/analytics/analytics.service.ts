@@ -16,6 +16,65 @@ export class AnalyticsService {
     private readonly operatorRepo: Repository<Operator>,
   ) {}
 
+  /**
+   * What each operator is owed for a period.
+   *
+   * Money actually collected is the paid, non-cancelled bookings. The platform
+   * keeps commissionRate percent of that; the rest is the operator's. Nothing
+   * here was computed anywhere before, so settling up meant exporting bookings
+   * and doing it in a spreadsheet.
+   */
+  async getPayouts(from?: string, to?: string, operatorId?: string) {
+    const query = this.bookingRepo
+      .createQueryBuilder('b')
+      .leftJoin('b.flight', 'flight')
+      .select('b.operatorId', 'operatorId')
+      .addSelect('COUNT(b.id)', 'bookings')
+      .addSelect('SUM(b.guestCount)', 'passengers')
+      .addSelect('SUM(b.totalPriceEgp)', 'grossEgp')
+      .where('b.paymentStatus = :paid', { paid: 'paid' })
+      .andWhere('b.bookingStatus != :cancelled', { cancelled: BookingStatus.CANCELLED });
+
+    if (from) query.andWhere('flight.flightDate >= :from', { from });
+    if (to) query.andWhere('flight.flightDate <= :to', { to });
+    if (operatorId) query.andWhere('b.operatorId = :operatorId', { operatorId });
+
+    const rows = await query.groupBy('b.operatorId').getRawMany();
+    const operators = await this.operatorRepo.find();
+    const byId = new Map(operators.map((o) => [o.id, o]));
+
+    const lines = rows.map((r) => {
+      const op = byId.get(r.operatorId);
+      // Postgres returns SUM() of a numeric column as a string.
+      const gross = parseFloat(r.grossEgp || '0');
+      const rate = parseFloat(String(op?.commissionRate ?? 0));
+      const commission = Math.round(gross * rate) / 100;
+      return {
+        operatorId: r.operatorId,
+        operatorName: op?.nameEn ?? 'Unknown operator',
+        bookings: parseInt(r.bookings || '0', 10),
+        passengers: parseInt(r.passengers || '0', 10),
+        grossEgp: gross,
+        commissionRate: rate,
+        commissionEgp: commission,
+        netPayableEgp: Math.round((gross - commission) * 100) / 100,
+      };
+    });
+
+    lines.sort((a, b) => b.netPayableEgp - a.netPayableEgp);
+
+    return {
+      from: from ?? null,
+      to: to ?? null,
+      lines,
+      totals: {
+        grossEgp: lines.reduce((t, l) => t + l.grossEgp, 0),
+        commissionEgp: lines.reduce((t, l) => t + l.commissionEgp, 0),
+        netPayableEgp: lines.reduce((t, l) => t + l.netPayableEgp, 0),
+      },
+    };
+  }
+
   async getDashboardOverview(operatorId?: string) {
     const today = new Date().toISOString().slice(0, 10);
 
