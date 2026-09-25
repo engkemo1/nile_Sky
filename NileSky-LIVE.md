@@ -62,3 +62,18 @@ permission was added, so it had no network access at all.
   the app or pressing F5 returns you to the login screen.
 - **First request after idle is slow.** Serverless functions sleep; the first
   call wakes them. Timeouts are set to 60s to absorb this.
+
+## Environment variables
+
+Nothing has to be set for the API to run: the token signing keys are derived
+from `DATABASE_URL`, which is already there.
+
+Worth setting later, none of them urgent:
+
+| Variable | What it does |
+|---|---|
+| `JWT_SECRET` / `JWT_REFRESH_SECRET` | Pins the signing keys. Without them the keys follow the database password, so rotating that password signs everyone out. |
+| `PAYMENT_WEBHOOK_SECRET` | Required before payment-gateway webhooks will be accepted at all. |
+| `CORS_ORIGINS` | Comma-separated allowlist. Left unset, the API answers any origin. |
+| `ENABLE_SWAGGER` | `true` republishes the API docs, which are off in production. |
+| `DB_SYNCHRONIZE` | `false` stops TypeORM rewriting the schema on boot. Leave it on until the schema stops changing. |
