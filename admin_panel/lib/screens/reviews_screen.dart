@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../services/admin_language_service.dart';
 import '../utils/num_parse.dart';
 import '../widgets/admin_form.dart';
 
@@ -142,11 +143,11 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Reviews',
+                  Text(AdminLanguageService.tr('reviewsTitle'),
                       style: Theme.of(context).textTheme.displayLarge),
                   const SizedBox(height: 4),
                   Text(
-                    '${_reviews.length} published reviews',
+                    '${_reviews.length} ${AdminLanguageService.isArabic ? 'تقييمات مسجلة' : 'published reviews'}',
                     style: const TextStyle(
                         color: AdminColors.textSecondary, fontSize: 13),
                   ),
@@ -217,13 +218,13 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                 ),
                 child: DataTable(
                   columnSpacing: 20,
-                  columns: const [
-                    DataColumn(label: Text('RATING')),
-                    DataColumn(label: Text('COMMENT')),
-                    DataColumn(label: Text('CUSTOMER')),
-                    DataColumn(label: Text('OPERATOR')),
-                    DataColumn(label: Text('DATE')),
-                    DataColumn(label: Text('SHOWN IN APP')),
+                  columns: [
+                    DataColumn(label: Text(AdminLanguageService.isArabic ? 'التقييم' : 'RATING')),
+                    DataColumn(label: Text(AdminLanguageService.isArabic ? 'التعليق' : 'COMMENT')),
+                    DataColumn(label: Text(AdminLanguageService.tr('guest'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('operator'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('date'))),
+                    DataColumn(label: Text(AdminLanguageService.isArabic ? 'ظاهر بالتطبيق' : 'SHOWN IN APP')),
                   ],
                   rows: _reviews.map<DataRow>((raw) {
                     final r = Map<String, dynamic>.from(raw as Map);

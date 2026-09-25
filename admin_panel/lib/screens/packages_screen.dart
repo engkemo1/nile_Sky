@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../services/admin_language_service.dart';
 import '../utils/num_parse.dart';
 import '../widgets/admin_form.dart';
 import '../widgets/media_manager.dart';
@@ -299,11 +300,11 @@ class _PackagesScreenState extends State<PackagesScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Packages', style: Theme.of(context).textTheme.displayLarge),
+                  Text(AdminLanguageService.tr('packagesTitle'), style: Theme.of(context).textTheme.displayLarge),
                   const SizedBox(height: 4),
-                  const Text(
-                    'Manage the flight packages each operator sells',
-                    style: TextStyle(color: AdminColors.textSecondary, fontSize: 13),
+                  Text(
+                    AdminLanguageService.isArabic ? 'إدارة باقات رحلات المنطاد المتاحة للركاب' : 'Manage the flight packages each operator sells',
+                    style: const TextStyle(color: AdminColors.textSecondary, fontSize: 13),
                   ),
                 ],
               ),
@@ -316,7 +317,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 ElevatedButton.icon(
                   onPressed: () => _showEditDialog(),
                   icon: const Icon(Icons.add, size: 18),
-                  label: const Text('Add Package'),
+                  label: Text(AdminLanguageService.tr('addPackage')),
                 ),
               ]),
             ],
@@ -329,7 +330,7 @@ class _PackagesScreenState extends State<PackagesScreen> {
             loading: _isLoading,
             error: _error,
             empty: _packages.isEmpty,
-            emptyMessage: 'No packages found.',
+            emptyMessage: AdminLanguageService.isArabic ? 'لا توجد باقات مسجلة.' : 'No packages found.',
             onRetry: _load,
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(28),
@@ -342,13 +343,13 @@ class _PackagesScreenState extends State<PackagesScreen> {
                 ),
                 child: DataTable(
                   columnSpacing: 20,
-                  columns: const [
-                    DataColumn(label: Text('NAME (EN)')),
-                    DataColumn(label: Text('OPERATOR')),
-                    DataColumn(label: Text('DURATION')),
-                    DataColumn(label: Text('PRICE')),
-                    DataColumn(label: Text('TYPE')),
-                    DataColumn(label: Text('ACTIONS')),
+                  columns: [
+                    DataColumn(label: Text(AdminLanguageService.tr('packageName'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('operator'))),
+                    DataColumn(label: Text(AdminLanguageService.isArabic ? 'المدة' : 'DURATION')),
+                    DataColumn(label: Text(AdminLanguageService.tr('price'))),
+                    DataColumn(label: Text(AdminLanguageService.isArabic ? 'النوع' : 'TYPE')),
+                    DataColumn(label: Text(AdminLanguageService.tr('actions'))),
                   ],
                   rows: _packages.map<DataRow>((p) {
                     final pkg = Map<String, dynamic>.from(p as Map);

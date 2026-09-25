@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../services/admin_language_service.dart';
 import '../utils/num_parse.dart';
 import '../widgets/admin_form.dart';
 import '../widgets/flight_editor.dart';
@@ -308,14 +309,17 @@ class _FlightsScreenState extends State<FlightsScreen> with SingleTickerProvider
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Flight Management', style: Theme.of(context).textTheme.displayLarge),
+                  Text(AdminLanguageService.tr('flightsTitle'), style: Theme.of(context).textTheme.displayLarge),
                   const SizedBox(height: 4),
-                  const Text('Manage schedule & passenger manifests', style: TextStyle(color: AdminColors.textSecondary, fontSize: 13)),
+                  Text(
+                    AdminLanguageService.isArabic ? 'إدارة مواعيد الرحلات وكشوفات المسافرين' : 'Manage schedule & passenger manifests',
+                    style: const TextStyle(color: AdminColors.textSecondary, fontSize: 13),
+                  ),
                 ],
               ),
               Row(
                 children: [
-                  IconButton(onPressed: _loadFlights, icon: const Icon(Icons.refresh, color: AdminColors.textMuted), tooltip: 'Refresh'),
+                  IconButton(onPressed: _loadFlights, icon: const Icon(Icons.refresh, color: AdminColors.textMuted), tooltip: AdminLanguageService.tr('refresh')),
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
                     onPressed: () async {
@@ -329,13 +333,13 @@ class _FlightsScreenState extends State<FlightsScreen> with SingleTickerProvider
                       }
                     },
                     icon: const Icon(Icons.auto_awesome, size: 18),
-                    label: const Text('Generate Tomorrow\'s Flights'),
+                    label: Text(AdminLanguageService.isArabic ? 'توليد رحلات الغد' : 'Generate Tomorrow\'s Flights'),
                   ),
                   const SizedBox(width: 8),
                   ElevatedButton.icon(
                     onPressed: () => _openEditor(),
                     icon: const Icon(Icons.add, size: 18),
-                    label: const Text('Add Flight'),
+                    label: Text(AdminLanguageService.tr('createFlight')),
                   ),
                 ],
               ),
@@ -352,9 +356,9 @@ class _FlightsScreenState extends State<FlightsScreen> with SingleTickerProvider
             unselectedLabelColor: AdminColors.textMuted,
             isScrollable: true,
             labelStyle: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
-            tabs: const [
-              Tab(text: '📅 Flight Schedule'),
-              Tab(text: '🔄 Flight Templates'),
+            tabs: [
+              Tab(text: AdminLanguageService.isArabic ? '📅 جدول الرحلات المجدولة' : '📅 Flight Schedule'),
+              Tab(text: AdminLanguageService.isArabic ? '🔄 النماذج والقوالب' : '🔄 Flight Templates'),
             ],
           ),
         ),

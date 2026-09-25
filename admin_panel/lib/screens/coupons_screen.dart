@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../services/admin_language_service.dart';
 import '../widgets/admin_form.dart';
 
 class CouponsScreen extends StatefulWidget {
@@ -153,24 +154,37 @@ class _CouponsScreenState extends State<CouponsScreen> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Padding(padding: const EdgeInsets.fromLTRB(28, 28, 28, 0), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Coupons & Promotions', style: Theme.of(context).textTheme.displayLarge),
-          const SizedBox(height: 4), const Text('Manage discount codes & marketing campaigns', style: TextStyle(color: AdminColors.textSecondary, fontSize: 13)),
+          Text(AdminLanguageService.tr('couponsTitle'), style: Theme.of(context).textTheme.displayLarge),
+          const SizedBox(height: 4),
+          Text(
+            AdminLanguageService.isArabic ? 'إدارة أكواد الخصم والحملات الترويجية' : 'Manage discount codes & marketing campaigns',
+            style: const TextStyle(color: AdminColors.textSecondary, fontSize: 13),
+          ),
         ]),
         Row(children: [
           IconButton(onPressed: _load, icon: const Icon(Icons.refresh, color: AdminColors.textMuted)),
           const SizedBox(width: 8),
-          ElevatedButton.icon(onPressed: _showCreateDialog, icon: const Icon(Icons.add, size: 18), label: const Text('Create Coupon')),
+          ElevatedButton.icon(
+            onPressed: _showCreateDialog,
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(AdminLanguageService.tr('addCoupon')),
+          ),
         ]),
       ])),
       const SizedBox(height: 16), const Divider(color: AdminColors.border, height: 1),
       ErrorBanner(error: _error, onRetry: _load),
       Expanded(child: _isLoading ? const Center(child: CircularProgressIndicator(color: AdminColors.primary))
-        : _coupons.isEmpty ? const Center(child: Text('No coupons found.', style: TextStyle(color: AdminColors.textMuted)))
+        : _coupons.isEmpty ? Center(child: Text(AdminLanguageService.isArabic ? 'لا توجد كوبونات خصم مسجلة.' : 'No coupons found.', style: const TextStyle(color: AdminColors.textMuted)))
         : SingleChildScrollView(padding: const EdgeInsets.all(28), child: Container(
             width: double.infinity, decoration: BoxDecoration(color: AdminColors.cardDark, borderRadius: BorderRadius.circular(16), border: Border.all(color: AdminColors.border)),
-            child: DataTable(columnSpacing: 20, columns: const [
-              DataColumn(label: Text('CODE')), DataColumn(label: Text('TYPE')), DataColumn(label: Text('VALUE')),
-              DataColumn(label: Text('USED')), DataColumn(label: Text('VALID TO')), DataColumn(label: Text('STATUS')), DataColumn(label: Text('ACTIONS')),
+            child: DataTable(columnSpacing: 20, columns: [
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'الكود' : 'CODE')),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'النوع' : 'TYPE')),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'القيمة' : 'VALUE')),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'المستخدم' : 'USED')),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'صالح حتى' : 'VALID TO')),
+              DataColumn(label: Text(AdminLanguageService.tr('status'))),
+              DataColumn(label: Text(AdminLanguageService.tr('actions'))),
             ], rows: _coupons.map<DataRow>((c) {
               final isActive = c['isActive'] == true;
               final type = (c['type'] ?? 'percentage').toString();

@@ -3,6 +3,7 @@ import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
 import '../widgets/admin_form.dart';
 import '../widgets/media_manager.dart';
+import '../services/admin_language_service.dart';
 import 'package:intl/intl.dart';
 
 class OperatorsScreen extends StatefulWidget {
@@ -248,15 +249,22 @@ class _OperatorsScreenState extends State<OperatorsScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Operators', style: Theme.of(context).textTheme.displayLarge),
+                  Text(AdminLanguageService.tr('operatorsTitle'), style: Theme.of(context).textTheme.displayLarge),
                   const SizedBox(height: 4),
-                  const Text('Manage balloon flight operators', style: TextStyle(color: AdminColors.textSecondary, fontSize: 13)),
+                  Text(
+                    AdminLanguageService.isArabic ? 'إدارة مشغلي وشركات طيران المنطاد بالأقصر' : 'Manage balloon flight operators',
+                    style: const TextStyle(color: AdminColors.textSecondary, fontSize: 13),
+                  ),
                 ],
               ),
               Row(children: [
                 IconButton(onPressed: _load, icon: const Icon(Icons.refresh, color: AdminColors.textMuted)),
                 const SizedBox(width: 8),
-                ElevatedButton.icon(onPressed: () => _showEditDialog(), icon: const Icon(Icons.add, size: 18), label: const Text('Add Operator')),
+                ElevatedButton.icon(
+                  onPressed: () => _showEditDialog(),
+                  icon: const Icon(Icons.add, size: 18),
+                  label: Text(AdminLanguageService.tr('addOperator')),
+                ),
               ]),
             ],
           ),

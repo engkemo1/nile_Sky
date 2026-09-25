@@ -6,6 +6,7 @@ import '../utils/num_parse.dart';
 import '../widgets/operator_picker.dart';
 import '../widgets/admin_form.dart';
 import '../widgets/media_manager.dart';
+import '../services/admin_language_service.dart';
 
 class PilotsScreen extends StatefulWidget {
   const PilotsScreen({super.key});
@@ -235,25 +236,38 @@ class _PilotsScreenState extends State<PilotsScreen> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Padding(padding: const EdgeInsets.fromLTRB(28, 28, 28, 0), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Pilot Management', style: Theme.of(context).textTheme.displayLarge),
-          const SizedBox(height: 4), const Text('Manage pilot assignments & licensing', style: TextStyle(color: AdminColors.textSecondary, fontSize: 13)),
+          Text(AdminLanguageService.tr('pilotsTitle'), style: Theme.of(context).textTheme.displayLarge),
+          const SizedBox(height: 4),
+          Text(
+            AdminLanguageService.isArabic ? 'إدارة طياري وكباتن المنطاد والتراخيص' : 'Manage pilot assignments & licensing',
+            style: const TextStyle(color: AdminColors.textSecondary, fontSize: 13),
+          ),
         ]),
         Row(children: [
           IconButton(onPressed: _load, icon: const Icon(Icons.refresh, color: AdminColors.textMuted)),
           const SizedBox(width: 8),
-          ElevatedButton.icon(onPressed: () => _showEditDialog(), icon: const Icon(Icons.add, size: 18), label: const Text('Add Pilot')),
+          ElevatedButton.icon(
+            onPressed: () => _showEditDialog(),
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(AdminLanguageService.tr('addPilot')),
+          ),
         ]),
       ])),
       const SizedBox(height: 16), const Divider(color: AdminColors.border, height: 1),
       ErrorBanner(error: _error, onRetry: _load),
       Expanded(child: _isLoading ? const Center(child: CircularProgressIndicator(color: AdminColors.primary))
-        : _pilots.isEmpty ? const Center(child: Text('No pilots found.', style: TextStyle(color: AdminColors.textMuted)))
+        : _pilots.isEmpty ? Center(child: Text(AdminLanguageService.isArabic ? 'لا يوجد طيارون مسجلون حتى الآن.' : 'No pilots found.', style: const TextStyle(color: AdminColors.textMuted)))
         : SingleChildScrollView(padding: const EdgeInsets.all(28), child: Container(
             width: double.infinity, decoration: BoxDecoration(color: AdminColors.cardDark, borderRadius: BorderRadius.circular(16), border: Border.all(color: AdminColors.border)),
-            child: DataTable(columnSpacing: 20, columns: const [
-              DataColumn(label: Text('NAME')), DataColumn(label: Text('LICENSE')), DataColumn(label: Text('LICENCE EXPIRY')),
-              DataColumn(label: Text('EXPERIENCE')), DataColumn(label: Text('FLIGHTS')), DataColumn(label: Text('RATING')),
-              DataColumn(label: Text('STATUS')), DataColumn(label: Text('ACTIONS')),
+            child: DataTable(columnSpacing: 20, columns: [
+              DataColumn(label: Text(AdminLanguageService.tr('name'))),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'رقم الترخيص' : 'LICENSE')),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'انتهاء الترخيص' : 'LICENCE EXPIRY')),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'الخبرة' : 'EXPERIENCE')),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'الرحلات' : 'FLIGHTS')),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'التقييم' : 'RATING')),
+              DataColumn(label: Text(AdminLanguageService.tr('status'))),
+              DataColumn(label: Text(AdminLanguageService.tr('actions'))),
             ], rows: _pilots.map<DataRow>((p) {
               final status = (p['status'] ?? 'active').toString();
               final statusColor = status == 'active' ? AdminColors.success : status == 'on_leave' ? AdminColors.warning : AdminColors.error;

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../services/admin_language_service.dart';
 import '../widgets/operator_picker.dart';
 import '../widgets/admin_form.dart';
 
@@ -107,24 +108,36 @@ class _DriversScreenState extends State<DriversScreen> {
     return Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
       Padding(padding: const EdgeInsets.fromLTRB(28, 28, 28, 0), child: Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
         Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-          Text('Driver Management', style: Theme.of(context).textTheme.displayLarge),
-          const SizedBox(height: 4), const Text('Manage hotel pickup drivers & vehicles', style: TextStyle(color: AdminColors.textSecondary, fontSize: 13)),
+          Text(AdminLanguageService.tr('driversTitle'), style: Theme.of(context).textTheme.displayLarge),
+          const SizedBox(height: 4),
+          Text(
+            AdminLanguageService.isArabic ? 'إدارة سائقين وسيارات التوصيل من وإلى الفنادق' : 'Manage hotel pickup drivers & vehicles',
+            style: const TextStyle(color: AdminColors.textSecondary, fontSize: 13),
+          ),
         ]),
         Row(children: [
           IconButton(onPressed: _load, icon: const Icon(Icons.refresh, color: AdminColors.textMuted)),
           const SizedBox(width: 8),
-          ElevatedButton.icon(onPressed: () => _showEditDialog(), icon: const Icon(Icons.add, size: 18), label: const Text('Add Driver')),
+          ElevatedButton.icon(
+            onPressed: () => _showEditDialog(),
+            icon: const Icon(Icons.add, size: 18),
+            label: Text(AdminLanguageService.tr('addDriver')),
+          ),
         ]),
       ])),
       const SizedBox(height: 16), const Divider(color: AdminColors.border, height: 1),
       ErrorBanner(error: _error, onRetry: _load),
       Expanded(child: _isLoading ? const Center(child: CircularProgressIndicator(color: AdminColors.primary))
-        : _drivers.isEmpty ? const Center(child: Text('No drivers found.', style: TextStyle(color: AdminColors.textMuted)))
+        : _drivers.isEmpty ? Center(child: Text(AdminLanguageService.isArabic ? 'لا يوجد سائقون مسجلون حتى الآن.' : 'No drivers found.', style: const TextStyle(color: AdminColors.textMuted)))
         : SingleChildScrollView(padding: const EdgeInsets.all(28), child: Container(
             width: double.infinity, decoration: BoxDecoration(color: AdminColors.cardDark, borderRadius: BorderRadius.circular(16), border: Border.all(color: AdminColors.border)),
-            child: DataTable(columnSpacing: 20, columns: const [
-              DataColumn(label: Text('NAME')), DataColumn(label: Text('PHONE')), DataColumn(label: Text('CAR')),
-              DataColumn(label: Text('PLATE')), DataColumn(label: Text('STATUS')), DataColumn(label: Text('ACTIONS')),
+            child: DataTable(columnSpacing: 20, columns: [
+              DataColumn(label: Text(AdminLanguageService.tr('name'))),
+              DataColumn(label: Text(AdminLanguageService.tr('phone'))),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'نوع السيارة' : 'CAR')),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'رقم اللوحة' : 'PLATE')),
+              DataColumn(label: Text(AdminLanguageService.tr('status'))),
+              DataColumn(label: Text(AdminLanguageService.tr('actions'))),
             ], rows: _drivers.map<DataRow>((d) {
               final status = (d['status'] ?? 'available').toString();
               final statusColor = status == 'available' ? AdminColors.success : status == 'on_trip' ? AdminColors.info : AdminColors.warning;

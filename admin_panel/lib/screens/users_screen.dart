@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../services/admin_language_service.dart';
 import '../widgets/admin_form.dart';
 
 /// Platform user directory: filter by role, activate/deactivate an account and
@@ -335,11 +336,11 @@ class _UsersScreenState extends State<UsersScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Users',
+                  Text(AdminLanguageService.tr('usersTitle'),
                       style: Theme.of(context).textTheme.displayLarge),
                   const SizedBox(height: 4),
                   Text(
-                    '${rows.length} of ${_users.length} users',
+                    '${rows.length} ${AdminLanguageService.isArabic ? 'من إجمالي' : 'of'} ${_users.length} ${AdminLanguageService.tr('navUsers')}',
                     style: const TextStyle(
                         color: AdminColors.textSecondary, fontSize: 13),
                   ),
@@ -351,12 +352,12 @@ class _UsersScreenState extends State<UsersScreen> {
                   SizedBox(
                     width: 220,
                     child: AdminDropdown(
-                      label: 'Role',
+                      label: AdminLanguageService.tr('role'),
                       value: _roleFilter,
                       items: [
-                        const DropdownMenuItem<String>(
+                        DropdownMenuItem<String>(
                           value: 'all',
-                          child: Text('All roles'),
+                          child: Text(AdminLanguageService.tr('all')),
                         ),
                         ..._roles.map((r) => DropdownMenuItem<String>(
                               value: r,
@@ -372,7 +373,7 @@ class _UsersScreenState extends State<UsersScreen> {
                     onPressed: _load,
                     icon: const Icon(Icons.refresh,
                         color: AdminColors.textMuted),
-                    tooltip: 'Refresh',
+                    tooltip: AdminLanguageService.tr('refresh'),
                   ),
                 ],
               ),
@@ -387,8 +388,8 @@ class _UsersScreenState extends State<UsersScreen> {
             error: _error,
             empty: rows.isEmpty,
             emptyMessage: _roleFilter == 'all'
-                ? 'No users yet.'
-                : 'No users with this role.',
+                ? (AdminLanguageService.isArabic ? 'لا يوجد مستخدمين مسجلين حتى الآن.' : 'No users yet.')
+                : (AdminLanguageService.isArabic ? 'لا يوجد مستخدمون بهذه الصلاحية.' : 'No users with this role.'),
             onRetry: _load,
             child: SingleChildScrollView(
               padding: const EdgeInsets.all(28),
@@ -401,14 +402,14 @@ class _UsersScreenState extends State<UsersScreen> {
                 ),
                 child: DataTable(
                   columnSpacing: 20,
-                  columns: const [
-                    DataColumn(label: Text('NAME')),
-                    DataColumn(label: Text('EMAIL')),
-                    DataColumn(label: Text('PHONE')),
-                    DataColumn(label: Text('ROLE')),
-                    DataColumn(label: Text('VERIFIED')),
-                    DataColumn(label: Text('ACTIVE')),
-                    DataColumn(label: Text('ACTIONS')),
+                  columns: [
+                    DataColumn(label: Text(AdminLanguageService.tr('name'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('email'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('phone'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('role'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('verified'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('active'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('actions'))),
                   ],
                   rows: rows.map<DataRow>((raw) {
                     final u = Map<String, dynamic>.from(raw as Map);

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../services/admin_language_service.dart';
 import '../utils/num_parse.dart';
 import '../widgets/admin_form.dart';
 
@@ -267,12 +268,12 @@ class _BookingsScreenState extends State<BookingsScreen> {
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text('Booking Management', style: Theme.of(context).textTheme.displayLarge),
+                  Text(AdminLanguageService.tr('bookingsTitle'), style: Theme.of(context).textTheme.displayLarge),
                   const SizedBox(height: 4),
-                  Text('${_bookings.length} total bookings', style: const TextStyle(color: AdminColors.textSecondary, fontSize: 13)),
+                  Text('${_bookings.length} ${AdminLanguageService.tr('totalBookings')}', style: const TextStyle(color: AdminColors.textSecondary, fontSize: 13)),
                 ],
               ),
-              IconButton(onPressed: _loadBookings, icon: const Icon(Icons.refresh, color: AdminColors.textMuted), tooltip: 'Refresh'),
+              IconButton(onPressed: _loadBookings, icon: const Icon(Icons.refresh, color: AdminColors.textMuted), tooltip: AdminLanguageService.tr('refresh')),
             ],
           ),
         ),
@@ -285,10 +286,10 @@ class _BookingsScreenState extends State<BookingsScreen> {
                   ? Center(child: Column(mainAxisSize: MainAxisSize.min, children: [
                       Text('Error: $_error', style: const TextStyle(color: AdminColors.error, fontSize: 12)),
                       const SizedBox(height: 8),
-                      ElevatedButton(onPressed: _loadBookings, child: const Text('Retry')),
+                      ElevatedButton(onPressed: _loadBookings, child: Text(AdminLanguageService.tr('retry'))),
                     ]))
                   : _bookings.isEmpty
-                      ? const Center(child: Text('No bookings yet.', style: TextStyle(color: AdminColors.textMuted)))
+                      ? Center(child: Text(AdminLanguageService.isArabic ? 'لا توجد حجوزات مسجلة حتى الآن.' : 'No bookings yet.', style: const TextStyle(color: AdminColors.textMuted)))
                       : SingleChildScrollView(
                           padding: const EdgeInsets.all(28),
                           child: Container(
@@ -300,16 +301,16 @@ class _BookingsScreenState extends State<BookingsScreen> {
                             ),
                             child: DataTable(
                               columnSpacing: 16,
-                              columns: const [
-                                DataColumn(label: Text('REF')),
-                                DataColumn(label: Text('GUEST')),
-                                DataColumn(label: Text('FLIGHT')),
-                                DataColumn(label: Text('HOTEL')),
-                                DataColumn(label: Text('GUESTS')),
-                                DataColumn(label: Text('TOTAL')),
-                                DataColumn(label: Text('PAYMENT')),
-                                DataColumn(label: Text('STATUS')),
-                                DataColumn(label: Text('ACTIONS')),
+                              columns: [
+                                DataColumn(label: Text(AdminLanguageService.tr('ref'))),
+                                DataColumn(label: Text(AdminLanguageService.tr('guest'))),
+                                DataColumn(label: Text(AdminLanguageService.tr('flightNum'))),
+                                DataColumn(label: Text(AdminLanguageService.isArabic ? 'الفندق' : 'HOTEL')),
+                                DataColumn(label: Text(AdminLanguageService.tr('guestsCount'))),
+                                DataColumn(label: Text(AdminLanguageService.tr('total'))),
+                                DataColumn(label: Text(AdminLanguageService.tr('payment'))),
+                                DataColumn(label: Text(AdminLanguageService.tr('status'))),
+                                DataColumn(label: Text(AdminLanguageService.tr('actions'))),
                               ],
                               rows: _bookings.map<DataRow>((b) {
                                 final status = (b['bookingStatus'] ?? 'pending').toString();

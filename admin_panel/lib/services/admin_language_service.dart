@@ -87,7 +87,7 @@ class AdminLanguageService {
       // Navigation Sidebar
       'navDashboard': 'لوحة التحكم',
       'navOperators': 'شركات المنطاد',
-      'navBalloons': 'الأسطول والبالونات',
+      'navBalloons': 'المنطاد والبالونات',
       'navPilots': 'الكباتن والطيارين',
       'navDrivers': 'السائقين والتوصيل',
       'navFlights': 'جدول الرحلات',
@@ -136,6 +136,81 @@ class AdminLanguageService {
       'flightStatusHold': 'الطيران: قيد التقييم ⚠️',
       'flightStatusNoGo': 'الطيران: معلق رسمياً ❌',
       'weatherUnavailable': 'بيانات الطقس غير متاحة',
+
+      // Operators Screen
+      'operatorsTitle': 'شركات طيران المنطاد',
+      'addOperator': 'إضافة شركة جديدة',
+      'companyName': 'اسم الشركة',
+      'licenseNumber': 'رقم الترخيص',
+      'contactPerson': 'مسؤول التواصل',
+
+      // Balloons Screen
+      'balloonsTitle': 'إدارة بالونات المنطاد',
+      'addBalloon': 'إضافة بالون جديد',
+      'balloonModel': 'موديل المنطاد',
+      'balloonCapacity': 'سعة البالون (عدد الركاب)',
+      'registrationNum': 'رقم التسجيل الرسمى',
+
+      // Pilots Screen
+      'pilotsTitle': 'الكباتن والطيارين المعتمدين',
+      'addPilot': 'إضافة طيار جديد',
+      'licenseExp': 'انتهاء الترخيص',
+      'flightHours': 'ساعات الطيران',
+
+      // Drivers Screen
+      'driversTitle': 'السائقين وسيارات التوصيل',
+      'addDriver': 'إضافة سائق جديد',
+      'vehicleModel': 'نوع السيارة / الحافلة',
+      'plateNumber': 'رقم اللوحة',
+
+      // Flights Screen
+      'flightsTitle': 'جدول رحلات المنطاد',
+      'createFlight': 'إضافة رحلة جديدة',
+      'generateFlights': 'توليد رحلات اليوم تلقائياً',
+      'departureTime': 'وقت الإقلاع',
+      'meetingPoint': 'نقطة التجمع بالبر الغربي',
+
+      // Bookings Screen
+      'bookingsTitle': 'سجل الحجوزات',
+      'bookingRef': 'رقم مرجع الحجز',
+      'checkIn': 'تسجيل وصول العميل',
+      'assignDriver': 'تخصيص سائق التوصيل',
+      'cancelBooking': 'إلغاء الحجز',
+
+      // Payments Screen
+      'paymentsTitle': 'المدفوعات ومستحقات الشركات',
+      'payoutSettlements': 'صافي المستحقات للشركات',
+      'refundPayment': 'استرداد المبلغ',
+      'platformCommission': 'عمولة المنصة',
+
+      // Coupons Screen
+      'couponsTitle': 'كوبونات الخصم والترويج',
+      'addCoupon': 'إضافة كوبون خصم',
+      'couponCode': 'كود الكوبون',
+      'discountPct': 'نسبة الخصم %',
+      'validUntil': 'تاريخ انتهاء الصلاحية',
+
+      // Packages Screen
+      'packagesTitle': 'باقات رحلات المنطاد',
+      'addPackage': 'إضافة باقة جديدة',
+      'packageName': 'اسم الباقة',
+      'packageType': 'نوع الباقة (أساسية / مميزة / VIP)',
+
+      // Users Screen
+      'usersTitle': 'دليل المستخدمين والعملاء',
+      'sendNotification': 'إرسال تنبيه / إشعار',
+      'changeUserRole': 'تغيير الصلاحية والمشغّل',
+
+      // Reviews Screen
+      'reviewsTitle': 'التقييمات وآراء العملاء',
+      'hideReview': 'إخفاء التقييم المسيء',
+      'restoreReview': 'استعادة التقييم',
+      'overallRating': 'التقييم العام للشركة',
+
+      // Analytics Screen
+      'analyticsTitle': 'التقارير والإحصائيات الشاملة',
+      'totalRevenue': 'إجمالي الإيرادات والتحصيلات',
+      'totalPassengers': 'إجمالي الركاب المسافرين',
 
       // Table Columns & Fields
       'flightNum': 'رقم الرحلة',
@@ -244,6 +319,81 @@ class AdminLanguageService {
       'flightStatusHold': 'Flights: HOLD ⚠️',
       'flightStatusNoGo': 'Flights: NO-GO ❌',
       'weatherUnavailable': 'Weather: unavailable',
+
+      // Operators Screen
+      'operatorsTitle': 'Balloon Operators',
+      'addOperator': 'Add New Operator',
+      'companyName': 'Company Name',
+      'licenseNumber': 'License Number',
+      'contactPerson': 'Contact Person',
+
+      // Balloons Screen
+      'balloonsTitle': 'Balloons Management',
+      'addBalloon': 'Add New Balloon',
+      'balloonModel': 'Balloon Model',
+      'balloonCapacity': 'Capacity (Passengers)',
+      'registrationNum': 'Registration Number',
+
+      // Pilots Screen
+      'pilotsTitle': 'Certified Pilots',
+      'addPilot': 'Add New Pilot',
+      'licenseExp': 'License Expiration',
+      'flightHours': 'Flight Hours',
+
+      // Drivers Screen
+      'driversTitle': 'Drivers & Transport Vans',
+      'addDriver': 'Add New Driver',
+      'vehicleModel': 'Vehicle Model',
+      'plateNumber': 'Plate Number',
+
+      // Flights Screen
+      'flightsTitle': 'Flight Schedule',
+      'createFlight': 'Create Flight',
+      'generateFlights': 'Generate Today Flights',
+      'departureTime': 'Departure Time',
+      'meetingPoint': 'West Bank Meeting Field',
+
+      // Bookings Screen
+      'bookingsTitle': 'Bookings Record',
+      'bookingRef': 'Booking Ref',
+      'checkIn': 'Check-In Passenger',
+      'assignDriver': 'Assign Driver',
+      'cancelBooking': 'Cancel Booking',
+
+      // Payments Screen
+      'paymentsTitle': 'Payments & Payouts',
+      'payoutSettlements': 'Operator Net Payouts',
+      'refundPayment': 'Refund Payment',
+      'platformCommission': 'Platform Commission',
+
+      // Coupons Screen
+      'couponsTitle': 'Discount Coupons',
+      'addCoupon': 'Add Discount Coupon',
+      'couponCode': 'Coupon Code',
+      'discountPct': 'Discount %',
+      'validUntil': 'Valid Until',
+
+      // Packages Screen
+      'packagesTitle': 'Flight Packages',
+      'addPackage': 'Add New Package',
+      'packageName': 'Package Name',
+      'packageType': 'Package Type (Standard / Premium / VIP)',
+
+      // Users Screen
+      'usersTitle': 'Users & Guests Directory',
+      'sendNotification': 'Send Notification',
+      'changeUserRole': 'Change Role & Operator',
+
+      // Reviews Screen
+      'reviewsTitle': 'Reviews & Ratings',
+      'hideReview': 'Hide Review',
+      'restoreReview': 'Restore Review',
+      'overallRating': 'Overall Operator Rating',
+
+      // Analytics Screen
+      'analyticsTitle': 'Reports & Analytics',
+      'totalRevenue': 'Total Revenue',
+      'totalPassengers': 'Total Passengers Flown',
 
       // Table Columns & Fields
       'flightNum': 'FLIGHT #',

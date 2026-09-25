@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../services/admin_language_service.dart';
 import '../utils/num_parse.dart';
 import '../widgets/admin_form.dart';
 
@@ -352,18 +353,18 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
-          'Operator settlement',
-          style: TextStyle(
+        Text(
+          AdminLanguageService.isArabic ? 'صافي مستحقات والتزامات المشغّلين' : 'Operator settlement',
+          style: const TextStyle(
             color: AdminColors.textPrimary,
             fontSize: 16,
             fontWeight: FontWeight.bold,
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
-          'Collected money, minus commission, per operator.',
-          style: TextStyle(color: AdminColors.textMuted, fontSize: 12),
+        Text(
+          AdminLanguageService.isArabic ? 'إجمالي المبالغ المحصلة مطروحاً منها عمولة المنصة لكل مشغّل.' : 'Collected money, minus commission, per operator.',
+          style: const TextStyle(color: AdminColors.textMuted, fontSize: 12),
         ),
         const SizedBox(height: 12),
         Container(
@@ -375,13 +376,13 @@ class _PaymentsScreenState extends State<PaymentsScreen> {
           ),
           child: DataTable(
             columnSpacing: 22,
-            columns: const [
-              DataColumn(label: Text('OPERATOR')),
-              DataColumn(label: Text('BOOKINGS')),
-              DataColumn(label: Text('PASSENGERS')),
-              DataColumn(label: Text('GROSS')),
-              DataColumn(label: Text('COMMISSION')),
-              DataColumn(label: Text('NET PAYABLE')),
+            columns: [
+              DataColumn(label: Text(AdminLanguageService.tr('operator'))),
+              DataColumn(label: Text(AdminLanguageService.tr('navBookings'))),
+              DataColumn(label: Text(AdminLanguageService.tr('passengers'))),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'الإجمالي' : 'GROSS')),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'العمولة' : 'COMMISSION')),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'الصافي المستحق' : 'NET PAYABLE')),
             ],
             rows: [
               ...lines.map<DataRow>((raw) {
@@ -854,19 +855,6 @@ class _BookingPaymentsDialogState extends State<_BookingPaymentsDialog> {
   void initState() {
     super.initState();
     _load();
-    _loadPayouts();
-  }
-
-  Future<void> _loadPayouts() async {
-    try {
-      final data = await AdminApiService.getPayouts();
-      if (!mounted) return;
-      setState(() => _payouts = data);
-    } catch (_) {
-      // The payments table is the main thing on this screen; a failed
-      // settlement query should not take it down with it.
-      if (mounted) setState(() => _payouts = null);
-    }
   }
 
   Future<void> _load() async {

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../services/admin_language_service.dart';
 import '../utils/num_parse.dart';
 
 class AnalyticsScreen extends StatefulWidget {
@@ -57,9 +58,9 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
         children: [
           Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
             Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-              Text('Analytics & Revenue', style: Theme.of(context).textTheme.displayLarge),
+              Text(AdminLanguageService.tr('analyticsTitle'), style: Theme.of(context).textTheme.displayLarge),
               const SizedBox(height: 4),
-              Text('Performance metrics • ${DateFormat('MMMM yyyy').format(DateTime.now())}', style: const TextStyle(color: AdminColors.textSecondary, fontSize: 13)),
+              Text('${AdminLanguageService.isArabic ? 'مؤشرات الأداء والإيرادات' : 'Performance metrics'} • ${DateFormat('MMMM yyyy', AdminLanguageService.currentLanguage).format(DateTime.now())}', style: const TextStyle(color: AdminColors.textSecondary, fontSize: 13)),
             ]),
             IconButton(onPressed: _load, icon: const Icon(Icons.refresh, color: AdminColors.textMuted)),
           ]),
@@ -67,28 +68,28 @@ class _AnalyticsScreenState extends State<AnalyticsScreen> {
 
           // Revenue KPIs
           Row(children: [
-            Expanded(child: _MetricCard(label: 'Total Revenue', value: '${NumberFormat('#,###').format(totalRevenue)} EGP', sub: '≈ \$${NumberFormat('#,###').format(totalRevenue ~/ 49.5)} USD', icon: Icons.monetization_on, color: AdminColors.success)),
+            Expanded(child: _MetricCard(label: AdminLanguageService.tr('totalRevenue'), value: '${NumberFormat('#,###').format(totalRevenue)} EGP', sub: '≈ \$${NumberFormat('#,###').format(totalRevenue ~/ 49.5)} USD', icon: Icons.monetization_on, color: AdminColors.success)),
             const SizedBox(width: 16),
-            Expanded(child: _MetricCard(label: 'Platform Commission', value: '${NumberFormat('#,###').format(totalCommission)} EGP', sub: '≈ \$${NumberFormat('#,###').format(totalCommission ~/ 49.5)} USD', icon: Icons.account_balance, color: AdminColors.primary)),
+            Expanded(child: _MetricCard(label: AdminLanguageService.tr('platformCommission'), value: '${NumberFormat('#,###').format(totalCommission)} EGP', sub: '≈ \$${NumberFormat('#,###').format(totalCommission ~/ 49.5)} USD', icon: Icons.account_balance, color: AdminColors.primary)),
             const SizedBox(width: 16),
-            Expanded(child: _MetricCard(label: 'Avg per Booking', value: '${NumberFormat('#,###').format(avgPerBooking)} EGP', sub: 'Per confirmed booking', icon: Icons.receipt_long, color: AdminColors.secondary)),
+            Expanded(child: _MetricCard(label: AdminLanguageService.isArabic ? 'متوسط سعر الحجز' : 'Avg per Booking', value: '${NumberFormat('#,###').format(avgPerBooking)} EGP', sub: AdminLanguageService.isArabic ? 'لكل حجز مؤكد' : 'Per confirmed booking', icon: Icons.receipt_long, color: AdminColors.secondary)),
             const SizedBox(width: 16),
-            Expanded(child: _MetricCard(label: 'Total Passengers', value: NumberFormat('#,###').format(totalPassengers), sub: 'All-time passenger count', icon: Icons.people, color: AdminColors.accent)),
+            Expanded(child: _MetricCard(label: AdminLanguageService.tr('totalPassengers'), value: NumberFormat('#,###').format(totalPassengers), sub: AdminLanguageService.isArabic ? 'إجمالي الركاب' : 'All-time passenger count', icon: Icons.people, color: AdminColors.accent)),
           ]),
           const SizedBox(height: 16),
           Row(children: [
-            Expanded(child: _MetricCard(label: 'Total Bookings', value: '${_bookings.length}', sub: '${confirmedBookings.length} confirmed', icon: Icons.book_online, color: AdminColors.info)),
+            Expanded(child: _MetricCard(label: AdminLanguageService.tr('totalBookings'), value: '${_bookings.length}', sub: '${confirmedBookings.length} ${AdminLanguageService.isArabic ? 'مؤكد' : 'confirmed'}', icon: Icons.book_online, color: AdminColors.info)),
             const SizedBox(width: 16),
-            Expanded(child: _MetricCard(label: 'Cancellations', value: '$cancelledCount', sub: '${_bookings.isNotEmpty ? (cancelledCount * 100 ~/ _bookings.length) : 0}% cancellation rate', icon: Icons.cancel_outlined, color: AdminColors.error)),
+            Expanded(child: _MetricCard(label: AdminLanguageService.isArabic ? 'الإلغاءات' : 'Cancellations', value: '$cancelledCount', sub: '${_bookings.isNotEmpty ? (cancelledCount * 100 ~/ _bookings.length) : 0}% ${AdminLanguageService.isArabic ? 'نسبة الإلغاء' : 'cancellation rate'}', icon: Icons.cancel_outlined, color: AdminColors.error)),
             const SizedBox(width: 16),
-            Expanded(child: _MetricCard(label: "Today's Flights", value: '${today['flightsCount'] ?? 0}', sub: '${today['passengersCount'] ?? 0} passengers booked', icon: Icons.flight_takeoff, color: AdminColors.warning)),
+            Expanded(child: _MetricCard(label: AdminLanguageService.tr('todayFlights'), value: '${today['flightsCount'] ?? 0}', sub: '${today['passengersCount'] ?? 0} ${AdminLanguageService.tr('passengers')}', icon: Icons.flight_takeoff, color: AdminColors.warning)),
             const SizedBox(width: 16),
-            Expanded(child: _MetricCard(label: "Today's Revenue", value: '${NumberFormat('#,###').format(today['revenueEgp'] ?? 0)} EGP', sub: '${today['bookingsCount'] ?? 0} bookings today', icon: Icons.today, color: AdminColors.success)),
+            Expanded(child: _MetricCard(label: AdminLanguageService.tr('todayRevenue'), value: '${NumberFormat('#,###').format(today['revenueEgp'] ?? 0)} EGP', sub: '${today['bookingsCount'] ?? 0} ${AdminLanguageService.tr('todayBookings')}', icon: Icons.today, color: AdminColors.success)),
           ]),
           const SizedBox(height: 28),
 
           // Revenue by operator (computed from bookings)
-          Text('Revenue by Operator', style: Theme.of(context).textTheme.titleLarge),
+          Text(AdminLanguageService.isArabic ? 'إيرادات كل شركة مشغّلة' : 'Revenue by Operator', style: Theme.of(context).textTheme.titleLarge),
           const SizedBox(height: 14),
           Container(
             width: double.infinity,

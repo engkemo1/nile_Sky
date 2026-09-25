@@ -5,6 +5,7 @@ import '../services/admin_api_service.dart';
 import '../widgets/operator_picker.dart';
 import '../widgets/admin_form.dart';
 import '../widgets/media_manager.dart';
+import '../services/admin_language_service.dart';
 
 class BalloonsScreen extends StatefulWidget {
   const BalloonsScreen({super.key});
@@ -267,27 +268,38 @@ class _BalloonsScreenState extends State<BalloonsScreen> {
       Padding(padding: const EdgeInsets.fromLTRB(28, 28, 28, 0), child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
           Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
-            Text('Fleet Management', style: Theme.of(context).textTheme.displayLarge),
+            Text(AdminLanguageService.tr('balloonsTitle'), style: Theme.of(context).textTheme.displayLarge),
             const SizedBox(height: 4),
-            const Text('Manage balloon fleet & inspections', style: TextStyle(color: AdminColors.textSecondary, fontSize: 13)),
+            Text(
+              AdminLanguageService.isArabic ? 'إدارة أسطول البالونات وفحوصات السلامة' : 'Manage balloon fleet & inspections',
+              style: const TextStyle(color: AdminColors.textSecondary, fontSize: 13),
+            ),
           ]),
           Row(children: [
             IconButton(onPressed: _load, icon: const Icon(Icons.refresh, color: AdminColors.textMuted)),
             const SizedBox(width: 8),
-            ElevatedButton.icon(onPressed: () => _showEditDialog(), icon: const Icon(Icons.add, size: 18), label: const Text('Add Balloon')),
+            ElevatedButton.icon(
+              onPressed: () => _showEditDialog(),
+              icon: const Icon(Icons.add, size: 18),
+              label: Text(AdminLanguageService.tr('addBalloon')),
+            ),
           ]),
         ],
       )),
       const SizedBox(height: 16), const Divider(color: AdminColors.border, height: 1),
       ErrorBanner(error: _error, onRetry: _load),
       Expanded(child: _isLoading ? const Center(child: CircularProgressIndicator(color: AdminColors.primary))
-        : _balloons.isEmpty ? const Center(child: Text('No balloons found.', style: TextStyle(color: AdminColors.textMuted)))
+        : _balloons.isEmpty ? Center(child: Text(AdminLanguageService.isArabic ? 'لا توجد بالونات مسجلة حتى الآن.' : 'No balloons found.', style: const TextStyle(color: AdminColors.textMuted)))
         : SingleChildScrollView(padding: const EdgeInsets.all(28), child: Container(
             width: double.infinity, decoration: BoxDecoration(color: AdminColors.cardDark, borderRadius: BorderRadius.circular(16), border: Border.all(color: AdminColors.border)),
-            child: DataTable(columnSpacing: 20, columns: const [
-              DataColumn(label: Text('REG CODE')), DataColumn(label: Text('NAME')), DataColumn(label: Text('OPERATOR')),
-              DataColumn(label: Text('CAPACITY')), DataColumn(label: Text('STATUS')), DataColumn(label: Text('INSURANCE')),
-              DataColumn(label: Text('ACTIONS')),
+            child: DataTable(columnSpacing: 20, columns: [
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'رقم التسجيل' : 'REG CODE')),
+              DataColumn(label: Text(AdminLanguageService.tr('name'))),
+              DataColumn(label: Text(AdminLanguageService.tr('operator'))),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'السعة' : 'CAPACITY')),
+              DataColumn(label: Text(AdminLanguageService.tr('status'))),
+              DataColumn(label: Text(AdminLanguageService.isArabic ? 'التأمين' : 'INSURANCE')),
+              DataColumn(label: Text(AdminLanguageService.tr('actions'))),
             ], rows: _balloons.map<DataRow>((b) {
               final status = (b['status'] ?? 'available').toString();
               final statusColor = status == 'available' ? AdminColors.success : status == 'in_flight' ? AdminColors.info : status == 'maintenance' ? AdminColors.warning : AdminColors.error;
