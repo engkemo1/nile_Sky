@@ -41,6 +41,11 @@ class FlightModel {
   // Where the flight starts and ends. Set by the operator in the admin panel;
   // null until they fill it in, in which case the map falls back to the
   // general Luxor west-bank launch area.
+  /// The operator's own copy for this package, shown instead of fixed text.
+  final String? descriptionEn;
+  final String? descriptionAr;
+  final int? maxAltitudeM;
+
   final String? launchSite;
   final double? launchLat;
   final double? launchLng;
@@ -80,6 +85,9 @@ class FlightModel {
     this.videoUrl,
     this.pilotName,
     this.balloonName,
+    this.descriptionEn,
+    this.descriptionAr,
+    this.maxAltitudeM,
     this.launchSite,
     this.launchLat,
     this.launchLng,
@@ -150,6 +158,9 @@ class FlightModel {
       )),
       pilotName: pilot['nameEn'],
       balloonName: balloon['name'],
+      descriptionEn: pkg['descriptionEn'],
+      descriptionAr: pkg['descriptionAr'],
+      maxAltitudeM: int.tryParse(json['maxAltitudeM']?.toString() ?? ''),
       launchSite: json['launchSite'],
       // Postgres hands numerics back as strings, so parse rather than cast.
       launchLat: double.tryParse(json['launchLat']?.toString() ?? ''),

@@ -10,6 +10,7 @@ import 'compare_screen.dart';
 import 'flight_detail_screen.dart';
 import 'my_bookings_screen.dart';
 import 'active_flight_screen.dart';
+import 'notifications_screen.dart';
 import 'profile_screen.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -32,6 +33,7 @@ class _HomeScreenState extends State<HomeScreen> {
   void initState() {
     super.initState();
     _loadData();
+    _loadUnread();
   }
 
   Future<void> _loadData() async {
@@ -61,6 +63,16 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   /// Opens the day-of screen for the nearest upcoming booking.
+  int _unreadCount = 0;
+
+  Future<void> _loadUnread() async {
+    if (!ApiService.isLoggedIn) return;
+    final items = await ApiService.getNotifications();
+    if (!mounted) return;
+    setState(() =>
+        _unreadCount = items.where((n) => n['isRead'] != true).length);
+  }
+
   Future<void> _openNextFlight() async {
     final bookings = await ApiService.getMyBookings();
     if (!mounted) return;
@@ -271,6 +283,50 @@ class _HomeScreenState extends State<HomeScreen> {
                     ),
                   ),
                   const SizedBox(width: 6),
+
+                  // Notifications — the API has been writing these all along
+                  // (cancellations, pickup times) and nothing ever showed them.
+                  Stack(
+                    clipBehavior: Clip.none,
+                    children: [
+                      IconButton(
+                        icon: const Icon(Icons.notifications_none,
+                            color: AppColors.textPrimary, size: 22),
+                        tooltip: context.tr('notifications'),
+                        onPressed: () async {
+                          await Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                                builder: (_) => const NotificationsScreen()),
+                          );
+                          _loadUnread();
+                        },
+                      ),
+                      if (_unreadCount > 0)
+                        Positioned(
+                          right: 6,
+                          top: 6,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 5, vertical: 1),
+                            decoration: BoxDecoration(
+                              color: AppColors.error,
+                              borderRadius: BorderRadius.circular(9),
+                            ),
+                            constraints: const BoxConstraints(minWidth: 16),
+                            child: Text(
+                              _unreadCount > 9 ? '9+' : '$_unreadCount',
+                              textAlign: TextAlign.center,
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ),
+                        ),
+                    ],
+                  ),
 
                   // Currency Switcher
                   PopupMenuButton<String>(

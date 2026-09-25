@@ -37,6 +37,7 @@ import { Review } from './reviews/entities/review.entity';
 import { Notification } from './notifications/entities/notification.entity';
 import { Coupon } from './coupons/entities/coupon.entity';
 import { Media } from './upload/entities/media.entity';
+import { Setting } from './config/entities/setting.entity';
 import { APP_GUARD } from '@nestjs/core';
 import { ThrottlerModule, ThrottlerGuard } from '@nestjs/throttler';
 
@@ -50,7 +51,7 @@ function buildTypeOrmConfig() {
     entities: [
       User, Operator, Package, Balloon, Pilot, Driver,
       FlightTemplate, Flight, Booking, Payment, Review,
-      Notification, Coupon, Media,
+      Notification, Coupon, Media, Setting,
     ],
     // TypeORM rewrites the live schema on every boot to match the entities.
     // That is how new columns appear without migrations, and also how a
@@ -88,7 +89,7 @@ function buildTypeOrmConfig() {
     TypeOrmModule.forFeature([
       User, Operator, Package, Balloon, Pilot, Driver,
       FlightTemplate, Flight, Booking, Payment, Review,
-      Notification, Coupon, Media,
+      Notification, Coupon, Media, Setting,
     ]),
     ConfigModule,
     AuthModule,

@@ -5,7 +5,8 @@ import '../services/admin_api_service.dart';
 import '../utils/num_parse.dart';
 import '../widgets/admin_form.dart';
 
-/// Read-only view of customer reviews, optionally narrowed to one operator.
+/// Customer reviews, optionally narrowed to one operator, with a switch
+/// that hides a review from the app without deleting it.
 class ReviewsScreen extends StatefulWidget {
   const ReviewsScreen({super.key});
 
@@ -26,6 +27,20 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  Future<void> _setVisibility(Map<String, dynamic> review, bool isVisible) async {
+    final id = review['id']?.toString();
+    if (id == null) return;
+    try {
+      await AdminApiService.setReviewVisibility(id, isVisible);
+      if (!mounted) return;
+      showSnack(context, isVisible ? 'Review restored' : 'Review hidden');
+      await _load();
+    } catch (e) {
+      if (!mounted) return;
+      showSnack(context, 'Error: $e', error: true);
+    }
   }
 
   Future<void> _load() async {
@@ -208,6 +223,7 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                     DataColumn(label: Text('CUSTOMER')),
                     DataColumn(label: Text('OPERATOR')),
                     DataColumn(label: Text('DATE')),
+                    DataColumn(label: Text('SHOWN IN APP')),
                   ],
                   rows: _reviews.map<DataRow>((raw) {
                     final r = Map<String, dynamic>.from(raw as Map);
@@ -243,6 +259,19 @@ class _ReviewsScreenState extends State<ReviewsScreen> {
                         _formatDate(r['createdAt']),
                         style: const TextStyle(
                             fontSize: 12, color: AdminColors.textSecondary),
+                      )),
+                      // An operator had no way to deal with a defamatory or
+                      // mistaken review except editing the database. Hiding
+                      // keeps the row and takes it off the app, and the public
+                      // rating is recomputed without it.
+                      DataCell(Tooltip(
+                        message: r['isVisible'] == false
+                            ? 'Hidden — passengers do not see this'
+                            : 'Visible to passengers',
+                        child: Switch(
+                          value: r['isVisible'] != false,
+                          onChanged: (v) => _setVisibility(r, v),
+                        ),
                       )),
                     ]);
                   }).toList(),

@@ -508,11 +508,32 @@ class AdminApiService {
 
   // ───────── REVIEWS ─────────
 
+  /// The moderation list: hidden reviews included, so they can be restored.
   static Future<List<dynamic>> getReviews({String? operatorId}) async {
-    return await _get('/reviews', queryParams: {
+    return await _get('/reviews/all', queryParams: {
       if (operatorId != null) 'operatorId': operatorId,
     });
   }
+
+  /// Hides a review from the app, or puts it back. The row is kept either way,
+  /// and the operator's public rating is recomputed.
+  static Future<void> setReviewVisibility(String id, bool isVisible) async {
+    await _patch('/reviews/$id/visibility', {'isVisible': isVisible});
+  }
+
+  /// What each operator is owed for a period, and what the platform keeps.
+  static Future<Map<String, dynamic>> getPayouts({
+    String? from,
+    String? to,
+    String? operatorId,
+  }) async {
+    return await _get('/analytics/payouts', queryParams: {
+      if (from != null) 'from': from,
+      if (to != null) 'to': to,
+      if (operatorId != null) 'operatorId': operatorId,
+    });
+  }
+
 
   // ───────── USERS ─────────
 

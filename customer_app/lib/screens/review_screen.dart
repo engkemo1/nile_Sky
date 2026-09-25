@@ -11,7 +11,7 @@ class ReviewScreen extends StatefulWidget {
   const ReviewScreen({
     super.key,
     this.bookingId,
-    this.operatorName = 'NileSky Fleet',
+    this.operatorName = 'NileSky',
     this.flightName = 'NileSky Classic Sunrise Ride',
   });
 
