@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../services/admin_language_service.dart';
 import '../utils/num_parse.dart';
 
 class DashboardScreen extends StatefulWidget {
@@ -31,8 +32,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
         AdminApiService.getDashboard(),
         AdminApiService.getBookings(),
         AdminApiService.getLuxorWeather().catchError((_) => <String, dynamic>{
-          // A failed weather call must never render as an affirmative go/no-go
-          // for balloon flights. Fall back to an explicit unknown.
           'condition': 'Unavailable',
           'flightStatus': 'unknown',
         }),
@@ -64,14 +63,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
           children: [
             const Icon(Icons.cloud_off, color: AdminColors.textMuted, size: 48),
             const SizedBox(height: 12),
-            Text('Failed to load dashboard', style: const TextStyle(color: AdminColors.textPrimary, fontSize: 16)),
+            Text(
+              AdminLanguageService.isArabic ? 'فشل تحميل لوحة التحكم' : 'Failed to load dashboard',
+              style: const TextStyle(color: AdminColors.textPrimary, fontSize: 16),
+            ),
             const SizedBox(height: 4),
             Text(_error!, style: const TextStyle(color: AdminColors.textMuted, fontSize: 12)),
             const SizedBox(height: 16),
             ElevatedButton.icon(
               onPressed: _loadData,
               icon: const Icon(Icons.refresh, size: 18),
-              label: const Text('Retry'),
+              label: Text(AdminLanguageService.tr('retry')),
               style: ElevatedButton.styleFrom(backgroundColor: AdminColors.primary, foregroundColor: Colors.black),
             ),
           ],
@@ -82,15 +84,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final today = _dashboardData?['today'] ?? {};
     final allTime = _dashboardData?['allTime'] ?? {};
     final todayFlights = (_dashboardData?['todayFlightsSummary'] as List?) ?? [];
-    final weatherCondition = _weather?['condition'] ?? 'Clear ☀️';
+    final rawCondition = _weather?['condition'] ?? 'Clear ☀️';
+    final weatherCondition = AdminLanguageService.isArabic && rawCondition.contains('Clear')
+        ? 'صافٍ آمن ☀️'
+        : rawCondition;
     final flightStatus = _weather?['flightStatus'] ?? 'unknown';
     final flightStatusLabel = flightStatus == 'favorable'
-        ? 'Flights: GO ✅'
+        ? AdminLanguageService.tr('flightStatusGo')
         : flightStatus == 'uncertain' || flightStatus == 'marginal'
-            ? 'Flights: HOLD ⚠️'
+            ? AdminLanguageService.tr('flightStatusHold')
             : flightStatus == 'unknown'
-                ? 'Weather: unavailable'
-                : 'Flights: NO-GO ❌';
+                ? AdminLanguageService.tr('weatherUnavailable')
+                : AdminLanguageService.tr('flightStatusNoGo');
     final flightStatusColor = flightStatus == 'favorable'
         ? AdminColors.success
         : flightStatus == 'uncertain' || flightStatus == 'marginal'
@@ -115,24 +120,30 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text('Dashboard', style: Theme.of(context).textTheme.displayLarge),
+                    Text(
+                      AdminLanguageService.tr('dashboardTitle'),
+                      style: Theme.of(context).textTheme.displayLarge,
+                    ),
                     const SizedBox(height: 4),
                     Text(
-                      'Luxor Operations • ${DateFormat('EEEE, MMMM d, yyyy').format(DateTime.now())}',
+                      '${AdminLanguageService.tr('luxorOperations')} • ${DateFormat('EEEE, d MMMM yyyy', AdminLanguageService.currentLanguage).format(DateTime.now())}',
                       style: const TextStyle(color: AdminColors.textSecondary, fontSize: 13),
                     ),
                   ],
                 ),
                 Row(
                   children: [
-                    _StatusBadge(label: 'Weather: $weatherCondition', color: AdminColors.success),
+                    _StatusBadge(
+                      label: '${AdminLanguageService.tr('weatherStatus')}: $weatherCondition',
+                      color: AdminColors.success,
+                    ),
                     const SizedBox(width: 10),
                     _StatusBadge(label: flightStatusLabel, color: flightStatusColor),
                     const SizedBox(width: 10),
                     IconButton(
                       onPressed: _loadData,
                       icon: const Icon(Icons.refresh, color: AdminColors.textMuted),
-                      tooltip: 'Refresh',
+                      tooltip: AdminLanguageService.tr('refresh'),
                     ),
                   ],
                 ),
@@ -143,57 +154,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
             // KPI Cards Row — Live Data
             Row(
               children: [
-                Expanded(child: _KpiCard(
-                  title: "Today's Flights",
-                  value: '${today['flightsCount'] ?? 0}',
-                  subtitle: 'Scheduled for today',
-                  icon: Icons.flight_takeoff,
-                  iconColor: AdminColors.secondary,
-                )),
+                Expanded(
+                  child: _KpiCard(
+                    title: AdminLanguageService.tr('todayFlights'),
+                    value: '${today['flightsCount'] ?? 0}',
+                    subtitle: AdminLanguageService.tr('scheduledForToday'),
+                    icon: Icons.flight_takeoff,
+                    iconColor: AdminColors.secondary,
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Expanded(child: _KpiCard(
-                  title: 'Today Bookings',
-                  value: '${today['bookingsCount'] ?? 0}',
-                  subtitle: '${today['passengersCount'] ?? 0} passengers',
-                  icon: Icons.book_online,
-                  iconColor: AdminColors.primary,
-                )),
+                Expanded(
+                  child: _KpiCard(
+                    title: AdminLanguageService.tr('todayBookings'),
+                    value: '${today['bookingsCount'] ?? 0}',
+                    subtitle: '${today['passengersCount'] ?? 0} ${AdminLanguageService.tr('passengers')}',
+                    icon: Icons.book_online,
+                    iconColor: AdminColors.primary,
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Expanded(child: _KpiCard(
-                  title: 'Today Revenue',
-                  value: '${NumberFormat('#,###').format(today['revenueEgp'] ?? 0)} EGP',
-                  subtitle: '≈ \$${NumberFormat('#,###').format((today['revenueEgp'] ?? 0) ~/ 49.5)} USD',
-                  icon: Icons.monetization_on,
-                  iconColor: AdminColors.success,
-                )),
+                Expanded(
+                  child: _KpiCard(
+                    title: AdminLanguageService.tr('todayRevenue'),
+                    value: '${NumberFormat('#,###').format(today['revenueEgp'] ?? 0)} EGP',
+                    subtitle: '≈ \$${NumberFormat('#,###').format((today['revenueEgp'] ?? 0) ~/ 49.5)} USD',
+                    icon: Icons.monetization_on,
+                    iconColor: AdminColors.success,
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Expanded(child: _KpiCard(
-                  title: 'All-Time Revenue',
-                  value: '${NumberFormat('#,###').format(allTime['revenueEgp'] ?? 0)} EGP',
-                  subtitle: '${allTime['totalBookings'] ?? 0} total bookings',
-                  icon: Icons.trending_up,
-                  iconColor: AdminColors.accent,
-                )),
+                Expanded(
+                  child: _KpiCard(
+                    title: AdminLanguageService.tr('allTimeRevenue'),
+                    value: '${NumberFormat('#,###').format(allTime['revenueEgp'] ?? 0)} EGP',
+                    subtitle: '${allTime['totalBookings'] ?? 0} ${AdminLanguageService.tr('totalBookings')}',
+                    icon: Icons.trending_up,
+                    iconColor: AdminColors.accent,
+                  ),
+                ),
               ],
             ),
             const SizedBox(height: 16),
             Row(
               children: [
-                Expanded(child: _KpiCard(
-                  title: 'Active Operators',
-                  value: '${allTime['totalOperators'] ?? 0}',
-                  subtitle: 'Registered operators',
-                  icon: Icons.business,
-                  iconColor: AdminColors.info,
-                )),
+                Expanded(
+                  child: _KpiCard(
+                    title: AdminLanguageService.tr('activeOperators'),
+                    value: '${allTime['totalOperators'] ?? 0}',
+                    subtitle: AdminLanguageService.tr('registeredOperators'),
+                    icon: Icons.business,
+                    iconColor: AdminColors.info,
+                  ),
+                ),
                 const SizedBox(width: 16),
-                Expanded(child: _KpiCard(
-                  title: 'Passengers Today',
-                  value: '${today['passengersCount'] ?? 0}',
-                  subtitle: 'Across all flights',
-                  icon: Icons.people,
-                  iconColor: AdminColors.warning,
-                )),
+                Expanded(
+                  child: _KpiCard(
+                    title: AdminLanguageService.tr('passengersToday'),
+                    value: '${today['passengersCount'] ?? 0}',
+                    subtitle: AdminLanguageService.tr('acrossAllFlights'),
+                    icon: Icons.people,
+                    iconColor: AdminColors.warning,
+                  ),
+                ),
                 const SizedBox(width: 16),
                 const Expanded(child: SizedBox()),
                 const SizedBox(width: 16),
@@ -204,7 +227,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             // Today's Flights Table
             if (todayFlights.isNotEmpty) ...[
-              Text("Today's Flight Schedule", style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                AdminLanguageService.tr('todaySchedule'),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 14),
               Container(
                 width: double.infinity,
@@ -215,18 +241,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 child: DataTable(
                   columnSpacing: 24,
-                  columns: const [
-                    DataColumn(label: Text('FLIGHT #')),
-                    DataColumn(label: Text('DEPARTURE')),
-                    DataColumn(label: Text('BOOKED / CAP')),
-                    DataColumn(label: Text('STATUS')),
+                  columns: [
+                    DataColumn(label: Text(AdminLanguageService.tr('flightNum'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('departure'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('bookedCap'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('status'))),
                   ],
                   rows: todayFlights.map<DataRow>((f) {
                     final status = (f['status'] ?? 'scheduled').toString();
-                    final statusColor = status == 'completed' ? AdminColors.success
-                        : status == 'cancelled' ? AdminColors.error
-                        : status == 'in_flight' ? AdminColors.info
-                        : AdminColors.warning;
+                    final statusColor = status == 'completed'
+                        ? AdminColors.success
+                        : status == 'cancelled'
+                            ? AdminColors.error
+                            : status == 'in_flight'
+                                ? AdminColors.info
+                                : AdminColors.warning;
                     return DataRow(cells: [
                       DataCell(Text(f['flightNumber']?.toString() ?? '-', style: const TextStyle(color: AdminColors.secondary, fontWeight: FontWeight.w600, fontSize: 12))),
                       DataCell(Text(f['departureTime']?.toString() ?? '-')),
@@ -241,7 +270,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
             // Recent Bookings Table
             if (_recentBookings.isNotEmpty) ...[
-              Text('Recent Bookings', style: Theme.of(context).textTheme.titleLarge),
+              Text(
+                AdminLanguageService.tr('recentBookings'),
+                style: Theme.of(context).textTheme.titleLarge,
+              ),
               const SizedBox(height: 14),
               Container(
                 width: double.infinity,
@@ -252,20 +284,22 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 child: DataTable(
                   columnSpacing: 20,
-                  columns: const [
-                    DataColumn(label: Text('REF')),
-                    DataColumn(label: Text('GUEST')),
-                    DataColumn(label: Text('GUESTS')),
-                    DataColumn(label: Text('TOTAL')),
-                    DataColumn(label: Text('PAYMENT')),
-                    DataColumn(label: Text('STATUS')),
+                  columns: [
+                    DataColumn(label: Text(AdminLanguageService.tr('ref'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('guest'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('guestsCount'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('total'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('payment'))),
+                    DataColumn(label: Text(AdminLanguageService.tr('status'))),
                   ],
                   rows: _recentBookings.map<DataRow>((b) {
                     final bookingStatus = (b['bookingStatus'] ?? 'pending').toString();
                     final paymentStatus = (b['paymentStatus'] ?? 'pending').toString();
-                    final statusColor = bookingStatus == 'confirmed' ? AdminColors.success
-                        : bookingStatus == 'cancelled' ? AdminColors.error
-                        : AdminColors.warning;
+                    final statusColor = bookingStatus == 'confirmed'
+                        ? AdminColors.success
+                        : bookingStatus == 'cancelled'
+                            ? AdminColors.error
+                            : AdminColors.warning;
                     final payColor = paymentStatus == 'paid' ? AdminColors.success : AdminColors.warning;
                     final guestName = b['user']?['name'] ?? 'Guest';
                     return DataRow(cells: [

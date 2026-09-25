@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../services/admin_language_service.dart';
 import 'login_screen.dart';
 import 'dashboard_screen.dart';
 import 'operators_screen.dart';
@@ -26,20 +27,20 @@ class AdminShell extends StatefulWidget {
 class _AdminShellState extends State<AdminShell> {
   int _selectedIndex = 0;
 
-  static const List<_NavItem> _navItems = [
-    _NavItem(icon: Icons.dashboard_outlined, activeIcon: Icons.dashboard, label: 'Dashboard'),
-    _NavItem(icon: Icons.business_outlined, activeIcon: Icons.business, label: 'Operators'),
-    _NavItem(icon: Icons.hot_tub_outlined, activeIcon: Icons.hot_tub, label: 'Balloons'),
-    _NavItem(icon: Icons.person_outlined, activeIcon: Icons.person, label: 'Pilots'),
-    _NavItem(icon: Icons.directions_car_outlined, activeIcon: Icons.directions_car, label: 'Drivers'),
-    _NavItem(icon: Icons.flight_takeoff_outlined, activeIcon: Icons.flight_takeoff, label: 'Flights'),
-    _NavItem(icon: Icons.book_online_outlined, activeIcon: Icons.book_online, label: 'Bookings'),
-    _NavItem(icon: Icons.payments_outlined, activeIcon: Icons.payments, label: 'Payments'),
-    _NavItem(icon: Icons.local_offer_outlined, activeIcon: Icons.local_offer, label: 'Coupons'),
-    _NavItem(icon: Icons.inventory_2_outlined, activeIcon: Icons.inventory_2, label: 'Packages'),
-    _NavItem(icon: Icons.people_outline, activeIcon: Icons.people, label: 'Users'),
-    _NavItem(icon: Icons.star_outline, activeIcon: Icons.star, label: 'Reviews'),
-    _NavItem(icon: Icons.analytics_outlined, activeIcon: Icons.analytics, label: 'Analytics'),
+  static const List<_NavItemData> _navItems = [
+    _NavItemData(icon: Icons.dashboard_outlined, activeIcon: Icons.dashboard, key: 'navDashboard'),
+    _NavItemData(icon: Icons.business_outlined, activeIcon: Icons.business, key: 'navOperators'),
+    _NavItemData(icon: Icons.hot_tub_outlined, activeIcon: Icons.hot_tub, key: 'navBalloons'),
+    _NavItemData(icon: Icons.person_outlined, activeIcon: Icons.person, key: 'navPilots'),
+    _NavItemData(icon: Icons.directions_car_outlined, activeIcon: Icons.directions_car, key: 'navDrivers'),
+    _NavItemData(icon: Icons.flight_takeoff_outlined, activeIcon: Icons.flight_takeoff, key: 'navFlights'),
+    _NavItemData(icon: Icons.book_online_outlined, activeIcon: Icons.book_online, key: 'navBookings'),
+    _NavItemData(icon: Icons.payments_outlined, activeIcon: Icons.payments, key: 'navPayments'),
+    _NavItemData(icon: Icons.local_offer_outlined, activeIcon: Icons.local_offer, key: 'navCoupons'),
+    _NavItemData(icon: Icons.inventory_2_outlined, activeIcon: Icons.inventory_2, key: 'navPackages'),
+    _NavItemData(icon: Icons.people_outline, activeIcon: Icons.people, key: 'navUsers'),
+    _NavItemData(icon: Icons.star_outline, activeIcon: Icons.star, key: 'navReviews'),
+    _NavItemData(icon: Icons.analytics_outlined, activeIcon: Icons.analytics, key: 'navAnalytics'),
   ];
 
   static const List<Widget> _screens = [
@@ -58,7 +59,7 @@ class _AdminShellState extends State<AdminShell> {
     AnalyticsScreen(),
   ];
 
-  /// Change your own password without touching the database by hand.
+  /// Change password dialog with full localization
   void _changePassword() {
     final currentCtrl = TextEditingController();
     final newCtrl = TextEditingController();
@@ -69,37 +70,41 @@ class _AdminShellState extends State<AdminShell> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AdminColors.cardDark,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Change password',
-            style: TextStyle(color: AdminColors.textPrimary, fontSize: 16)),
+        title: Text(
+          AdminLanguageService.tr('changePassword'),
+          style: const TextStyle(color: AdminColors.textPrimary, fontSize: 16),
+        ),
         content: SizedBox(
           width: 380,
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              _passwordField('Current password', currentCtrl),
-              _passwordField('New password (10+ characters)', newCtrl),
-              _passwordField('Repeat the new password', confirmCtrl),
+              _passwordField(AdminLanguageService.tr('currentPassword'), currentCtrl),
+              _passwordField(AdminLanguageService.tr('newPassword'), newCtrl),
+              _passwordField(AdminLanguageService.tr('repeatPassword'), confirmCtrl),
             ],
           ),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel',
-                style: TextStyle(color: AdminColors.textMuted)),
+            child: Text(
+              AdminLanguageService.tr('cancel'),
+              style: const TextStyle(color: AdminColors.textMuted),
+            ),
           ),
           ElevatedButton(
             onPressed: () async {
               if (newCtrl.text != confirmCtrl.text) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('The two new passwords do not match'),
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(AdminLanguageService.tr('passwordMismatch')),
                   backgroundColor: AdminColors.error,
                 ));
                 return;
               }
               if (newCtrl.text.length < 10) {
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Use at least 10 characters'),
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(AdminLanguageService.tr('passwordLengthError')),
                   backgroundColor: AdminColors.error,
                 ));
                 return;
@@ -111,8 +116,8 @@ class _AdminShellState extends State<AdminShell> {
                   newPassword: newCtrl.text,
                 );
                 if (!mounted) return;
-                ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-                  content: Text('Password changed. Sign in again on your other devices.'),
+                ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+                  content: Text(AdminLanguageService.tr('passwordSuccess')),
                   backgroundColor: AdminColors.success,
                 ));
               } catch (e) {
@@ -127,7 +132,7 @@ class _AdminShellState extends State<AdminShell> {
               backgroundColor: AdminColors.primary,
               foregroundColor: Colors.black,
             ),
-            child: const Text('Change'),
+            child: Text(AdminLanguageService.tr('change')),
           ),
         ],
       ),
@@ -158,8 +163,7 @@ class _AdminShellState extends State<AdminShell> {
             borderRadius: BorderRadius.circular(10),
             borderSide: const BorderSide(color: AdminColors.primary),
           ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
         ),
       ),
     );
@@ -171,12 +175,12 @@ class _AdminShellState extends State<AdminShell> {
       builder: (ctx) => AlertDialog(
         backgroundColor: AdminColors.cardDark,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-        title: const Text('Logout', style: TextStyle(color: AdminColors.textPrimary)),
-        content: const Text('Are you sure you want to sign out?', style: TextStyle(color: AdminColors.textSecondary)),
+        title: Text(AdminLanguageService.tr('logoutConfirmTitle'), style: const TextStyle(color: AdminColors.textPrimary)),
+        content: Text(AdminLanguageService.tr('logoutConfirmBody'), style: const TextStyle(color: AdminColors.textSecondary)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: const Text('Cancel', style: TextStyle(color: AdminColors.textMuted)),
+            child: Text(AdminLanguageService.tr('cancel'), style: const TextStyle(color: AdminColors.textMuted)),
           ),
           ElevatedButton(
             onPressed: () {
@@ -191,7 +195,7 @@ class _AdminShellState extends State<AdminShell> {
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
-            child: const Text('Logout'),
+            child: Text(AdminLanguageService.tr('logout')),
           ),
         ],
       ),
@@ -200,170 +204,213 @@ class _AdminShellState extends State<AdminShell> {
 
   @override
   Widget build(BuildContext context) {
-    final user = AdminApiService.currentUser;
-    final userName = user?['name'] ?? 'Admin User';
-    final userEmail = user?['email'] ?? 'admin@nilesky.com';
-    final userRole = user?['role'] ?? 'platform_admin';
-    final roleDisplay = userRole == 'platform_admin' ? 'Platform Admin' : 'Operator Admin';
-    final initial = userName.isNotEmpty ? userName[0].toUpperCase() : 'A';
+    return ValueListenableBuilder<Locale>(
+      valueListenable: AdminLanguageService.localeNotifier,
+      builder: (context, locale, child) {
+        final user = AdminApiService.currentUser;
+        final userName = user?['name'] ?? (AdminLanguageService.isArabic ? 'مدير النظام' : 'Admin User');
+        final userEmail = user?['email'] ?? 'admin@nilesky.com';
+        final userRole = user?['role'] ?? 'platform_admin';
+        final roleDisplay = userRole == 'platform_admin'
+            ? AdminLanguageService.tr('platformAdmin')
+            : AdminLanguageService.tr('operatorAdmin');
+        final initial = userName.isNotEmpty ? userName[0].toUpperCase() : 'A';
 
-    return Scaffold(
-      body: Row(
-        children: [
-          // Sidebar Navigation
-          Container(
-            width: 240,
-            color: AdminColors.sidebarBg,
-            child: Column(
-              children: [
-                // Logo Header
-                Container(
-                  height: 72,
-                  padding: const EdgeInsets.symmetric(horizontal: 20),
-                  alignment: Alignment.centerLeft,
-                  child: Row(
-                    children: [
-                      Image.asset(
-                        'assets/images/logo.png',
-                        width: 38,
-                        height: 38,
-                        filterQuality: FilterQuality.high,
-                        errorBuilder: (_, __, ___) => const Icon(
-                          Icons.airplanemode_active,
-                          size: 28,
-                          color: AdminColors.primary,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Column(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.start,
+        return Scaffold(
+          body: Row(
+            children: [
+              // Sidebar Navigation
+              Container(
+                width: 240,
+                color: AdminColors.sidebarBg,
+                child: Column(
+                  children: [
+                    // Logo Header + Language Switcher
+                    Container(
+                      height: 72,
+                      padding: const EdgeInsets.symmetric(horizontal: 16),
+                      alignment: Alignment.centerLeft,
+                      child: Row(
                         children: [
-                          Text(
-                            'NileSky',
-                            style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 17),
+                          Image.asset(
+                            'assets/images/logo.png',
+                            width: 38,
+                            height: 38,
+                            filterQuality: FilterQuality.high,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.airplanemode_active,
+                              size: 28,
+                              color: AdminColors.primary,
+                            ),
                           ),
-                          const Text(
-                            'Admin Panel',
-                            style: TextStyle(color: AdminColors.textMuted, fontSize: 11),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  AdminLanguageService.tr('appName'),
+                                  style: Theme.of(context).textTheme.titleLarge?.copyWith(fontSize: 16),
+                                ),
+                                Text(
+                                  AdminLanguageService.tr('adminPanel'),
+                                  style: const TextStyle(color: AdminColors.textMuted, fontSize: 11),
+                                ),
+                              ],
+                            ),
                           ),
-                        ],
-                      ),
-                    ],
-                  ),
-                ),
-                const Divider(color: AdminColors.border, height: 1),
-                const SizedBox(height: 8),
-
-                // Nav Items
-                Expanded(
-                  child: ListView.builder(
-                    itemCount: _navItems.length,
-                    padding: const EdgeInsets.symmetric(horizontal: 12),
-                    itemBuilder: (context, index) {
-                      final item = _navItems[index];
-                      final isActive = _selectedIndex == index;
-                      return Padding(
-                        padding: const EdgeInsets.only(bottom: 2),
-                        child: Material(
-                          color: Colors.transparent,
-                          borderRadius: BorderRadius.circular(10),
-                          child: InkWell(
-                            borderRadius: BorderRadius.circular(10),
-                            onTap: () => setState(() => _selectedIndex = index),
+                          // Language Switcher Toggle Button
+                          InkWell(
+                            onTap: () => AdminLanguageService.toggleLanguage(),
+                            borderRadius: BorderRadius.circular(8),
                             child: Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
                               decoration: BoxDecoration(
-                                color: isActive ? AdminColors.primary.withValues(alpha: 0.15) : Colors.transparent,
-                                borderRadius: BorderRadius.circular(10),
+                                color: AdminColors.primary.withValues(alpha: 0.15),
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: AdminColors.primary.withValues(alpha: 0.3)),
                               ),
                               child: Row(
+                                mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(
-                                    isActive ? item.activeIcon : item.icon,
-                                    color: isActive ? AdminColors.primary : AdminColors.textMuted,
-                                    size: 20,
-                                  ),
-                                  const SizedBox(width: 12),
+                                  const Icon(Icons.language, color: AdminColors.primary, size: 14),
+                                  const SizedBox(width: 4),
                                   Text(
-                                    item.label,
-                                    style: TextStyle(
-                                      color: isActive ? AdminColors.textPrimary : AdminColors.textSecondary,
-                                      fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
-                                      fontSize: 13,
-                                    ),
+                                    AdminLanguageService.tr('switchLang'),
+                                    style: const TextStyle(color: AdminColors.primary, fontSize: 11, fontWeight: FontWeight.bold),
                                   ),
                                 ],
                               ),
                             ),
                           ),
-                        ),
-                      );
-                    },
-                  ),
-                ),
+                        ],
+                      ),
+                    ),
+                    const Divider(color: AdminColors.border, height: 1),
+                    const SizedBox(height: 8),
 
-                // Footer with user info and logout
-                const Divider(color: AdminColors.border, height: 1),
-                Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Row(
-                    children: [
-                      CircleAvatar(
-                        radius: 16,
-                        backgroundColor: AdminColors.primary.withValues(alpha: 0.2),
-                        child: Text(initial, style: const TextStyle(color: AdminColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
+                    // Nav Items List
+                    Expanded(
+                      child: ListView.builder(
+                        itemCount: _navItems.length,
+                        padding: const EdgeInsets.symmetric(horizontal: 12),
+                        itemBuilder: (context, index) {
+                          final item = _navItems[index];
+                          final isActive = _selectedIndex == index;
+                          final labelText = AdminLanguageService.tr(item.key);
+                          return Padding(
+                            padding: const EdgeInsets.only(bottom: 2),
+                            child: Material(
+                              color: Colors.transparent,
+                              borderRadius: BorderRadius.circular(10),
+                              child: InkWell(
+                                borderRadius: BorderRadius.circular(10),
+                                onTap: () => setState(() => _selectedIndex = index),
+                                child: Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                                  decoration: BoxDecoration(
+                                    color: isActive ? AdminColors.primary.withValues(alpha: 0.15) : Colors.transparent,
+                                    borderRadius: BorderRadius.circular(10),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        isActive ? item.activeIcon : item.icon,
+                                        color: isActive ? AdminColors.primary : AdminColors.textMuted,
+                                        size: 20,
+                                      ),
+                                      const SizedBox(width: 12),
+                                      Expanded(
+                                        child: Text(
+                                          labelText,
+                                          style: TextStyle(
+                                            color: isActive ? AdminColors.textPrimary : AdminColors.textSecondary,
+                                            fontWeight: isActive ? FontWeight.w600 : FontWeight.normal,
+                                            fontSize: 13,
+                                          ),
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        },
                       ),
-                      const SizedBox(width: 10),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Text('$userName • $roleDisplay', style: const TextStyle(color: AdminColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
-                            Text(userEmail, style: const TextStyle(color: AdminColors.textMuted, fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis),
-                          ],
-                        ),
-                      ),
-                      InkWell(
-                        onTap: _changePassword,
-                        borderRadius: BorderRadius.circular(8),
-                        child: const Padding(
-                          padding: EdgeInsets.all(4),
-                          child: Icon(Icons.key_outlined,
-                              color: AdminColors.textMuted, size: 18),
-                        ),
-                      ),
-                      const SizedBox(width: 4),
-                      InkWell(
-                        onTap: _handleLogout,
-                        borderRadius: BorderRadius.circular(8),
-                        child: const Padding(
-                          padding: EdgeInsets.all(4),
-                          child: Icon(Icons.logout, color: AdminColors.textMuted, size: 18),
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-          ),
+                    ),
 
-          // Main Content Area
-          Expanded(
-            child: _screens[_selectedIndex],
+                    // Footer with user info, change password and logout
+                    const Divider(color: AdminColors.border, height: 1),
+                    Padding(
+                      padding: const EdgeInsets.all(16),
+                      child: Row(
+                        children: [
+                          CircleAvatar(
+                            radius: 16,
+                            backgroundColor: AdminColors.primary.withValues(alpha: 0.2),
+                            child: Text(initial, style: const TextStyle(color: AdminColors.primary, fontWeight: FontWeight.bold, fontSize: 13)),
+                          ),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text('$userName • $roleDisplay', style: const TextStyle(color: AdminColors.textPrimary, fontSize: 12, fontWeight: FontWeight.w600), maxLines: 1, overflow: TextOverflow.ellipsis),
+                                Text(userEmail, style: const TextStyle(color: AdminColors.textMuted, fontSize: 10), maxLines: 1, overflow: TextOverflow.ellipsis),
+                              ],
+                            ),
+                          ),
+                          Tooltip(
+                            message: AdminLanguageService.tr('changePassword'),
+                            child: InkWell(
+                              onTap: _changePassword,
+                              borderRadius: BorderRadius.circular(8),
+                              child: const Padding(
+                                padding: EdgeInsets.all(4),
+                                child: Icon(Icons.key_outlined, color: AdminColors.textMuted, size: 18),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 4),
+                          Tooltip(
+                            message: AdminLanguageService.tr('logout'),
+                            child: InkWell(
+                              onTap: _handleLogout,
+                              borderRadius: BorderRadius.circular(8),
+                              child: const Padding(
+                                padding: EdgeInsets.all(4),
+                                child: Icon(Icons.logout, color: AdminColors.textMuted, size: 18),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Main Content Area
+              Expanded(
+                child: _screens[_selectedIndex],
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 }
 
-class _NavItem {
+class _NavItemData {
   final IconData icon;
   final IconData activeIcon;
-  final String label;
+  final String key;
 
-  const _NavItem({required this.icon, required this.activeIcon, required this.label});
+  const _NavItemData({required this.icon, required this.activeIcon, required this.key});
 }

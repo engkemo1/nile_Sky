@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_localizations/flutter_localizations.dart';
 import 'theme/admin_theme.dart';
 import 'theme/admin_colors.dart';
 import 'screens/login_screen.dart';
 import 'screens/admin_shell.dart';
 import 'services/admin_api_service.dart';
+import 'services/admin_language_service.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await AdminLanguageService.init();
   runApp(const NileSkyAdminApp());
 }
 
@@ -15,11 +18,34 @@ class NileSkyAdminApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'NileSky Admin — Luxor Operations',
-      debugShowCheckedModeBanner: false,
-      theme: AdminTheme.darkTheme(),
-      home: const _SessionGate(),
+    return ValueListenableBuilder<Locale>(
+      valueListenable: AdminLanguageService.localeNotifier,
+      builder: (context, locale, child) {
+        return MaterialApp(
+          title: 'نايل سكاي - لوحة الإدارة',
+          debugShowCheckedModeBanner: false,
+          theme: AdminTheme.darkTheme(),
+          locale: locale,
+          supportedLocales: const [
+            Locale('ar'),
+            Locale('en'),
+          ],
+          localizationsDelegates: const [
+            GlobalMaterialLocalizations.delegate,
+            GlobalWidgetsLocalizations.delegate,
+            GlobalCupertinoLocalizations.delegate,
+          ],
+          builder: (context, widget) {
+            return Directionality(
+              textDirection: locale.languageCode == 'ar'
+                  ? TextDirection.rtl
+                  : TextDirection.ltr,
+              child: widget ?? const SizedBox(),
+            );
+          },
+          home: const _SessionGate(),
+        );
+      },
     );
   }
 }
@@ -55,17 +81,19 @@ class _SessionGateState extends State<_SessionGate> {
   @override
   Widget build(BuildContext context) {
     if (_checking) {
-      return const Scaffold(
+      return Scaffold(
         backgroundColor: AdminColors.bgDark,
         body: Center(
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircularProgressIndicator(color: AdminColors.primary),
-              SizedBox(height: 16),
+              const CircularProgressIndicator(color: AdminColors.primary),
+              const SizedBox(height: 16),
               Text(
-                'Restoring your session…',
-                style: TextStyle(color: AdminColors.textMuted, fontSize: 13),
+                AdminLanguageService.isArabic
+                    ? 'جارٍ استعادة الجلسة…'
+                    : 'Restoring your session…',
+                style: const TextStyle(color: AdminColors.textMuted, fontSize: 13),
               ),
             ],
           ),

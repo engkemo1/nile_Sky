@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../theme/admin_colors.dart';
 import '../services/admin_api_service.dart';
+import '../services/admin_language_service.dart';
 import 'admin_shell.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -61,7 +62,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       } else {
         AdminApiService.logout();
         setState(() {
-          _errorMessage = 'Access denied. Admin or Operator role required.';
+          _errorMessage = AdminLanguageService.isArabic
+              ? 'تم رفض الوصول. يتطلب صلاحية مدير النظام أو مدير شركة.'
+              : 'Access denied. Admin or Operator role required.';
         });
       }
     } on ApiException catch (e) {
@@ -70,7 +73,9 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
       });
     } catch (e) {
       setState(() {
-        _errorMessage = 'Connection error. Check backend URL & network.';
+        _errorMessage = AdminLanguageService.isArabic
+            ? 'خطأ في الاتصال. تحقق من اتصال الشبكة.'
+            : 'Connection error. Check backend URL & network.';
       });
     } finally {
       if (mounted) setState(() => _isLoading = false);
@@ -79,282 +84,355 @@ class _LoginScreenState extends State<LoginScreen> with SingleTickerProviderStat
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AdminColors.bgDark,
-      body: Center(
-        child: FadeTransition(
-          opacity: _fadeAnim,
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(32),
-            child: ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 420),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  // Logo
-                  Image.asset(
-                    'assets/images/logo.png',
-                    width: 96,
-                    height: 96,
-                    filterQuality: FilterQuality.high,
-                    errorBuilder: (_, __, ___) => const Icon(
-                      Icons.airplanemode_active,
-                      size: 72,
-                      color: AdminColors.primary,
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-                  const Text(
-                    'NileSky Admin',
-                    style: TextStyle(
-                      color: AdminColors.textPrimary,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  const Text(
-                    'Luxor Operations Control Center',
-                    style: TextStyle(color: AdminColors.textMuted, fontSize: 13),
-                  ),
-                  const SizedBox(height: 36),
-
-                  // Login Card
-                  Container(
-                    padding: const EdgeInsets.all(28),
+    return ValueListenableBuilder<Locale>(
+      valueListenable: AdminLanguageService.localeNotifier,
+      builder: (context, locale, child) {
+        return Scaffold(
+          backgroundColor: AdminColors.bgDark,
+          body: Stack(
+            children: [
+              // Language Switcher Top Corner Button
+              Positioned(
+                top: 24,
+                left: AdminLanguageService.isArabic ? null : 24,
+                right: AdminLanguageService.isArabic ? 24 : null,
+                child: InkWell(
+                  onTap: () => AdminLanguageService.toggleLanguage(),
+                  borderRadius: BorderRadius.circular(10),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
                     decoration: BoxDecoration(
                       color: AdminColors.cardDark,
-                      borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: AdminColors.border),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: AdminColors.primary.withValues(alpha: 0.4)),
                     ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
                       children: [
-                        const Text('Sign In', style: TextStyle(color: AdminColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold)),
-                        const SizedBox(height: 4),
-                        const Text('Enter your admin credentials', style: TextStyle(color: AdminColors.textMuted, fontSize: 12)),
-                        const SizedBox(height: 24),
-
-                        // Error
-                        if (_errorMessage != null) ...[
-                          Container(
-                            width: double.infinity,
-                            padding: const EdgeInsets.all(12),
-                            decoration: BoxDecoration(
-                              color: AdminColors.error.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: AdminColors.error.withValues(alpha: 0.3)),
-                            ),
-                            child: Row(
-                              children: [
-                                const Icon(Icons.error_outline, color: AdminColors.error, size: 18),
-                                const SizedBox(width: 8),
-                                Expanded(child: Text(_errorMessage!, style: const TextStyle(color: AdminColors.error, fontSize: 12))),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 16),
-                        ],
-
-                        // Email
-                        const Text('Email', style: TextStyle(color: AdminColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 6),
-                        TextField(
-                          controller: _emailController,
-                          style: const TextStyle(color: AdminColors.textPrimary, fontSize: 14),
-                          decoration: InputDecoration(
-                            hintText: 'admin@nilesky.com',
-                            hintStyle: const TextStyle(color: AdminColors.textMuted),
-                            prefixIcon: const Icon(Icons.mail_outline, color: AdminColors.textMuted, size: 18),
-                            filled: true,
-                            fillColor: AdminColors.surfaceDark,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AdminColors.border),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AdminColors.border),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AdminColors.primary, width: 1.5),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Password
-                        const Text('Password', style: TextStyle(color: AdminColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600)),
-                        const SizedBox(height: 6),
-                        TextField(
-                          controller: _passwordController,
-                          obscureText: _obscurePassword,
-                          style: const TextStyle(color: AdminColors.textPrimary, fontSize: 14),
-                          onSubmitted: (_) => _handleLogin(),
-                          decoration: InputDecoration(
-                            hintText: '••••••••',
-                            hintStyle: const TextStyle(color: AdminColors.textMuted),
-                            prefixIcon: const Icon(Icons.lock_outline, color: AdminColors.textMuted, size: 18),
-                            suffixIcon: IconButton(
-                              icon: Icon(
-                                _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-                                color: AdminColors.textMuted,
-                                size: 18,
-                              ),
-                              onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-                            ),
-                            filled: true,
-                            fillColor: AdminColors.surfaceDark,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AdminColors.border),
-                            ),
-                            enabledBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AdminColors.border),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(12),
-                              borderSide: const BorderSide(color: AdminColors.primary, width: 1.5),
-                            ),
-                            contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
-                          ),
-                        ),
-                        const SizedBox(height: 24),
-
-                        // Login Button
-                        SizedBox(
-                          width: double.infinity,
-                          height: 48,
-                          child: ElevatedButton(
-                            onPressed: _isLoading ? null : _handleLogin,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: AdminColors.primary,
-                              foregroundColor: Colors.black,
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              elevation: 0,
-                            ),
-                            child: _isLoading
-                                ? const SizedBox(
-                                    width: 22,
-                                    height: 22,
-                                    child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
-                                  )
-                                : const Text('Sign In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 15)),
+                        const Icon(Icons.language, color: AdminColors.primary, size: 16),
+                        const SizedBox(width: 6),
+                        Text(
+                          AdminLanguageService.tr('switchLang'),
+                          style: const TextStyle(
+                            color: AdminColors.primary,
+                            fontSize: 12,
+                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ],
                     ),
                   ),
-                  const SizedBox(height: 20),
+                ),
+              ),
 
-                  // Backend URL indicator (clickable to configure)
-                  InkWell(
-                    borderRadius: BorderRadius.circular(8),
-                    onTap: () {
-                      final urlCtrl = TextEditingController(text: AdminApiService.baseUrl);
-                      showDialog(
-                        context: context,
-                        builder: (dCtx) => AlertDialog(
-                          backgroundColor: AdminColors.cardDark,
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                          title: const Text('Configure Backend URL', style: TextStyle(color: AdminColors.textPrimary, fontSize: 16)),
-                          content: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              const Text('Set the NileSky NestJS backend API endpoint:', style: TextStyle(color: AdminColors.textSecondary, fontSize: 12)),
-                              const SizedBox(height: 12),
-                              TextField(
-                                controller: urlCtrl,
-                                style: const TextStyle(color: AdminColors.textPrimary),
-                                decoration: InputDecoration(
-                                  labelText: 'API Base URL',
-                                  labelStyle: const TextStyle(color: AdminColors.textMuted),
-                                  filled: true,
-                                  fillColor: AdminColors.surfaceDark,
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
-                                ),
-                              ),
-                              const SizedBox(height: 10),
-                              Wrap(
-                                spacing: 8,
-                                children: [
-                                  ActionChip(
-                                    label: const Text('🌐 Live Render', style: TextStyle(color: AdminColors.primary, fontSize: 11)),
-                                    backgroundColor: AdminColors.surfaceDark,
-                                    onPressed: () => urlCtrl.text = 'https://nile-sky.vercel.app',
-                                  ),
-                                  ActionChip(
-                                    label: const Text('💻 Localhost', style: TextStyle(color: AdminColors.textSecondary, fontSize: 11)),
-                                    backgroundColor: AdminColors.surfaceDark,
-                                    onPressed: () => urlCtrl.text = 'http://localhost:3000',
-                                  ),
-                                ],
-                              ),
-                            ],
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(dCtx),
-                              child: const Text('Cancel', style: TextStyle(color: AdminColors.textMuted)),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                final u = urlCtrl.text.trim();
-                                if (u.isNotEmpty) {
-                                  setState(() => AdminApiService.setBaseUrl(u));
-                                  Navigator.pop(dCtx);
-                                }
-                              },
-                              style: ElevatedButton.styleFrom(backgroundColor: AdminColors.primary, foregroundColor: Colors.black),
-                              child: const Text('Save'),
-                            ),
-                          ],
-                        ),
-                      );
-                    },
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-                      decoration: BoxDecoration(
-                        color: AdminColors.surfaceDark,
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: AdminColors.border),
-                      ),
-                      child: Row(
+              Center(
+                child: FadeTransition(
+                  opacity: _fadeAnim,
+                  child: SingleChildScrollView(
+                    padding: const EdgeInsets.all(32),
+                    child: ConstrainedBox(
+                      constraints: const BoxConstraints(maxWidth: 420),
+                      child: Column(
                         mainAxisSize: MainAxisSize.min,
                         children: [
+                          // Logo
+                          Image.asset(
+                            'assets/images/logo.png',
+                            width: 96,
+                            height: 96,
+                            filterQuality: FilterQuality.high,
+                            errorBuilder: (_, __, ___) => const Icon(
+                              Icons.airplanemode_active,
+                              size: 72,
+                              color: AdminColors.primary,
+                            ),
+                          ),
+                          const SizedBox(height: 20),
+                          Text(
+                            AdminLanguageService.tr('loginTitle'),
+                            style: const TextStyle(
+                              color: AdminColors.textPrimary,
+                              fontSize: 26,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            AdminLanguageService.tr('loginSubtitle'),
+                            style: const TextStyle(color: AdminColors.textMuted, fontSize: 13),
+                            textAlign: TextAlign.center,
+                          ),
+                          const SizedBox(height: 36),
+
+                          // Login Card
                           Container(
-                            width: 8,
-                            height: 8,
-                            decoration: const BoxDecoration(
-                              color: AdminColors.success,
-                              shape: BoxShape.circle,
+                            padding: const EdgeInsets.all(28),
+                            decoration: BoxDecoration(
+                              color: AdminColors.cardDark,
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: AdminColors.border),
+                            ),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  AdminLanguageService.tr('signIn'),
+                                  style: const TextStyle(color: AdminColors.textPrimary, fontSize: 18, fontWeight: FontWeight.bold),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  AdminLanguageService.tr('loginSubtitle'),
+                                  style: const TextStyle(color: AdminColors.textMuted, fontSize: 12),
+                                ),
+                                const SizedBox(height: 24),
+
+                                // Error Message
+                                if (_errorMessage != null) ...[
+                                  Container(
+                                    width: double.infinity,
+                                    padding: const EdgeInsets.all(12),
+                                    decoration: BoxDecoration(
+                                      color: AdminColors.error.withValues(alpha: 0.1),
+                                      borderRadius: BorderRadius.circular(10),
+                                      border: Border.all(color: AdminColors.error.withValues(alpha: 0.3)),
+                                    ),
+                                    child: Row(
+                                      children: [
+                                        const Icon(Icons.error_outline, color: AdminColors.error, size: 18),
+                                        const SizedBox(width: 8),
+                                        Expanded(
+                                          child: Text(
+                                            _errorMessage!,
+                                            style: const TextStyle(color: AdminColors.error, fontSize: 12),
+                                          ),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                  const SizedBox(height: 16),
+                                ],
+
+                                // Email Input
+                                Text(
+                                  AdminLanguageService.tr('emailAddress'),
+                                  style: const TextStyle(color: AdminColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(height: 6),
+                                TextField(
+                                  controller: _emailController,
+                                  style: const TextStyle(color: AdminColors.textPrimary, fontSize: 14),
+                                  decoration: InputDecoration(
+                                    hintText: 'admin@nilesky.com',
+                                    hintStyle: const TextStyle(color: AdminColors.textMuted),
+                                    prefixIcon: const Icon(Icons.mail_outline, color: AdminColors.textMuted, size: 18),
+                                    filled: true,
+                                    fillColor: AdminColors.surfaceDark,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: AdminColors.border),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: AdminColors.border),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: AdminColors.primary, width: 1.5),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                                  ),
+                                ),
+                                const SizedBox(height: 16),
+
+                                // Password Input
+                                Text(
+                                  AdminLanguageService.tr('password'),
+                                  style: const TextStyle(color: AdminColors.textSecondary, fontSize: 12, fontWeight: FontWeight.w600),
+                                ),
+                                const SizedBox(height: 6),
+                                TextField(
+                                  controller: _passwordController,
+                                  obscureText: _obscurePassword,
+                                  style: const TextStyle(color: AdminColors.textPrimary, fontSize: 14),
+                                  onSubmitted: (_) => _handleLogin(),
+                                  decoration: InputDecoration(
+                                    hintText: '••••••••',
+                                    hintStyle: const TextStyle(color: AdminColors.textMuted),
+                                    prefixIcon: const Icon(Icons.lock_outline, color: AdminColors.textMuted, size: 18),
+                                    suffixIcon: IconButton(
+                                      icon: Icon(
+                                        _obscurePassword ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+                                        color: AdminColors.textMuted,
+                                        size: 18,
+                                      ),
+                                      onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+                                    ),
+                                    filled: true,
+                                    fillColor: AdminColors.surfaceDark,
+                                    border: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: AdminColors.border),
+                                    ),
+                                    enabledBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: AdminColors.border),
+                                    ),
+                                    focusedBorder: OutlineInputBorder(
+                                      borderRadius: BorderRadius.circular(12),
+                                      borderSide: const BorderSide(color: AdminColors.primary, width: 1.5),
+                                    ),
+                                    contentPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 14),
+                                  ),
+                                ),
+                                const SizedBox(height: 24),
+
+                                // Login Button
+                                SizedBox(
+                                  width: double.infinity,
+                                  height: 48,
+                                  child: ElevatedButton(
+                                    onPressed: _isLoading ? null : _handleLogin,
+                                    style: ElevatedButton.styleFrom(
+                                      backgroundColor: AdminColors.primary,
+                                      foregroundColor: Colors.black,
+                                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                      elevation: 0,
+                                    ),
+                                    child: _isLoading
+                                        ? const SizedBox(
+                                            width: 22,
+                                            height: 22,
+                                            child: CircularProgressIndicator(strokeWidth: 2, color: Colors.black),
+                                          )
+                                        : Text(
+                                            AdminLanguageService.tr('signIn'),
+                                            style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 15),
+                                          ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
-                          const SizedBox(width: 8),
-                          Flexible(
-                            child: Text(
-                              'Backend: ${AdminApiService.baseUrl}',
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(color: AdminColors.textMuted, fontSize: 11),
+                          const SizedBox(height: 20),
+
+                          // Backend URL indicator
+                          InkWell(
+                            borderRadius: BorderRadius.circular(8),
+                            onTap: () {
+                              final urlCtrl = TextEditingController(text: AdminApiService.baseUrl);
+                              showDialog(
+                                context: context,
+                                builder: (dCtx) => AlertDialog(
+                                  backgroundColor: AdminColors.cardDark,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+                                  title: Text(
+                                    AdminLanguageService.isArabic ? 'إعداد رابط الخادم (API)' : 'Configure Backend URL',
+                                    style: const TextStyle(color: AdminColors.textPrimary, fontSize: 16),
+                                  ),
+                                  content: Column(
+                                    mainAxisSize: MainAxisSize.min,
+                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        AdminLanguageService.isArabic
+                                            ? 'حدد رابط API الخادم الخاص بنايل سكاي:'
+                                            : 'Set the NileSky NestJS backend API endpoint:',
+                                        style: const TextStyle(color: AdminColors.textSecondary, fontSize: 12),
+                                      ),
+                                      const SizedBox(height: 12),
+                                      TextField(
+                                        controller: urlCtrl,
+                                        style: const TextStyle(color: AdminColors.textPrimary),
+                                        decoration: InputDecoration(
+                                          labelText: 'API Base URL',
+                                          labelStyle: const TextStyle(color: AdminColors.textMuted),
+                                          filled: true,
+                                          fillColor: AdminColors.surfaceDark,
+                                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(10)),
+                                        ),
+                                      ),
+                                      const SizedBox(height: 10),
+                                      Wrap(
+                                        spacing: 8,
+                                        children: [
+                                          ActionChip(
+                                            label: const Text('🌐 Live Vercel', style: TextStyle(color: AdminColors.primary, fontSize: 11)),
+                                            backgroundColor: AdminColors.surfaceDark,
+                                            onPressed: () => urlCtrl.text = 'https://nile-sky.vercel.app',
+                                          ),
+                                          ActionChip(
+                                            label: const Text('💻 Localhost', style: TextStyle(color: AdminColors.textSecondary, fontSize: 11)),
+                                            backgroundColor: AdminColors.surfaceDark,
+                                            onPressed: () => urlCtrl.text = 'http://localhost:3000',
+                                          ),
+                                        ],
+                                      ),
+                                    ],
+                                  ),
+                                  actions: [
+                                    TextButton(
+                                      onPressed: () => Navigator.pop(dCtx),
+                                      child: Text(AdminLanguageService.tr('cancel'), style: const TextStyle(color: AdminColors.textMuted)),
+                                    ),
+                                    ElevatedButton(
+                                      onPressed: () {
+                                        final u = urlCtrl.text.trim();
+                                        if (u.isNotEmpty) {
+                                          setState(() => AdminApiService.setBaseUrl(u));
+                                          Navigator.pop(dCtx);
+                                        }
+                                      },
+                                      style: ElevatedButton.styleFrom(backgroundColor: AdminColors.primary, foregroundColor: Colors.black),
+                                      child: Text(AdminLanguageService.tr('save')),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                              decoration: BoxDecoration(
+                                color: AdminColors.surfaceDark,
+                                borderRadius: BorderRadius.circular(8),
+                                border: Border.all(color: AdminColors.border),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Container(
+                                    width: 8,
+                                    height: 8,
+                                    decoration: const BoxDecoration(
+                                      color: AdminColors.success,
+                                      shape: BoxShape.circle,
+                                    ),
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Flexible(
+                                    child: Text(
+                                      'Backend: ${AdminApiService.baseUrl}',
+                                      overflow: TextOverflow.ellipsis,
+                                      style: const TextStyle(color: AdminColors.textMuted, fontSize: 11),
+                                    ),
+                                  ),
+                                  const SizedBox(width: 6),
+                                  const Icon(Icons.edit_outlined, size: 12, color: AdminColors.textMuted),
+                                ],
+                              ),
                             ),
                           ),
-                          const SizedBox(width: 6),
-                          const Icon(Icons.edit_outlined, size: 12, color: AdminColors.textMuted),
+
                         ],
                       ),
                     ),
                   ),
-
-                ],
+                ),
               ),
-            ),
+            ],
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
